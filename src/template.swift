@@ -179,9 +179,9 @@
 ** it appears.
 */
 #ifdef YYFALLBACK
-static const YYCODETYPE yyFallback[] = {
+let yyFallback: [YYCODETYPE] = [
 %%
-};
+]
 #endif /* YYFALLBACK */
 
 /* The following structure represents a single element of the
@@ -266,17 +266,17 @@ void ParseTrace(FILE *TraceFILE, char *zTracePrompt){
 #ifndef NDEBUG
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
-static const char *const yyTokenName[] = { 
+let yyTokenName: [String] = [
 %%
-};
+]
 #endif /* NDEBUG */
 
 #ifndef NDEBUG
 /* For tracing reduce actions, the names of all rules are required.
 */
-static const char *const yyRuleName[] = {
+let yyRuleName: [String] = [
 %%
-};
+]
 #endif /* NDEBUG */
 
 
@@ -641,14 +641,14 @@ static void yy_shift(
 }
 
 /* The following table contains information about every rule that
-** is used during the reduce.
+   is used during the reduce.
+   lhs  => Symbol on the left-hand side of the rule
+   nrhs => Negative of the number of RHS symbols in the rule
 */
-static const struct {
-  YYCODETYPE lhs;       /* Symbol on the left-hand side of the rule */
-  signed char nrhs;     /* Negative of the number of RHS symbols in the rule */
-} yyRuleInfo[] = {
+
+let yyRuleInfo: [(lhs: YYCODETYPE, nrhs: Int8)] = [
 %%
-};
+]
 
 static void yy_accept(yyParser*);  /* Forward Declaration */
 
