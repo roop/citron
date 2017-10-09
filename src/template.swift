@@ -1,4 +1,9 @@
 /*
+** 2017-10-09:
+**
+** The author Roopesh Chander <roop@roopc.net> disclaims copyright to the
+** modifications he made to port this template to Swift.
+**
 ** 2000-05-29
 **
 ** The author disclaims copyright to this source code.  In place of
