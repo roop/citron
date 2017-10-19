@@ -23,20 +23,7 @@
 ** the value of the %name directive from the grammar.  Otherwise, the content
 ** of this template is copied straight through into the generate parser
 ** source file.
-**
-** The following is the concatenation of all %include directives from the
-** input grammar file:
 */
-#include <stdio.h>
-/************ Begin %include sections from the grammar ************************/
-%%
-/**************** End of %include directives **********************************/
-/* These constants specify the various numeric values for terminal symbols
-** in a format understandable to "makeheaders".  This section is blank unless
-** "lemon" is run with the "-m" command-line option.
-***************** Begin makeheaders token definitions *************************/
-%%
-/**************** End makeheaders token definitions ***************************/
 
 /* The next sections is a series of control #defines.
 ** various aspects of the generated parser.

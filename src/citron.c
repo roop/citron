@@ -4071,29 +4071,6 @@ void ReportTable(
   lineno = 1;
   tplt_xfer(lemp->name,in,out,&lineno);
 
-  /* Generate the include code, if any */
-  tplt_print(out,lemp,lemp->include,&lineno);
-  if( mhflag ){
-    char *incName = file_makename(lemp, ".h");
-    fprintf(out,"#include \"%s\"\n", incName); lineno++;
-    free(incName);
-  }
-  tplt_xfer(lemp->name,in,out,&lineno);
-
-  /* Generate #defines for all tokens */
-  /*if( mhflag ){
-    const char *prefix;
-    fprintf(out,"#if INTERFACE\n"); lineno++;
-    if( lemp->tokenprefix ) prefix = lemp->tokenprefix;
-    else                    prefix = "";
-    for(i=1; i<lemp->nterminal; i++){
-      fprintf(out,"#define %s%-30s %2d\n",prefix,lemp->symbols[i]->name,i);
-      lineno++;
-    }
-    fprintf(out,"#endif\n"); lineno++;
-  }*/
-  tplt_xfer(lemp->name,in,out,&lineno);
-
   /* Generate the defines */
   fprintf(out,"typealias YYCODETYPE = %s\n",
     minimum_size_type(0, lemp->nsymbol+1, &szCodeType)); lineno++;
