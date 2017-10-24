@@ -417,7 +417,6 @@ struct lemon {
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
   char *start;             /* Name of the start symbol for the grammar */
-  char *stacksize;         /* Size of the parser stack */
   char *include;           /* Code to put at the start of the C file */
   char *extracode;         /* Code appended to the generated file */
   char *filename;          /* Name of the input file */
@@ -438,6 +437,7 @@ struct lemon {
   char *accept;            /* Code to execute when the parser excepts */
   char *tokendest;         /* Code to execute to destroy token data */
   char *vardest;           /* Code for the default non-terminal destructor */
+  char *stacksize;         /* Size of the parser stack */
 };
 
 #define MemoryCheck(X) if((X)==0){ \
@@ -2432,9 +2432,6 @@ to follow the previous rule.");
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"default_type")==0 ){
           psp->declargslot = &(psp->gp->vartype);
-          psp->insertLineMacro = 0;
-        }else if( strcmp(x,"stack_size")==0 ){
-          psp->declargslot = &(psp->gp->stacksize);
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"start_symbol")==0 ){
           psp->declargslot = &(psp->gp->start);
