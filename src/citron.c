@@ -3962,7 +3962,7 @@ void ReportTable(
 
   in = tplt_open(lemp);
   if( in==0 ) return;
-  out = file_open(lemp,".c","wb", user_outputcodefilename);
+  out = file_open(lemp,".swift","wb", user_outputcodefilename);
   if( out==0 ){
     fclose(in);
     return;
