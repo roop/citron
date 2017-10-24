@@ -1495,31 +1495,6 @@ void memory_error(void){
   exit(1);
 }
 
-static int nDefine = 0;      /* Number of -D options on the command line */
-static char **azDefine = 0;  /* Name of the -D macros */
-
-/* This routine is called with the argument to each -D command-line option.
-** Add the macro defined to the azDefine array.
-*/
-static void handle_D_option(char *z){
-  char **paz;
-  nDefine++;
-  azDefine = (char **) realloc(azDefine, sizeof(azDefine[0])*nDefine);
-  if( azDefine==0 ){
-    fprintf(stderr,"out of memory\n");
-    exit(1);
-  }
-  paz = &azDefine[nDefine-1];
-  *paz = (char *) malloc( lemonStrlen(z)+1 );
-  if( *paz==0 ){
-    fprintf(stderr,"out of memory\n");
-    exit(1);
-  }
-  lemon_strcpy(*paz, z);
-  for(z=*paz; *z && *z!='='; z++){}
-  *z = 0;
-}
-
 static char *user_templatename = NULL;
 static void handle_T_option(char *z){
   user_templatename = (char *) malloc( lemonStrlen(z)+1 );
@@ -1604,7 +1579,6 @@ int main(int argc, char **argv)
   static struct s_options options[] = {
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
-    {OPT_FSTR, "D", (char*)handle_D_option, "Define an %ifdef macro."},
     {OPT_FSTR, "f", 0, "Ignored.  (Placeholder for -f compiler options.)"},
     {OPT_FLAG, "g", (char*)&rpflag, "Print grammar without actions."},
     {OPT_FSTR, "I", 0, "Ignored.  (Placeholder for '-I' compiler options.)"},
@@ -2734,57 +2708,6 @@ to follow the previous rule.");
   }
 }
 
-/* Run the preprocessor over the input file text.  The global variables
-** azDefine[0] through azDefine[nDefine-1] contains the names of all defined
-** macros.  This routine looks for "%ifdef" and "%ifndef" and "%endif" and
-** comments them out.  Text in between is also commented out as appropriate.
-*/
-static void preprocess_input(char *z){
-  int i, j, k, n;
-  int exclude = 0;
-  int start = 0;
-  int lineno = 1;
-  int start_lineno = 1;
-  for(i=0; z[i]; i++){
-    if( z[i]=='\n' ) lineno++;
-    if( z[i]!='%' || (i>0 && z[i-1]!='\n') ) continue;
-    if( strncmp(&z[i],"%endif",6)==0 && ISSPACE(z[i+6]) ){
-      if( exclude ){
-        exclude--;
-        if( exclude==0 ){
-          for(j=start; j<i; j++) if( z[j]!='\n' ) z[j] = ' ';
-        }
-      }
-      for(j=i; z[j] && z[j]!='\n'; j++) z[j] = ' ';
-    }else if( (strncmp(&z[i],"%ifdef",6)==0 && ISSPACE(z[i+6]))
-          || (strncmp(&z[i],"%ifndef",7)==0 && ISSPACE(z[i+7])) ){
-      if( exclude ){
-        exclude++;
-      }else{
-        for(j=i+7; ISSPACE(z[j]); j++){}
-        for(n=0; z[j+n] && !ISSPACE(z[j+n]); n++){}
-        exclude = 1;
-        for(k=0; k<nDefine; k++){
-          if( strncmp(azDefine[k],&z[j],n)==0 && lemonStrlen(azDefine[k])==n ){
-            exclude = 0;
-            break;
-          }
-        }
-        if( z[i+3]=='n' ) exclude = !exclude;
-        if( exclude ){
-          start = i;
-          start_lineno = lineno;
-        }
-      }
-      for(j=i; z[j] && z[j]!='\n'; j++) z[j] = ' ';
-    }
-  }
-  if( exclude ){
-    fprintf(stderr,"unterminated %%ifdef starting on line %d\n", start_lineno);
-    exit(1);
-  }
-}
-
 /* In spite of its name, this function is really a scanner.  It read
 ** in the entire input file (all at once) then tokenizes it.  Each
 ** token is passed to the function "parseonetoken" which builds all
@@ -2834,9 +2757,6 @@ void Parse(struct lemon *gp)
   }
   fclose(fp);
   filebuf[filesize] = 0;
-
-  /* Make an initial pass through the file to handle %ifdef and %ifndef */
-  preprocess_input(filebuf);
 
   /* Now scan the text of the input file */
   lineno = 1;
