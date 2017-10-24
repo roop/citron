@@ -1590,10 +1590,10 @@ int main(int argc, char **argv)
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
     {OPT_FLAG, "q", (char*)&quiet, "(Quiet) Don't print the report file."},
-    {OPT_FLAG, "r", (char*)&noResort, "Do not sort or renumber states"},
+    {OPT_FLAG, "x", (char*)&noResort, "Do not sort or renumber states"},
     {OPT_FLAG, "s", (char*)&statistics,
                                    "Print parser stats to standard output."},
-    {OPT_FLAG, "x", (char*)&version, "Print the version number."},
+    {OPT_FLAG, "v", (char*)&version, "Print the version number."},
     {OPT_FSTR, "T", (char*)handle_T_option, "Specify a template file."},
     {OPT_FSTR, "W", 0, "Ignored.  (Placeholder for '-W' compiler options.)"},
     {OPT_FLAG,0,0,0}
