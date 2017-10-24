@@ -412,7 +412,7 @@ struct lemon {
   int errorcnt;            /* Number of errors */
   struct symbol *errsym;   /* The error symbol */
   struct symbol *wildcard; /* Token that matches anything */
-  char *name;              /* Name of the generated parser */
+  char *className;         /* Name of the generated parser class */
   char *extraArgType;      /* Type of the 4th argument to parser */
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
@@ -436,6 +436,8 @@ struct lemon {
   int has_fallback;        /* True if any %fallback is seen in the grammar */
   int nolinenosflag;       /* True if #line statements should not be printed */
   char *argv0;             /* Name of the program */
+  // FIXME: Members to be removed
+  char *name;
 };
 
 #define MemoryCheck(X) if((X)==0){ \
@@ -2413,8 +2415,8 @@ to follow the previous rule.");
         psp->decllinenoslot = 0;
         psp->insertLineMacro = 1;
         psp->state = WAITING_FOR_DECL_ARG;
-        if( strcmp(x,"name")==0 ){
-          psp->declargslot = &(psp->gp->name);
+        if( strcmp(x,"class_name")==0 ){
+          psp->declargslot = &(psp->gp->className);
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"include")==0 ){
           psp->declargslot = &(psp->gp->include);
