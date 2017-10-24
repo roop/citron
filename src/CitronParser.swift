@@ -49,7 +49,7 @@ protocol CitronParser {
     // YYACTIONTYPE in lemon.
     associatedtype ActionCode: BinaryInteger
 
-    // Token: The type representing a terminal, defined using %token in the grammar.
+    // Token: The type representing a terminal, defined using %token_type in the grammar.
     // ParseTOKENTYPE in lemon.
     associatedtype Token
 
