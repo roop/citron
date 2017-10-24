@@ -1506,6 +1506,15 @@ static void handle_T_option(char *z){
   lemon_strcpy(user_templatename, z);
 }
 
+static char *user_outputcodefilename = NULL;
+static void handle_O_option(char *z){
+  user_outputcodefilename = (char *) malloc( lemonStrlen(z)+1 );
+  if( user_outputcodefilename==0 ){
+    memory_error();
+  }
+  lemon_strcpy(user_outputcodefilename, z);
+}
+
 /* Merge together to lists of rules ordered by rule.iRule */
 static struct rule *Rule_merge(struct rule *pA, struct rule *pB){
   struct rule *pFirst = 0;
@@ -1579,6 +1588,7 @@ int main(int argc, char **argv)
   static int nolinenosflag = 0;
   static int noResort = 0;
   static struct s_options options[] = {
+    {OPT_FSTR, "o", (char*)handle_O_option, "Specify an output file."},
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
     {OPT_FLAG, "g", (char*)&rpflag, "Print grammar without actions."},
@@ -2916,12 +2926,13 @@ PRIVATE char *file_makename(struct lemon *lemp, const char *suffix)
 PRIVATE FILE *file_open(
   struct lemon *lemp,
   const char *suffix,
-  const char *mode
+  const char *mode,
+  char *userSpecifiedName
 ){
   FILE *fp;
 
   if( lemp->outname ) free(lemp->outname);
-  lemp->outname = file_makename(lemp, suffix);
+  lemp->outname = userSpecifiedName ? userSpecifiedName : file_makename(lemp, suffix);
   fp = fopen(lemp->outname,mode);
   if( fp==0 && *mode=='w' ){
     fprintf(stderr,"Can't open file \"%s\".\n",lemp->outname);
@@ -3120,7 +3131,7 @@ void ReportOutput(struct lemon *lemp)
   struct action *ap;
   FILE *fp;
 
-  fp = file_open(lemp,".out","wb");
+  fp = file_open(lemp,".out","wb", NULL);
   if( fp==0 ) return;
   for(i=0; i<lemp->nxstate; i++){
     stp = lemp->sorted[i];
@@ -3951,7 +3962,7 @@ void ReportTable(
 
   in = tplt_open(lemp);
   if( in==0 ) return;
-  out = file_open(lemp,".c","wb");
+  out = file_open(lemp,".c","wb", user_outputcodefilename);
   if( out==0 ){
     fclose(in);
     return;
