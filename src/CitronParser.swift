@@ -124,11 +124,6 @@ protocol CitronParser {
 
     func yyTokenToSymbol(_ token: Token) -> Symbol
     func yyArbitrarySymbol() -> Symbol // FIXME
-
-    // Parsing interface
-
-    mutating func consumeToken(token: Token, code: TokenCode)
-    mutating func endParsing()
 }
 
 // Parsing interface
