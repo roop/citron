@@ -130,17 +130,15 @@ protocol CitronParser {
 
 extension CitronParser {
     mutating func consumeToken(token: Token, code tokenCode: TokenCode) {
-        var symbolCode = tokenCode.rawValue
+        let symbolCode = tokenCode.rawValue
         tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
         let action = yyFindShiftAction(lookAhead: symbolCode)
         if (action <= yyMaxShiftReduce) {
             yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
-            symbolCode = yyInvalidSymbolCode
         } else if (action <= yyMaxReduce) {
             yyReduce(ruleNumber: Int(action - yyMinReduce))
         } else if (action == yyErrorAction) {
             onSyntaxError?(token, tokenCode)
-            symbolCode = yyInvalidSymbolCode
         } else {
             fatalError("Unexpected action")
         }
