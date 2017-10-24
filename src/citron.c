@@ -420,8 +420,6 @@ struct lemon {
   char *stacksize;         /* Size of the parser stack */
   char *include;           /* Code to put at the start of the C file */
   char *extracode;         /* Code appended to the generated file */
-  char *tokendest;         /* Code to execute to destroy token data */
-  char *vardest;           /* Code for the default non-terminal destructor */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the .h file */
@@ -438,6 +436,8 @@ struct lemon {
   char *overflow;          /* Code to execute on a stack overflow */
   char *failure;           /* Code to execute on parser failure */
   char *accept;            /* Code to execute when the parser excepts */
+  char *tokendest;         /* Code to execute to destroy token data */
+  char *vardest;           /* Code for the default non-terminal destructor */
 };
 
 #define MemoryCheck(X) if((X)==0){ \
@@ -2150,7 +2150,6 @@ enum e_state {
   PRECEDENCE_MARK_2,
   RESYNC_AFTER_RULE_ERROR,
   RESYNC_AFTER_DECL_ERROR,
-  WAITING_FOR_DESTRUCTOR_SYMBOL,
   WAITING_FOR_DATATYPE_SYMBOL,
   WAITING_FOR_FALLBACK_ID,
   WAITING_FOR_WILDCARD_ID,
@@ -2422,10 +2421,6 @@ to follow the previous rule.");
           psp->declargslot = &(psp->gp->include);
         }else if( strcmp(x,"code")==0 ){
           psp->declargslot = &(psp->gp->extracode);
-        }else if( strcmp(x,"token_destructor")==0 ){
-          psp->declargslot = &psp->gp->tokendest;
-        }else if( strcmp(x,"default_destructor")==0 ){
-          psp->declargslot = &psp->gp->vardest;
         }else if( strcmp(x,"token_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -2456,8 +2451,6 @@ to follow the previous rule.");
           psp->preccounter++;
           psp->declassoc = NONE;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
-        }else if( strcmp(x,"destructor")==0 ){
-          psp->state = WAITING_FOR_DESTRUCTOR_SYMBOL;
         }else if( strcmp(x,"type")==0 ){
           psp->state = WAITING_FOR_DATATYPE_SYMBOL;
         }else if( strcmp(x,"fallback")==0 ){
@@ -2480,20 +2473,6 @@ to follow the previous rule.");
           "Illegal declaration keyword: \"%s\".",x);
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_DECL_ERROR;
-      }
-      break;
-    case WAITING_FOR_DESTRUCTOR_SYMBOL:
-      if( !ISALPHA(x[0]) ){
-        ErrorMsg(psp->filename,psp->tokenlineno,
-          "Symbol name missing after %%destructor keyword");
-        psp->errorcnt++;
-        psp->state = RESYNC_AFTER_DECL_ERROR;
-      }else{
-        struct symbol *sp = Symbol_new(x);
-        psp->declargslot = &sp->destructor;
-        psp->decllinenoslot = &sp->destLineno;
-        psp->insertLineMacro = 1;
-        psp->state = WAITING_FOR_DECL_ARG;
       }
       break;
     case WAITING_FOR_DATATYPE_SYMBOL:
