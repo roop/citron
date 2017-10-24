@@ -1573,7 +1573,7 @@ int main(int argc, char **argv)
   static int rpflag = 0;
   static int basisflag = 0;
   static int compress = 0;
-  static int quiet = 0;
+  static int printReport = 0;
   static int statistics = 0;
   static int mhflag = 0;
   static int nolinenosflag = 0;
@@ -1586,7 +1586,7 @@ int main(int argc, char **argv)
     {OPT_FLAG, "l", (char*)&nolinenosflag, "Do not print #line statements."},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
-    {OPT_FLAG, "q", (char*)&quiet, "(Quiet) Don't print the report file."},
+    {OPT_FLAG, "r", (char*)&printReport, "Print the report file."},
     {OPT_FLAG, "x", (char*)&noResort, "Do not sort or renumber states"},
     {OPT_FLAG, "s", (char*)&statistics,
                                    "Print parser stats to standard output."},
@@ -1695,7 +1695,7 @@ int main(int argc, char **argv)
     if( noResort==0 ) ResortStates(&lem);
 
     /* Generate a report of the parser generated.  (the "y.output" file) */
-    if( !quiet ) ReportOutput(&lem);
+    if( printReport ) ReportOutput(&lem);
 
     /* Generate the source code for the parser */
     ReportTable(&lem, mhflag);
