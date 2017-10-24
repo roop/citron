@@ -419,10 +419,6 @@ struct lemon {
   char *start;             /* Name of the start symbol for the grammar */
   char *stacksize;         /* Size of the parser stack */
   char *include;           /* Code to put at the start of the C file */
-  char *error;             /* Code to execute when an error is seen */
-  char *overflow;          /* Code to execute on a stack overflow */
-  char *failure;           /* Code to execute on parser failure */
-  char *accept;            /* Code to execute when the parser excepts */
   char *extracode;         /* Code appended to the generated file */
   char *tokendest;         /* Code to execute to destroy token data */
   char *vardest;           /* Code for the default non-terminal destructor */
@@ -438,6 +434,10 @@ struct lemon {
   char *argv0;             /* Name of the program */
   // FIXME: Members to be removed
   char *name;
+  char *error;             /* Code to execute when an error is seen */
+  char *overflow;          /* Code to execute on a stack overflow */
+  char *failure;           /* Code to execute on parser failure */
+  char *accept;            /* Code to execute when the parser excepts */
 };
 
 #define MemoryCheck(X) if((X)==0){ \
@@ -2429,14 +2429,6 @@ to follow the previous rule.");
         }else if( strcmp(x,"token_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
-        }else if( strcmp(x,"syntax_error")==0 ){
-          psp->declargslot = &(psp->gp->error);
-        }else if( strcmp(x,"parse_accept")==0 ){
-          psp->declargslot = &(psp->gp->accept);
-        }else if( strcmp(x,"parse_failure")==0 ){
-          psp->declargslot = &(psp->gp->failure);
-        }else if( strcmp(x,"stack_overflow")==0 ){
-          psp->declargslot = &(psp->gp->overflow);
         }else if( strcmp(x,"extra_argument_type")==0 ){
           psp->declargslot = &(psp->gp->extraArgType);
           psp->insertLineMacro = 0;
