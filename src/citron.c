@@ -242,7 +242,6 @@ void Plink_delete(struct plink *);
 void Reprint(struct lemon *);
 void ReportOutput(struct lemon *);
 void ReportTable(struct lemon *, int);
-void ReportHeader(FILE *out, struct lemon *);
 void CompressTables(struct lemon *);
 void ResortStates(struct lemon *);
 
@@ -1709,11 +1708,6 @@ int main(int argc, char **argv)
 
     /* Generate the source code for the parser */
     ReportTable(&lem, mhflag);
-
-    /* Produce a header file for use by the scanner.  (This step is
-    ** omitted if the "-m" option is used because makeheaders will
-    ** generate the file for us.) */
-    // if( !mhflag ) ReportHeader(&lem);
   }
   if( statistics ){
     printf("Parser statistics:\n");
@@ -4363,24 +4357,6 @@ void ReportTable(
 
   fclose(in);
   fclose(out);
-  return;
-}
-
-/* Generate a header file for the parser */
-void ReportHeader(FILE *out, struct lemon *lemp)
-{
-  const char *prefix;
-  int i = 0;
-
-  if( lemp->tokenprefix ) prefix = lemp->tokenprefix;
-  else                    prefix = "";
-  if( out ){
-    fprintf(out,"enum TokenCode: YYCODETYPE {\n");
-    for(i=1; i<lemp->nterminal; i++){
-      fprintf(out,"  case %s%-30s = %3d\n",prefix,lemp->symbols[i]->name,i);
-    }
-    fprintf(out,"}\n");
-  }
   return;
 }
 
