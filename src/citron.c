@@ -416,8 +416,8 @@ struct lemon {
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
   char *start;             /* Name of the start symbol for the grammar */
-  char *include;           /* Code to put at the start of the C file */
-  char *extracode;         /* Code appended to the generated file */
+  char *preface;           /* Code to put at the start of the generated file */
+  char *epilogue;          /* Code to put at the end of the generated file */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the .h file */
@@ -2417,10 +2417,10 @@ to follow the previous rule.");
         if( strcmp(x,"class_name")==0 ){
           psp->declargslot = &(psp->gp->className);
           psp->insertLineMacro = 0;
-        }else if( strcmp(x,"include")==0 ){
-          psp->declargslot = &(psp->gp->include);
-        }else if( strcmp(x,"code")==0 ){
-          psp->declargslot = &(psp->gp->extracode);
+        }else if( strcmp(x,"preface")==0 ){
+          psp->declargslot = &(psp->gp->preface);
+        }else if( strcmp(x,"epilogue")==0 ){
+          psp->declargslot = &(psp->gp->epilogue);
         }else if( strcmp(x,"token_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -3962,8 +3962,16 @@ void ReportTable(
 
   print_swift_file_copyright(out);
 
+  // Preface
+
+  if (lemp->preface) {
+    fprintf(out, "// Preface\n\n");
+    fprintf(out, "%s\n\n", lemp->preface);
+  }
+
   // Open the Parser class
 
+  fprintf(out, "// Parser class\n\n");
   const char *className = lemp->className ? lemp->className : "Parser";
   fprintf(out, "class %s: CitronParser {\n\n", className);
 
@@ -4354,6 +4362,14 @@ void ReportTable(
   fprintf(out, "    }\n\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
+
+
+  // Epilogue
+
+  if (lemp->epilogue) {
+    fprintf(out, "// Epilogue\n\n");
+    fprintf(out, "%s\n\n", lemp->epilogue);
+  }
 
   fclose(in);
   fclose(out);
