@@ -2520,7 +2520,6 @@ to follow the previous rule.");
         const char *zOld, *zNew;
         char *zBuf, *z;
         int nOld, n, nLine = 0, nNew, nBack;
-        int addLineMacro;
         char zLine[50];
         zNew = x;
         if( zNew[0]=='"' || zNew[0]=='{' ) zNew++;
@@ -2532,35 +2531,8 @@ to follow the previous rule.");
         }
         nOld = lemonStrlen(zOld);
         n = nOld + nNew + 20;
-        addLineMacro = !psp->gp->nolinenosflag && psp->insertLineMacro &&
-                        (psp->decllinenoslot==0 || psp->decllinenoslot[0]!=0);
-        if( addLineMacro ){
-          for(z=psp->filename, nBack=0; *z; z++){
-            if( *z=='\\' ) nBack++;
-          }
-          // There's no equivalent for #line in Swift
-          // lemon_sprintf(zLine, "#line %d ", psp->tokenlineno);
-          nLine = lemonStrlen(zLine);
-          n += nLine + lemonStrlen(psp->filename) + nBack;
-        }
         *psp->declargslot = (char *) realloc(*psp->declargslot, n);
         zBuf = *psp->declargslot + nOld;
-        if( addLineMacro ){
-          if( nOld && zBuf[-1]!='\n' ){
-            *(zBuf++) = '\n';
-          }
-          memcpy(zBuf, zLine, nLine);
-          zBuf += nLine;
-          *(zBuf++) = '"';
-          for(z=psp->filename; *z; z++){
-            if( *z=='\\' ){
-              *(zBuf++) = '\\';
-            }
-            *(zBuf++) = *z;
-          }
-          *(zBuf++) = '"';
-          *(zBuf++) = '\n';
-        }
         if( psp->decllinenoslot && psp->decllinenoslot[0]==0 ){
           psp->decllinenoslot[0] = psp->tokenlineno;
         }
