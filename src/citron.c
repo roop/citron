@@ -3909,7 +3909,7 @@ void ReportTable(
   struct lemon *lemp,
   int mhflag     /* Output in makeheaders format if true */
 ){
-  FILE *out, *in;
+  FILE *out;
   char line[LINESIZE];
   int  lineno;
   struct state *stp;
@@ -3924,11 +3924,8 @@ void ReportTable(
   int mnNtOfst, mxNtOfst;
   struct axset *ax;
 
-  in = tplt_open(lemp);
-  if( in==0 ) return;
   out = file_open(lemp,".swift","wb", user_outputcodefilename);
   if( out==0 ){
-    fclose(in);
     return;
   }
 
@@ -4343,7 +4340,6 @@ void ReportTable(
     fprintf(out, "%s\n\n", lemp->epilogue);
   }
 
-  fclose(in);
   fclose(out);
   return;
 }
