@@ -136,20 +136,54 @@ extension CitronParser {
     mutating func consumeToken(token: Token, code tokenCode: TokenCode) {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
-        let action = yyFindShiftAction(lookAhead: symbolCode)
-        if (action <= yyMaxShiftReduce) {
-            yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
-        } else if (action <= yyMaxReduce) {
-            yyReduce(ruleNumber: Int(action - yyMinReduce))
-        } else if (action == yyErrorAction) {
-            onSyntaxError?(token, tokenCode)
-        } else {
-            fatalError("Unexpected action")
+        while (!yyStack.isEmpty) {
+            let action = yyFindShiftAction(lookAhead: symbolCode)
+            if (action <= yyMaxShiftReduce) {
+                yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
+                break
+            } else if (action <= yyMaxReduce) {
+                var isParseAccepted = false
+                yyReduce(ruleNumber: Int(action - yyMinReduce), isParseAccepted: &isParseAccepted)
+                assert(isParseAccepted == false)
+                continue
+            } else if (action == yyErrorAction) {
+                onSyntaxError?(token, tokenCode)
+                break
+            } else {
+                fatalError("Unexpected action")
+            }
         }
+        traceStack()
     }
 
-    mutating func endParsing() {
-        yyPopAll()
+    mutating func endParsing() -> Bool {
+        tracePrint("End of input")
+        while (!yyStack.isEmpty) {
+            let action = yyFindShiftAction(lookAhead: 0)
+            assert(action > yyMaxShiftReduce)
+            if (action <= yyMaxReduce) {
+                var isParseAccepted = false
+                yyReduce(ruleNumber: Int(action - yyMinReduce), isParseAccepted: &isParseAccepted)
+                if (isParseAccepted) {
+                    tracePrint("Parse successful")
+                    return true
+                }
+                continue
+            } else if (action == yyErrorAction) {
+                print("Syntax error: Unexpected end of input")
+                break
+            } else {
+                fatalError("Unexpected action")
+            }
+        }
+        return false
+    }
+
+    mutating func reset() {
+        tracePrint("Resetting the parser")
+        while (yyStack.count > 1) {
+            yyPop()
+        }
     }
 }
 
@@ -186,7 +220,7 @@ private extension CitronParser {
         if (state >= yyMinReduce) {
             return ActionCode(state)
         }
-        assert(state >= yyShiftOffsetIndexMax)
+        assert(state <= yyShiftOffsetIndexMax)
         var i: Int = 0
         var lookAhead = Int(la)
         while (true) {
@@ -253,10 +287,10 @@ private extension CitronParser {
         }
     }
 
-    mutating func yyReduce(ruleNumber: Int) {
+    mutating func yyReduce(ruleNumber: Int, isParseAccepted: inout Bool) {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
-
+        tracePrint("Reduce with rule [", yyRuleText[ruleNumber], "] and go to state", "\(yyStack[yyStack.count - 1 - Int(yyRuleInfo[ruleNumber].nrhs)].state)")
         // TODO: Perform reduce actions defined in the grammar
 
         let ruleInfo = yyRuleInfo[ruleNumber]
@@ -280,16 +314,16 @@ private extension CitronParser {
         }
 
         if (action == yyAcceptAction) {
-            yyAccept()
+            isParseAccepted = true
         } else {
-            precondition(isShift(actionCode: action), "Unexpected non-shift action")
             let newState = action
             yyPush(state: Int(newState), symbolCode: lhsSymbolCode,
-                 symbol: /*FIXME*/ yyArbitrarySymbol())
+                   symbol: /*FIXME*/ yyArbitrarySymbol())
             tracePrint("Shift:", safeTokenName(at: Int(lhsSymbolCode)))
             if (newState < yyNumberOfStates) {
                 tracePrint("       and go to state", "\(newState)")
             }
+            isParseAccepted = false
         }
     }
 
