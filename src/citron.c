@@ -3801,7 +3801,7 @@ void print_symbol_enumeration(
 
   /* Print out the definition of Symbol as a "union"-ish enum */
   fprintf(out,"    enum Symbol {\n");
-  fprintf(out,"        case yyinit(value: Int)\n");
+  fprintf(out,"        case baseOfStack\n");
   fprintf(out,"        case yy0(value: Token)\n");
   for(i=0; i<arraysize; i++){
     if( types[i]==0 ) continue;
@@ -4229,7 +4229,9 @@ void ReportTable(
 
   fprintf(out, "    // Stack\n\n");
 
-  fprintf(out, "    var yyStack: [(state: Int , symbolCode: SymbolCode, symbol: Symbol)]  = []\n");
+  fprintf(out, "    var yyStack: [(state: Int , symbolCode: SymbolCode, symbol: Symbol)]  = [\n");
+  fprintf(out, "        (state: 0, symbolCode: 0, symbol: .baseOfStack)\n");
+  fprintf(out, "    ]\n");
   fprintf(out, "    var maxStackSize: Int? = nil\n");
   fprintf(out, "    var onStackOverflow: (() -> Void)? = nil\n\n");
 
@@ -4327,7 +4329,7 @@ void ReportTable(
 
   // FIXME
   fprintf(out, "    func yyArbitrarySymbol() -> Symbol {\n");
-  fprintf(out, "        return .yyinit(value: 0)\n");
+  fprintf(out, "        return .baseOfStack\n");
   fprintf(out, "    }\n\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
