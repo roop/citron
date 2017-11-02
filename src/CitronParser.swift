@@ -389,11 +389,6 @@ private extension Array {
         get {
             let index = Int(i)
             return index < self.count ? self[index] : nil
-        } set(from) {
-            let index = Int(i)
-            if (index < count && from != nil) {
-                self[index] = from!
-            }
         }
     }
 }
