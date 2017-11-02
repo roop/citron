@@ -319,20 +319,20 @@ private extension CitronParser {
 private extension CitronParser {
     func tracePrint(_ msg: String) {
         if (isTracingEnabled) {
-            debugPrint("\(msg)")
+            print("\(msg)")
         }
     }
 
     func tracePrint(_ msg: String, _ closure: @autoclosure () -> CustomDebugStringConvertible) {
         if (isTracingEnabled) {
-            debugPrint("\(msg) \(closure())")
+            print("\(msg) \(closure())")
         }
     }
 
     func tracePrint(_ msg: String, _ closure: @autoclosure () -> CustomDebugStringConvertible,
                     _ msg2: String, _ closure2: @autoclosure () -> CustomDebugStringConvertible) {
         if (isTracingEnabled) {
-            debugPrint("\(msg) \(closure()) \(msg2) \(closure2())")
+            print("\(msg) \(closure()) \(msg2) \(closure2())")
         }
     }
 
