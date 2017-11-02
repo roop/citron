@@ -344,7 +344,7 @@ private extension CitronParser {
         if (isTracingEnabled) {
             print("STACK contents:")
             for (i, e) in yyStack.enumerated() {
-                print("    \(i): (state: \(e.state), symbolCode: \(e.symbolCode))")
+                print("    \(i): (state: \(e.state), symbol: \(safeTokenName(at: Int(e.symbolCode))) [\(e.symbolCode)])")
             }
         }
     }
