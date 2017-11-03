@@ -133,7 +133,7 @@ protocol CitronParser {
 // Parsing interface
 
 extension CitronParser {
-    mutating func consumeToken(token: Token, code tokenCode: TokenCode) {
+    mutating func consume(token: Token, code tokenCode: TokenCode) {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
         while (!yyStack.isEmpty) {
