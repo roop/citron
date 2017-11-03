@@ -114,10 +114,6 @@ protocol CitronParser: class {
     var maxStackSize: Int? { get set }
     var onStackOverflow: (() -> Void)? { get set }
 
-    // Error handling
-
-    var onSyntaxError: ((Token, TokenCode) -> Void)? { get set }
-
     // Tracing
 
     var isTracingEnabled: Bool { get set }
@@ -128,18 +124,30 @@ protocol CitronParser: class {
 
     func yyTokenToSymbol(_ token: Token) -> Symbol
     func yyArbitrarySymbol() -> Symbol // FIXME
+
+    // Error handling
+
+    typealias ParseError = CitronParseError<Token, TokenCode>
+}
+
+// Error handling
+
+enum CitronParseError<Token, TokenCode>: Error {
+    case syntaxErrorAt(token: Token, tokenCode: TokenCode)
+    case unexpectedEndOfInput
+    case stackOverflow
 }
 
 // Parsing interface
 
 extension CitronParser {
-    func consume(token: Token, code tokenCode: TokenCode) {
+    func consume(token: Token, code tokenCode: TokenCode) throws {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
         while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: symbolCode)
             if (action <= yyMaxShiftReduce) {
-                yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
+                try yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
                 break
             } else if (action <= yyMaxReduce) {
                 var isParseAccepted = false
@@ -147,8 +155,7 @@ extension CitronParser {
                 assert(isParseAccepted == false)
                 continue
             } else if (action == yyErrorAction) {
-                onSyntaxError?(token, tokenCode)
-                break
+                throw ParseError.syntaxErrorAt(token: token, tokenCode: tokenCode)
             } else {
                 fatalError("Unexpected action")
             }
@@ -156,7 +163,7 @@ extension CitronParser {
         traceStack()
     }
 
-    func endParsing() -> Bool {
+    func endParsing() throws -> Bool {
         tracePrint("End of input")
         while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: 0)
@@ -170,8 +177,7 @@ extension CitronParser {
                 }
                 continue
             } else if (action == yyErrorAction) {
-                print("Syntax error: Unexpected end of input")
-                break
+                throw ParseError.unexpectedEndOfInput
             } else {
                 fatalError("Unexpected action")
             }
@@ -270,11 +276,10 @@ private extension CitronParser {
         return yyAction[i]
     }
 
-    func yyShift(yyNewState: Int, symbolCode: SymbolCode, token: Token) {
+    func yyShift(yyNewState: Int, symbolCode: SymbolCode, token: Token) throws {
         if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
             // Can't grow stack anymore
-            yyStackOverflow()
-            return
+            throw ParseError.stackOverflow
         }
         var newState = yyNewState
         if (newState > yyMaxShift) {
