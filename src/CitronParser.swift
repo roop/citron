@@ -30,7 +30,7 @@ Citron: Modifications to Lemon to generate a parser in Swift
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-protocol CitronParser {
+protocol CitronParser: class {
 
     // Types
 
@@ -133,7 +133,7 @@ protocol CitronParser {
 // Parsing interface
 
 extension CitronParser {
-    mutating func consume(token: Token, code tokenCode: TokenCode) {
+    func consume(token: Token, code tokenCode: TokenCode) {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
         while (!yyStack.isEmpty) {
@@ -156,7 +156,7 @@ extension CitronParser {
         traceStack()
     }
 
-    mutating func endParsing() -> Bool {
+    func endParsing() -> Bool {
         tracePrint("End of input")
         while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: 0)
@@ -179,7 +179,7 @@ extension CitronParser {
         return false
     }
 
-    mutating func reset() {
+    func reset() {
         tracePrint("Resetting the parser")
         while (yyStack.count > 1) {
             yyPop()
@@ -191,24 +191,24 @@ extension CitronParser {
 
 private extension CitronParser {
 
-    mutating func yyPush(state: Int, symbolCode: SymbolCode, symbol: Symbol) {
+    func yyPush(state: Int, symbolCode: SymbolCode, symbol: Symbol) {
         yyStack.append((state: state, symbolCode: symbolCode, symbol: symbol))
     }
 
-    mutating func yyPop() {
+    func yyPop() {
         let last = yyStack.popLast()
         if let last = last {
             tracePrint("Popping", safeTokenName(at: Int(last.symbolCode)))
         }
     }
 
-    mutating func yyPopAll() {
+    func yyPopAll() {
         while (!yyStack.isEmpty) {
             yyPop()
         }
     }
 
-    mutating func yyStackOverflow() {
+    func yyStackOverflow() {
         tracePrint("Stack overflow")
         yyPopAll()
         onStackOverflow?()
@@ -270,7 +270,7 @@ private extension CitronParser {
         return yyAction[i]
     }
 
-    mutating func yyShift(yyNewState: Int, symbolCode: SymbolCode, token: Token) {
+    func yyShift(yyNewState: Int, symbolCode: SymbolCode, token: Token) {
         if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
             // Can't grow stack anymore
             yyStackOverflow()
@@ -287,7 +287,7 @@ private extension CitronParser {
         }
     }
 
-    mutating func yyReduce(ruleNumber: Int, isParseAccepted: inout Bool) {
+    func yyReduce(ruleNumber: Int, isParseAccepted: inout Bool) {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
         tracePrint("Reduce with rule [", yyRuleText[ruleNumber], "] and go to state", "\(yyStack[yyStack.count - 1 - Int(yyRuleInfo[ruleNumber].nrhs)].state)")
