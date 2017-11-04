@@ -37,8 +37,8 @@ protocol CitronParser: class {
     // Symbol code: Integer code representing terminal and non-terminal
     // symbols. Actual type depends on how many symbols there are. For
     // example, if numberOfSymbolCodes < 256, the type will be UInt8.
-    // If there are n terminals in the grammar, the integers 0..n are used to
-    // represent terminals and integers >=n are used to represent non-terminals.
+    // If there are n terminals in the grammar, the integers 1...n are used to
+    // represent terminals and integers >n are used to represent non-terminals.
     // YYCODETYPE in lemon.
     associatedtype SymbolCode: BinaryInteger
 
