@@ -325,6 +325,8 @@ private extension CitronParser {
             }
             isParseAccepted = false
         }
+
+        traceStack()
     }
 
     func yyAccept() {
