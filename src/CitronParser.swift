@@ -305,11 +305,6 @@ private extension CitronParser {
         let nextState = yyStack[yyStack.count - 1 - Int(numberOfRhsSymbols)].state
         let action = yyFindReduceAction(state: nextState, lookAhead: lhsSymbolCode)
 
-        // There are no SHIFTREDUCE actions on nonterminals because the table
-        // generator has simplified them to pure REDUCE actions.
-        precondition(!(action >= yyMaxShift && action <= yyMaxShiftReduce),
-                     "Unexpected shift-reduce action after a reduce")
-
         // It is not possible for a REDUCE to be followed by an error
         precondition(action != yyErrorAction,
                      "Unexpected error action after a reduce")
