@@ -4274,56 +4274,6 @@ void ReportTable(
   }
   fprintf(out, "    ]\n\n");
 
-  /* Generate code which execution during each REDUCE action */
-  // FIXME:
-  // i = 0;
-  // for(rp=lemp->rule; rp; rp=rp->next){
-  //   i += translate_code(lemp, rp);
-  // }
-  // if( i ){
-  //   fprintf(out,"        YYMINORTYPE yylhsminor;\n"); lineno++;
-  // }
-  // /* First output rules other than the default: rule */
-  // for(rp=lemp->rule; rp; rp=rp->next){
-  //   struct rule *rp2;               /* Other rules with the same action */
-  //   if( rp->codeEmitted ) continue;
-  //   if( rp->noCode ){
-  //     /* No C code actions, so this will be part of the "default:" rule */
-  //     continue;
-  //   }
-  //   fprintf(out,"      case %d: /* ", rp->iRule);
-  //   writeRuleText(out, rp);
-  //   fprintf(out, " */\n"); lineno++;
-  //   for(rp2=rp->next; rp2; rp2=rp2->next){
-  //     if( rp2->code==rp->code && rp2->codePrefix==rp->codePrefix
-  //            && rp2->codeSuffix==rp->codeSuffix ){
-  //       fprintf(out,"      case %d: /* ", rp2->iRule);
-  //       writeRuleText(out, rp2);
-  //       fprintf(out," */ yytestcase(yyruleno==%d);\n", rp2->iRule); lineno++;
-  //       rp2->codeEmitted = 1;
-  //     }
-  //   }
-  //   emit_code(out,rp,lemp,&lineno);
-  //   fprintf(out,"        break;\n"); lineno++;
-  //   rp->codeEmitted = 1;
-  // }
-  // /* Finally, output the default: rule.  We choose as the default: all
-  // ** empty actions. */
-  // fprintf(out,"      default:\n"); lineno++;
-  // for(rp=lemp->rule; rp; rp=rp->next){
-  //   if( rp->codeEmitted ) continue;
-  //   assert( rp->noCode );
-  //   fprintf(out,"      /* (%d) ", rp->iRule);
-  //   writeRuleText(out, rp);
-  //   if( rp->doesReduce ){
-  //     fprintf(out, " */ yytestcase(yyruleno==%d);\n", rp->iRule); lineno++;
-  //   }else{
-  //     fprintf(out, " (OPTIMIZED OUT) */ assert(yyruleno!=%d);\n",
-  //             rp->iRule); lineno++;
-  //   }
-  // }
-  // fprintf(out,"        break;\n"); lineno++;
-
   // Function definitions
 
   fprintf(out, "    // Function definitions\n\n");
@@ -4332,13 +4282,91 @@ void ReportTable(
   fprintf(out, "        return .yy0(value: token)\n");
   fprintf(out, "    }\n\n");
 
-  // FIXME
-  fprintf(out, "    func yyArbitrarySymbol() -> Symbol {\n");
-  fprintf(out, "        return .baseOfStack\n");
+  /* Generate code which execution during each REDUCE action */
+  fprintf(out, "    func invokeCodeBlockForRule(ruleNumber: Int) -> Symbol {\n");
+  fprintf(out, "        switch (ruleNumber) {\n");
+  int ruleNumberMaxDigits = 0;
+  i = lemp->nrule;
+  while (i > 0) {
+    i = i / 10;
+    ruleNumberMaxDigits++;
+  }
+  i = 0;
+  for(rp=lemp->rule; rp; rp=rp->next){
+    // i += translate_code(lemp, rp);
+    int ruleNumber = rp->iRule;
+    fprintf(out, "        case %d: /* ", rp->iRule);
+    writeRuleText(out, rp);
+    fprintf(out, " */\n");
+    fprintf(out, "            func codeBlockForRule%0*d(",
+            ruleNumberMaxDigits, rp->iRule);
+    int is_first_rhs_item = 1;
+    for (i = 0; i < rp->nrhs; i++) {
+      const char *rhsalias = rp->rhsalias[i];
+      if (rhsalias) {
+        char *rhstype = 0;
+        struct symbol *rhs_symbol = rp->rhs[i];
+        if (rhs_symbol->type == TERMINAL) {
+            rhstype = lemp->tokentype;
+        } else if (rhs_symbol->type == NONTERMINAL) {
+            rhstype = rhs_symbol->datatype;
+        } // FIXME: Handle MULTITERMINAL
+        assert(rhstype);
+        fprintf(out, "%s%s: %s",
+                (is_first_rhs_item? "" : ", "),
+                rhsalias, rhstype);
+        is_first_rhs_item = 0;
+      }
+    }
+    assert(rp->lhs);
+    assert(rp->lhs->datatype);
+    fprintf(out, ") -> %s {", rp->lhs->datatype);
+    fprintf(out, "%s", rp->code);
+    fprintf(out, " }\n");
+    is_first_rhs_item = 1;
+    for (i = 0; i < rp->nrhs; i++) {
+      const char *rhsalias = rp->rhsalias[i];
+      if (rhsalias) {
+        int rhsdtnum = -1;
+        struct symbol *rhs_symbol = rp->rhs[i];
+        if (rhs_symbol->type == TERMINAL) {
+            rhsdtnum = 0;
+        } else if (rhs_symbol->type == NONTERMINAL) {
+            rhsdtnum = rhs_symbol->dtnum;
+        } // FIXME: Handle MULTITERMINAL
+        assert(rhsdtnum >= 0);
+        fprintf(out, "%s case .yy%d(let %s) = yySymbolOnStack(distanceFromTop: %d)",
+                (is_first_rhs_item? "            if" : ",\n              "),
+                rhsdtnum, rhsalias, rp->nrhs - 1 - i);
+        is_first_rhs_item = 0;
+      }
+    }
+    fprintf(out, " {\n");
+    fprintf(out, "                return .yy%d(value: codeBlockForRule%0*d(",
+            rp->lhs->dtnum, ruleNumberMaxDigits, rp->iRule);
+    is_first_rhs_item = 1;
+    for (i = 0; i < rp->nrhs; i++) {
+      const char *rhsalias = rp->rhsalias[i];
+      if (rhsalias) {
+        fprintf(out, "%s%s: %s", (is_first_rhs_item? "" : ", "), rhsalias, rhsalias);
+        is_first_rhs_item = 0;
+      }
+    }
+    fprintf(out, "))\n");
+    fprintf(out, "            }\n"); // Close if case
+  }
+  fprintf(out, "        default:\n");
+  fprintf(out, "            fatalError(\"Can't invoke code block for rule number \\(ruleNumber) - no such rule\")\n");
+  fprintf(out, "        }\n"); // Close switch(ruleNumber)
+  fprintf(out, "        fatalError(\"Can't resolve types correctly for invoking code block for rule number \\(ruleNumber)\")\n");
+  fprintf(out, "    }\n\n"); // Close func invokeCodeBlockForRule(ruleNumber:)
+
+  fprintf(out, "    private func yySymbolOnStack(distanceFromTop: Int) -> Symbol {\n");
+  fprintf(out, "        assert(yyStack.count > distanceFromTop)\n");
+  fprintf(out, "        return yyStack[yyStack.count - 1 - distanceFromTop].symbol\n");
   fprintf(out, "    }\n\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
-
 
   // Epilogue
 
