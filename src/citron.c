@@ -4267,7 +4267,7 @@ void ReportTable(
     writeRuleText(out, rp);
     fprintf(out,"\",\n");
   }
-  fprintf(out, "    ]\n");
+  fprintf(out, "    ]\n\n");
 
   /* Generate code which execution during each REDUCE action */
   // FIXME:
