@@ -3883,7 +3883,12 @@ static void writeRuleText(FILE *out, struct rule *rp){
   for(j=0; j<rp->nrhs; j++){
     struct symbol *sp = rp->rhs[j];
     if( sp->type!=MULTITERMINAL ){
-      fprintf(out," %s", sp->name);
+      const char *rhsalias = rp->rhsalias[j];
+      if (rhsalias) {
+        fprintf(out," %s(%s)", sp->name, rhsalias);
+      } else {
+        fprintf(out," %s", sp->name);
+      }
     }else{
       int k;
       fprintf(out," %s", sp->subsym[0]->name);
