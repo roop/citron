@@ -4310,7 +4310,10 @@ void ReportTable(
             rhstype = lemp->tokentype;
         } else if (rhs_symbol->type == NONTERMINAL) {
             rhstype = rhs_symbol->datatype;
-        } // FIXME: Handle MULTITERMINAL
+        } else if (rhs_symbol->type == MULTITERMINAL) {
+            assert(rhs_symbol->subsym[0]->type == TERMINAL);
+            rhstype = lemp->tokentype;
+        }
         assert(rhstype);
         fprintf(out, "%s%s: %s",
                 (is_first_rhs_item? "" : ", "),
@@ -4329,11 +4332,12 @@ void ReportTable(
       if (rhsalias) {
         int rhsdtnum = -1;
         struct symbol *rhs_symbol = rp->rhs[i];
-        if (rhs_symbol->type == TERMINAL) {
-            rhsdtnum = 0;
-        } else if (rhs_symbol->type == NONTERMINAL) {
+        if (rhs_symbol->type == TERMINAL || rhs_symbol->type == NONTERMINAL) {
             rhsdtnum = rhs_symbol->dtnum;
-        } // FIXME: Handle MULTITERMINAL
+        } else if (rhs_symbol->type == MULTITERMINAL) {
+            assert(rhs_symbol->subsym[0]->type == TERMINAL);
+            rhsdtnum = rhs_symbol->subsym[0]->dtnum;
+        }
         assert(rhsdtnum >= 0);
         fprintf(out, "%s case .yy%d(let %s) = yySymbolOnStack(distanceFromTop: %d)",
                 (is_first_rhs_item? "            if" : ",\n              "),
