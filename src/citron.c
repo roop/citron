@@ -3920,6 +3920,17 @@ static int dtnum_of_symbol(struct symbol *sp) {
   return -1;
 }
 
+static struct symbol *find_start_symbol(struct lemon *lemp) {
+  struct symbol *sp = 0;
+  if (lemp->start) {
+    sp = Symbol_find(lemp->start);
+    if( sp==0 ) sp = lemp->startRule->lhs;
+  } else {
+    sp = lemp->startRule->lhs;
+  }
+  return sp;
+}
+
 static void print_swift_file_copyright(FILE *out) {
   fprintf(out,
     "/*\n"
@@ -3992,6 +4003,9 @@ void ReportTable(
 
   print_symbol_enumeration(out, lemp); // Generates "enum Symbol {...}"
   fprintf(out, "\n");
+
+  struct symbol *start_symbol = find_start_symbol(lemp);
+  fprintf(out,"    typealias Result = %s\n\n", type_string_of_symbol(start_symbol, lemp));
 
   // Action tables computation
 
@@ -4373,6 +4387,14 @@ void ReportTable(
   fprintf(out, "    private func yySymbolOnStack(distanceFromTop: Int) -> Symbol {\n");
   fprintf(out, "        assert(yyStack.count > distanceFromTop)\n");
   fprintf(out, "        return yyStack[yyStack.count - 1 - distanceFromTop].symbol\n");
+  fprintf(out, "    }\n\n");
+
+  fprintf(out, "    func yyUnwrapResultFromSymbol(_ symbol: Symbol) -> Result {\n");
+  fprintf(out, "        if case .yy%d(let result) = symbol {\n", dtnum_of_symbol(start_symbol));
+  fprintf(out, "            return result\n");
+  fprintf(out, "        } else {\n");
+  fprintf(out, "            fatalError(\"Unexpected mismatch in result type\")\n");
+  fprintf(out, "        }\n");
   fprintf(out, "    }\n\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser

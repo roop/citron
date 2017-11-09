@@ -59,6 +59,9 @@ protocol CitronParser: class {
     // YYMINORTYPE in lemon.
     associatedtype Symbol
 
+    // Result: The type representing the start symbol of the grammar
+    associatedtype Result
+
     // Counts
 
     var yyInvalidSymbolCode: SymbolCode { get } // YYNOCODE in lemon
@@ -124,6 +127,7 @@ protocol CitronParser: class {
 
     func yyTokenToSymbol(_ token: Token) -> Symbol
     func invokeCodeBlockForRule(ruleNumber: Int) -> Symbol
+    func yyUnwrapResultFromSymbol(_ symbol: Symbol) -> Result
 
     // Error handling
 
@@ -150,9 +154,8 @@ extension CitronParser {
                 try yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
                 break
             } else if (action <= yyMaxReduce) {
-                var isParseAccepted = false
-                yyReduce(ruleNumber: Int(action - yyMinReduce), isParseAccepted: &isParseAccepted)
-                assert(isParseAccepted == false)
+                let resultSymbol = yyReduce(ruleNumber: Int(action - yyMinReduce))
+                assert(resultSymbol == nil) // Can be non-nil only in endParsing()
                 continue
             } else if (action == yyErrorAction) {
                 throw ParseError.syntaxErrorAt(token: token, tokenCode: tokenCode)
@@ -163,17 +166,16 @@ extension CitronParser {
         traceStack()
     }
 
-    func endParsing() throws -> Bool {
+    func endParsing() throws -> Result {
         tracePrint("End of input")
         while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: 0)
             assert(action > yyMaxShiftReduce)
             if (action <= yyMaxReduce) {
-                var isParseAccepted = false
-                yyReduce(ruleNumber: Int(action - yyMinReduce), isParseAccepted: &isParseAccepted)
-                if (isParseAccepted) {
+                let resultSymbol = yyReduce(ruleNumber: Int(action - yyMinReduce))
+                if let resultSymbol = resultSymbol {
                     tracePrint("Parse successful")
-                    return true
+                    return yyUnwrapResultFromSymbol(resultSymbol)
                 }
                 continue
             } else if (action == yyErrorAction) {
@@ -182,7 +184,7 @@ extension CitronParser {
                 fatalError("Unexpected action")
             }
         }
-        return false
+        fatalError("Unexpected stack underflow")
     }
 
     func reset() {
@@ -292,7 +294,9 @@ private extension CitronParser {
         }
     }
 
-    func yyReduce(ruleNumber: Int, isParseAccepted: inout Bool) {
+    // yyReduce: Reduces using the specified rule number.
+    // If the parse is accepted, returns the result symbol, else returns nil.
+    func yyReduce(ruleNumber: Int) -> Symbol? {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
         tracePrint("Reduce with rule [", yyRuleText[ruleNumber], "] and go to state", "\(yyStack[yyStack.count - 1 - Int(yyRuleInfo[ruleNumber].nrhs)].state)")
@@ -315,7 +319,7 @@ private extension CitronParser {
         }
 
         if (action == yyAcceptAction) {
-            isParseAccepted = true
+            return resultSymbol
         } else {
             let newState = action
             yyPush(state: Int(newState), symbolCode: lhsSymbolCode, symbol: resultSymbol)
@@ -323,10 +327,9 @@ private extension CitronParser {
             if (newState < yyNumberOfStates) {
                 tracePrint("       and go to state", "\(newState)")
             }
-            isParseAccepted = false
+            traceStack()
+            return nil
         }
-
-        traceStack()
     }
 
     func yyAccept() {
