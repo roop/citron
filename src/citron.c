@@ -2387,7 +2387,7 @@ to follow the previous rule.");
         psp->state = RHS_ALIAS_1;
       }else{
         ErrorMsg(psp->filename,psp->tokenlineno,
-          "Illegal character on RHS of rule: \"%s\".",x);
+          "Illegal character on RHS of rule: \"%s\" (Did you forget to finish the previous rule with a '.'?).",x);
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_RULE_ERROR;
       }
