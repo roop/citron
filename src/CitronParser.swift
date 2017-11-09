@@ -154,7 +154,7 @@ extension CitronParser {
                 try yyShift(yyNewState: Int(action), symbolCode: symbolCode, token: token)
                 break
             } else if (action <= yyMaxReduce) {
-                let resultSymbol = yyReduce(ruleNumber: Int(action - yyMinReduce))
+                let resultSymbol = try yyReduce(ruleNumber: Int(action - yyMinReduce))
                 assert(resultSymbol == nil) // Can be non-nil only in endParsing()
                 continue
             } else if (action == yyErrorAction) {
@@ -172,7 +172,7 @@ extension CitronParser {
             let action = yyFindShiftAction(lookAhead: 0)
             assert(action > yyMaxShiftReduce)
             if (action <= yyMaxReduce) {
-                let resultSymbol = yyReduce(ruleNumber: Int(action - yyMinReduce))
+                let resultSymbol = try yyReduce(ruleNumber: Int(action - yyMinReduce))
                 if let resultSymbol = resultSymbol {
                     tracePrint("Parse successful")
                     return yyUnwrapResultFromSymbol(resultSymbol)
@@ -199,7 +199,11 @@ extension CitronParser {
 
 private extension CitronParser {
 
-    func yyPush(state: Int, symbolCode: SymbolCode, symbol: Symbol) {
+    func yyPush(state: Int, symbolCode: SymbolCode, symbol: Symbol) throws {
+        if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
+            // Can't grow stack anymore
+            throw ParseError.stackOverflow
+        }
         yyStack.append((state: state, symbolCode: symbolCode, symbol: symbol))
     }
 
@@ -279,15 +283,11 @@ private extension CitronParser {
     }
 
     func yyShift(yyNewState: Int, symbolCode: SymbolCode, token: Token) throws {
-        if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
-            // Can't grow stack anymore
-            throw ParseError.stackOverflow
-        }
         var newState = yyNewState
         if (newState > yyMaxShift) {
             newState += Int(yyMinReduce) - Int(yyMinShiftReduce)
         }
-        yyPush(state: newState, symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
+        try yyPush(state: newState, symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
         tracePrint("Shift:", safeTokenName(at: Int(symbolCode)))
         if (newState < yyNumberOfStates) {
             tracePrint("       and go to state", "\(newState)")
@@ -296,7 +296,7 @@ private extension CitronParser {
 
     // yyReduce: Reduces using the specified rule number.
     // If the parse is accepted, returns the result symbol, else returns nil.
-    func yyReduce(ruleNumber: Int) -> Symbol? {
+    func yyReduce(ruleNumber: Int) throws -> Symbol? {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
         tracePrint("Reduce with rule [", yyRuleText[ruleNumber], "] and go to state", "\(yyStack[yyStack.count - 1 - Int(yyRuleInfo[ruleNumber].nrhs)].state)")
@@ -322,7 +322,7 @@ private extension CitronParser {
             return resultSymbol
         } else {
             let newState = action
-            yyPush(state: Int(newState), symbolCode: lhsSymbolCode, symbol: resultSymbol)
+            try yyPush(state: Int(newState), symbolCode: lhsSymbolCode, symbol: resultSymbol)
             tracePrint("Shift:", safeTokenName(at: Int(lhsSymbolCode)))
             if (newState < yyNumberOfStates) {
                 tracePrint("       and go to state", "\(newState)")
