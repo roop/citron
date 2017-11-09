@@ -2217,11 +2217,11 @@ static void parseonetoken(struct pstate *psp)
         if( psp->prevrule==0 ){
           ErrorMsg(psp->filename,psp->tokenlineno,
 "There is no prior rule upon which to attach the code \
-fragment which begins on this line.");
+block which begins on this line.");
           psp->errorcnt++;
         }else if( psp->prevrule->code!=0 ){
           ErrorMsg(psp->filename,psp->tokenlineno,
-"Code fragment beginning on this line is not the first \
+"Code block beginning on this line is not the first \
 to follow the previous rule.");
           psp->errorcnt++;
         }else{
