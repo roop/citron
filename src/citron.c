@@ -4318,7 +4318,7 @@ void ReportTable(
   fprintf(out, "    }\n\n");
 
   /* Generate code which execution during each REDUCE action */
-  fprintf(out, "    func invokeCodeBlockForRule(ruleNumber: Int) -> Symbol {\n");
+  fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: Int) -> Symbol {\n");
   fprintf(out, "        switch (ruleNumber) {\n");
   int ruleNumberMaxDigits = 0;
   i = lemp->nrule;
