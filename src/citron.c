@@ -2437,7 +2437,7 @@ to follow the previous rule.");
         }else if( strcmp(x,"token_type")==0 ){
           psp->declargslot = &(psp->gp->tokentype);
           psp->insertLineMacro = 0;
-        }else if( strcmp(x,"default_type")==0 ){
+        }else if( strcmp(x,"default_nonterminal_type")==0 ){
           psp->declargslot = &(psp->gp->vartype);
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"start_symbol")==0 ){
@@ -2455,7 +2455,7 @@ to follow the previous rule.");
           psp->preccounter++;
           psp->declassoc = NONE;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
-        }else if( strcmp(x,"type")==0 ){
+        }else if( strcmp(x,"nonterminal_type")==0 ){
           psp->state = WAITING_FOR_DATATYPE_SYMBOL;
         }else if( strcmp(x,"fallback")==0 ){
           psp->fallback = 0;
@@ -2464,7 +2464,7 @@ to follow the previous rule.");
           psp->state = WAITING_FOR_TOKEN_NAME;
         }else if( strcmp(x,"wildcard")==0 ){
           psp->state = WAITING_FOR_WILDCARD_ID;
-        }else if( strcmp(x,"token_class")==0 ){
+        }else if( strcmp(x,"token_set")==0 ){
           psp->state = WAITING_FOR_CLASS_ID;
         }else{
           ErrorMsg(psp->filename,psp->tokenlineno,
