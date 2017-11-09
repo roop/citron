@@ -4335,7 +4335,6 @@ void ReportTable(
   }
   i = 0;
   for(rp=lemp->rule; rp; rp=rp->next){
-    // i += translate_code(lemp, rp);
     int ruleNumber = rp->iRule;
     fprintf(out, "        case %d: /* ", rp->iRule);
     writeRuleText(out, rp);
