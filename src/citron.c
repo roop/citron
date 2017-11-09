@@ -3899,6 +3899,27 @@ static void writeRuleText(FILE *out, struct rule *rp){
   }
 }
 
+static const char *type_string_of_symbol(struct symbol *sp, struct lemon *lemp) {
+  if (sp->type == TERMINAL) {
+    return lemp->tokentype;
+  } else if (sp->type == NONTERMINAL) {
+    return sp->datatype;
+  } else if (sp->type == MULTITERMINAL) {
+    assert(sp->subsym[0]->type == TERMINAL);
+    return lemp->tokentype;
+  }
+  return 0;
+}
+
+static int dtnum_of_symbol(struct symbol *sp) {
+  if (sp->type == TERMINAL || sp->type == NONTERMINAL) {
+      return sp->dtnum;
+  } else if (sp->type == MULTITERMINAL) {
+      return sp->subsym[0]->dtnum;
+  }
+  return -1;
+}
+
 static void print_swift_file_copyright(FILE *out) {
   fprintf(out,
     "/*\n"
@@ -4304,16 +4325,7 @@ void ReportTable(
     for (i = 0; i < rp->nrhs; i++) {
       const char *rhsalias = rp->rhsalias[i];
       if (rhsalias) {
-        char *rhstype = 0;
-        struct symbol *rhs_symbol = rp->rhs[i];
-        if (rhs_symbol->type == TERMINAL) {
-            rhstype = lemp->tokentype;
-        } else if (rhs_symbol->type == NONTERMINAL) {
-            rhstype = rhs_symbol->datatype;
-        } else if (rhs_symbol->type == MULTITERMINAL) {
-            assert(rhs_symbol->subsym[0]->type == TERMINAL);
-            rhstype = lemp->tokentype;
-        }
+        const char *rhstype = type_string_of_symbol(rp->rhs[i], lemp);
         assert(rhstype);
         fprintf(out, "%s%s: %s",
                 (is_first_rhs_item? "" : ", "),
@@ -4330,14 +4342,7 @@ void ReportTable(
     for (i = 0; i < rp->nrhs; i++) {
       const char *rhsalias = rp->rhsalias[i];
       if (rhsalias) {
-        int rhsdtnum = -1;
-        struct symbol *rhs_symbol = rp->rhs[i];
-        if (rhs_symbol->type == TERMINAL || rhs_symbol->type == NONTERMINAL) {
-            rhsdtnum = rhs_symbol->dtnum;
-        } else if (rhs_symbol->type == MULTITERMINAL) {
-            assert(rhs_symbol->subsym[0]->type == TERMINAL);
-            rhsdtnum = rhs_symbol->subsym[0]->dtnum;
-        }
+        int rhsdtnum = dtnum_of_symbol(rp->rhs[i]);
         assert(rhsdtnum >= 0);
         fprintf(out, "%s case .yy%d(let %s) = yySymbolOnStack(distanceFromTop: %d)",
                 (is_first_rhs_item? "            if" : ",\n              "),
