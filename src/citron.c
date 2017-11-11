@@ -1899,7 +1899,7 @@ static char emsg[] = "Command line syntax error: ";
 /*
 ** Process a flag command line argument.
 */
-static int handleflags(int i, FILE *err)
+static int handleflags(int i, FILE *err, int *skipnext)
 {
   int v;
   int errcnt = 0;
@@ -1921,7 +1921,12 @@ static int handleflags(int i, FILE *err)
   }else if( op[j].type==OPT_FFLAG ){
     (*(void(*)(int))(op[j].arg))(v);
   }else if( op[j].type==OPT_FSTR ){
-    (*(void(*)(char *))(op[j].arg))(&argv[i][2]);
+    char *string_value = &argv[i][2]; // E.g.: Skip "-x" in "-xarg"
+    if (string_value==0 || string_value[0]==0) {
+      string_value = argv[i+1];
+      (*skipnext) = 1;
+    }
+    (*(void(*)(char *))(op[j].arg))(string_value);
   }else{
     if( err ){
       fprintf(err,"%smissing argument on switch.\n",emsg);
@@ -2033,7 +2038,9 @@ int OptInit(char **a, struct s_options *o, FILE *err)
     int i;
     for(i=1; argv[i]; i++){
       if( argv[i][0]=='+' || argv[i][0]=='-' ){
-        errcnt += handleflags(i,err);
+        int skipnext = 0;
+        errcnt += handleflags(i,err,&skipnext);
+        if (skipnext) { i++; }
       }else if( strchr(argv[i],'=') ){
         errcnt += handleswitch(i,err);
       }else{
