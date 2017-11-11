@@ -2048,7 +2048,7 @@ int OptInit(char **a, struct s_options *o, FILE *err)
     exit(1);
   }
   if( filenamecnt==0 ){
-    fprintf(err,"Expecting the filename containing the input grammar as a command line argument.");
+    fprintf(err,"Expecting the filename containing the input grammar as a command line argument.\n");
     exit(1);
   }
   if( filenamecnt>1 ){
