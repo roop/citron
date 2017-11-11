@@ -242,7 +242,7 @@ void Plink_delete(struct plink *);
 /********** From the file "report.h" *************************************/
 void Reprint(struct lemon *);
 void ReportOutput(struct lemon *);
-void ReportTable(struct lemon *, int);
+void ReportTable(struct lemon *);
 void CompressTables(struct lemon *);
 void ResortStates(struct lemon *);
 
@@ -1580,7 +1580,6 @@ int main(int argc, char **argv)
   static int compress = 0;
   static int printReport = 0;
   static int statistics = 0;
-  static int mhflag = 0;
   static int nolinenosflag = 0;
   static int noResort = 0;
   static struct s_options options[] = {
@@ -1588,7 +1587,6 @@ int main(int argc, char **argv)
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
     {OPT_FLAG, "g", (char*)&rpflag, "Print grammar without actions."},
-    {OPT_FLAG, "m", (char*)&mhflag, "Output a makeheaders compatible file."},
     {OPT_FLAG, "l", (char*)&nolinenosflag, "Do not print #line statements."},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
@@ -1702,7 +1700,7 @@ int main(int argc, char **argv)
     if( printReport ) ReportOutput(&lem);
 
     /* Generate the source code for the parser */
-    ReportTable(&lem, mhflag);
+    ReportTable(&lem);
   }
   if( statistics ){
     printf("Parser statistics:\n");
@@ -3509,10 +3507,7 @@ static void print_swift_file_copyright(FILE *out) {
 }
 
 /* Generate C source code for the parser */
-void ReportTable(
-  struct lemon *lemp,
-  int mhflag     /* Output in makeheaders format if true */
-){
+void ReportTable(struct lemon *lemp){
   FILE *out;
   char line[LINESIZE];
   int  lineno;
