@@ -1565,6 +1565,7 @@ static void stats_line(const char *zLabel, int iValue){
 int main(int argc, char **argv)
 {
   static int version = 0;
+  static int help = 0;
   static int rpflag = 0;
   static int basisflag = 0;
   static int compress = 0;
@@ -1583,6 +1584,7 @@ int main(int argc, char **argv)
     {OPT_FLAG, "s", (char*)&statistics,
                                    "Print parser stats to standard output."},
     {OPT_FLAG, "v", (char*)&version, "Print the version number."},
+    {OPT_FLAG, "h", (char*)&help, "Print available command line options."},
     {OPT_FLAG,0,0,0}
   };
   int i;
@@ -1594,6 +1596,14 @@ int main(int argc, char **argv)
   OptInit(argv,options,&input_filename,stderr);
   if( version ){
      printf("Citron version 1.0\n");
+     exit(0);
+  }
+  if( help ){
+    fprintf(stderr,"Citron parser generator for Swift\n");
+    fprintf(stderr,"Usage: %s [options] <grammar_file>\n", argv[0]);
+    fprintf(stderr,"Options:\n");
+    OptPrint();
+    exit(1);
      exit(0);
   }
   if( input_filename==0 ){
