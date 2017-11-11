@@ -3910,6 +3910,9 @@ static const char *type_string_of_symbol(struct symbol *sp, struct lemon *lemp) 
   if (sp->type == TERMINAL) {
     return lemp->tokentype;
   } else if (sp->type == NONTERMINAL) {
+    if (sp->datatype==0 && lemp->vartype) {
+      return lemp->vartype;
+    }
     return sp->datatype;
   } else if (sp->type == MULTITERMINAL) {
     assert(sp->subsym[0]->type == TERMINAL);
@@ -4354,8 +4357,9 @@ void ReportTable(
       }
     }
     assert(rp->lhs);
-    assert(rp->lhs->datatype);
-    fprintf(out, ") -> %s {", rp->lhs->datatype);
+    const char *lhstype = type_string_of_symbol(rp->lhs, lemp);
+    assert(lhstype);
+    fprintf(out, ") -> %s {", lhstype);
     assert(rp->noCode == 0);
     if (rp->code) {
       fprintf(out, "%s", rp->code);
