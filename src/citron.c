@@ -223,7 +223,7 @@ struct s_options {
   char *arg;
   const char *message;
 };
-int    OptInit(char**,struct s_options*,FILE*);
+int    OptInit(char**,struct s_options*,char **,FILE*);
 int    OptNArgs(void);
 char  *OptArg(int);
 void   OptErr(int);
@@ -1589,11 +1589,16 @@ int main(int argc, char **argv)
   int exitcode;
   struct lemon lem;
   struct rule *rp;
+  char *input_filename = 0;
 
-  OptInit(argv,options,stderr);
+  OptInit(argv,options,&input_filename,stderr);
   if( version ){
      printf("Citron version 1.0\n");
      exit(0);
+  }
+  if( input_filename==0 ){
+    fprintf(stderr,"Expecting the filename containing the input grammar as a command line argument.\n");
+    exit(1);
   }
   memset(&lem, 0, sizeof(lem));
   lem.errorcnt = 0;
@@ -1603,7 +1608,8 @@ int main(int argc, char **argv)
   Symbol_init();
   State_init();
   lem.argv0 = argv[0];
-  lem.filename = OptArg(0);
+  assert(input_filename);
+  lem.filename = input_filename;
   lem.basisflag = basisflag;
   Symbol_new("$");
 
@@ -2011,7 +2017,7 @@ static int handleswitch(int i, FILE *err)
   return errcnt;
 }
 
-int OptInit(char **a, struct s_options *o, FILE *err)
+int OptInit(char **a, struct s_options *o, char **input_filename, FILE *err)
 {
   int errcnt = 0;
   int filenamecnt = 0;
@@ -2028,6 +2034,9 @@ int OptInit(char **a, struct s_options *o, FILE *err)
       }else if( strchr(argv[i],'=') ){
         errcnt += handleswitch(i,err);
       }else{
+        if (filenamecnt==0) {
+          (*input_filename) = argv[i];
+        }
         filenamecnt++;
       }
     }
@@ -2037,15 +2046,10 @@ int OptInit(char **a, struct s_options *o, FILE *err)
     OptPrint();
     exit(1);
   }
-  if( filenamecnt==0 ){
-    fprintf(err,"Expecting the filename containing the input grammar as a command line argument.\n");
-    exit(1);
-  }
   if( filenamecnt>1 ){
     fprintf(err,"Expecting just one filename as a command line argument, got %d.\n", filenamecnt);
     exit(1);
   }
-  assert(filenamecnt==1);
   return 0;
 }
 
