@@ -231,6 +231,7 @@ void   OptPrint(void);
 
 /******** From the file "parse.h" *****************************************/
 void Parse(struct lemon *lemp);
+void CheckTypeDefinitions(struct lemon *lemp);
 
 /********* From the file "plink.h" ***************************************/
 struct plink *Plink_new(void);
@@ -1653,6 +1654,10 @@ int main(int argc, char **argv)
   for(i=1; ISUPPER(lem.symbols[i]->name[0]); i++);
   lem.nterminal = i;
 
+  /* Make sure all symbols have type definitions. Error out otherwise. */
+  CheckTypeDefinitions(&lem);
+  if( lem.errorcnt ) exit(lem.errorcnt);
+
   /* Assign sequential rule numbers.  Start with 0.  Put rules that have no
   ** reduce action C-code associated with them last, so that the switch()
   ** statement that selects reduction actions will have a smaller jump table.
@@ -2805,6 +2810,38 @@ void Parse(struct lemon *gp)
   gp->rule = ps.firstrule;
   gp->errorcnt = ps.errorcnt;
 }
+
+void CheckTypeDefinitions(struct lemon *lemp) {
+  if (lemp->tokentype == 0) {
+    ErrorMsg(lemp->filename,0,
+"Type for terminals is undefined. Please use %%token_type to define that.");
+    lemp->errorcnt++;
+  }
+  int number_of_nonterminals_with_type_undefined = 0;
+  if (lemp->vartype==0) {
+    int i = 0;
+    for (i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
+      struct symbol *sp = lemp->symbols[i];
+      if (sp == lemp->errsym) {
+        // Ignore the error symbol
+        continue;
+      }
+      if (sp->type==NONTERMINAL && sp->datatype==0) {
+    ErrorMsg(lemp->filename,0,
+"Type for nonterminal '%s' is undefined.",
+        sp->name);
+        number_of_nonterminals_with_type_undefined++;
+      }
+    }
+  }
+  if (number_of_nonterminals_with_type_undefined > 0) {
+    ErrorMsg(lemp->filename,0,
+"Type for one or more nonterminals is undefined. Please use \
+%%nonterminal_type or %%default_nonterminal_type to define them.");
+    lemp->errorcnt++;
+  }
+}
+
 /*************************** From the file "plink.c" *********************/
 /*
 ** Routines processing configuration follow-set propagation links
