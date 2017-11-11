@@ -423,7 +423,6 @@ struct lemon {
   int tablesize;           /* Total table size of all tables in bytes */
   int basisflag;           /* Print only basis configurations */
   int has_fallback;        /* True if any %fallback is seen in the grammar */
-  int nolinenosflag;       /* True if #line statements should not be printed */
   char *argv0;             /* Name of the program */
   // FIXME: Members to be removed
   char *name;
@@ -1580,14 +1579,12 @@ int main(int argc, char **argv)
   static int compress = 0;
   static int printReport = 0;
   static int statistics = 0;
-  static int nolinenosflag = 0;
   static int noResort = 0;
   static struct s_options options[] = {
     {OPT_FSTR, "o", (char*)handle_O_option, "Specify an output file."},
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
     {OPT_FLAG, "g", (char*)&rpflag, "Print grammar without actions."},
-    {OPT_FLAG, "l", (char*)&nolinenosflag, "Do not print #line statements."},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
     {OPT_FLAG, "r", (char*)&printReport, "Print the report file."},
@@ -1618,7 +1615,6 @@ int main(int argc, char **argv)
   lem.argv0 = argv[0];
   lem.filename = OptArg(0);
   lem.basisflag = basisflag;
-  lem.nolinenosflag = nolinenosflag;
   Symbol_new("$");
 
   /* Parse the input file */
