@@ -1592,7 +1592,7 @@ int main(int argc, char **argv)
 
   OptInit(argv,options,stderr);
   if( version ){
-     printf("Lemon version 1.0\n");
+     printf("Citron version 1.0\n");
      exit(0);
   }
   memset(&lem, 0, sizeof(lem));
