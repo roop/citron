@@ -407,7 +407,6 @@ struct lemon {
   int nterminal;           /* Number of terminal symbols */
   struct symbol **symbols; /* Sorted array of pointers to symbols */
   int errorcnt;            /* Number of errors */
-  struct symbol *errsym;   /* The error symbol */
   struct symbol *wildcard; /* Token that matches anything */
   char *className;         /* Name of the generated parser class */
   char *extraArgType;      /* Type of the 4th argument to parser */
@@ -1389,7 +1388,7 @@ void Configlist_closure(struct lemon *lemp)
     if( dot>=rp->nrhs ) continue;
     sp = rp->rhs[dot];
     if( sp->type==NONTERMINAL ){
-      if( sp->rule==0 && sp!=lemp->errsym ){
+      if( sp->rule==0){
         ErrorMsg(lemp->filename,rp->line,"Nonterminal \"%s\" has no rules.",
           sp->name);
         lemp->errorcnt++;
@@ -1627,8 +1626,6 @@ int main(int argc, char **argv)
   lem.basisflag = basisflag;
   lem.nolinenosflag = nolinenosflag;
   Symbol_new("$");
-  lem.errsym = Symbol_new("error");
-  lem.errsym->useCnt = 0;
 
   /* Parse the input file */
   Parse(&lem);
@@ -2819,10 +2816,6 @@ void CheckTypeDefinitions(struct lemon *lemp) {
     int i = 0;
     for (i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
       struct symbol *sp = lemp->symbols[i];
-      if (sp == lemp->errsym) {
-        // Ignore the error symbol
-        continue;
-      }
       if (sp->type==NONTERMINAL && sp->datatype==0) {
     ErrorMsg(lemp->filename,0,
 "Type for nonterminal '%s' is undefined.",
@@ -3319,10 +3312,6 @@ void print_symbol_enumeration(
   for(i=0; i<lemp->nsymbol; i++){
     struct symbol *sp = lemp->symbols[i];
     char *cp;
-    if( sp==lemp->errsym ){
-      sp->dtnum = arraysize+1;
-      continue;
-    }
     if( sp->type!=NONTERMINAL || (sp->datatype==0 && lemp->vartype==0) ){
       sp->dtnum = 0;
       continue;
@@ -3370,9 +3359,6 @@ void print_symbol_enumeration(
     if( types[i]==0 ) continue;
     fprintf(out,"        case yy%d(value: %s)\n",i+1,types[i]);
     free(types[i]);
-  }
-  if( lemp->errsym->useCnt ){
-    fprintf(out,"        case yy%d(value: Int)\n",lemp->errsym->dtnum);
   }
   free(stddt);
   free(types);
