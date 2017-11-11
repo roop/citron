@@ -1492,15 +1492,6 @@ void memory_error(void){
   exit(1);
 }
 
-static char *user_templatename = NULL;
-static void handle_T_option(char *z){
-  user_templatename = (char *) malloc( lemonStrlen(z)+1 );
-  if( user_templatename==0 ){
-    memory_error();
-  }
-  lemon_strcpy(user_templatename, z);
-}
-
 static char *user_outputcodefilename = NULL;
 static void handle_O_option(char *z){
   user_outputcodefilename = (char *) malloc( lemonStrlen(z)+1 );
@@ -1592,7 +1583,6 @@ int main(int argc, char **argv)
     {OPT_FLAG, "s", (char*)&statistics,
                                    "Print parser stats to standard output."},
     {OPT_FLAG, "v", (char*)&version, "Print the version number."},
-    {OPT_FSTR, "T", (char*)handle_T_option, "Specify a template file."},
     {OPT_FLAG,0,0,0}
   };
   int i;
