@@ -1610,10 +1610,6 @@ int main(int argc, char **argv)
      printf("Lemon version 1.0\n");
      exit(0);
   }
-  if( OptNArgs()!=1 ){
-    fprintf(stderr,"Exactly one filename argument is required.\n");
-    exit(1);
-  }
   memset(&lem, 0, sizeof(lem));
   lem.errorcnt = 0;
 
@@ -2029,6 +2025,7 @@ static int handleswitch(int i, FILE *err)
 int OptInit(char **a, struct s_options *o, FILE *err)
 {
   int errcnt = 0;
+  int filenamecnt = 0;
   argv = a;
   op = o;
   errstream = err;
@@ -2039,6 +2036,8 @@ int OptInit(char **a, struct s_options *o, FILE *err)
         errcnt += handleflags(i,err);
       }else if( strchr(argv[i],'=') ){
         errcnt += handleswitch(i,err);
+      }else{
+        filenamecnt++;
       }
     }
   }
@@ -2047,6 +2046,15 @@ int OptInit(char **a, struct s_options *o, FILE *err)
     OptPrint();
     exit(1);
   }
+  if( filenamecnt==0 ){
+    fprintf(err,"Expecting the filename containing the input grammar as a command line argument.");
+    exit(1);
+  }
+  if( filenamecnt>1 ){
+    fprintf(err,"Expecting just one filename as a command line argument, got %d.\n", filenamecnt);
+    exit(1);
+  }
+  assert(filenamecnt==1);
   return 0;
 }
 
