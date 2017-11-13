@@ -115,7 +115,6 @@ protocol CitronParser: class {
 
     var yyStack: [(state: Int /*FIXME*/, symbolCode: CitronSymbolCode, symbol: CitronSymbol)] { get set }
     var maxStackSize: Int? { get set }
-    var onStackOverflow: (() -> Void)? { get set }
 
     // Tracing
 
@@ -218,12 +217,6 @@ private extension CitronParser {
         while (!yyStack.isEmpty) {
             yyPop()
         }
-    }
-
-    func yyStackOverflow() {
-        tracePrint("Stack overflow")
-        yyPopAll()
-        onStackOverflow?()
     }
 
     func yyFindShiftAction(lookAhead la: CitronSymbolCode) -> CitronActionCode {

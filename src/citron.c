@@ -3781,13 +3781,6 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "        (state: 0, symbolCode: 0, symbol: .yyBaseOfStack)\n");
   fprintf(out, "    ]\n");
   fprintf(out, "    var maxStackSize: Int? = nil\n");
-  fprintf(out, "    var onStackOverflow: (() -> Void)? = nil\n\n");
-
-  // Error handling
-
-  fprintf(out, "    // Error handling\n\n");
-
-  fprintf(out, "    var onSyntaxError: ((CitronToken, CitronTokenCode) -> Void)? = nil\n\n");
 
   // Tracing
 
