@@ -3311,9 +3311,9 @@ void print_symbol_enumeration(
   }
 
   /* Print out the definition of Symbol as a "union"-ish enum */
-  fprintf(out,"    enum Symbol {\n");
+  fprintf(out,"    enum CitronSymbol {\n");
   fprintf(out,"        case yyBaseOfStack\n");
-  fprintf(out,"        case yy0(value: Token)\n");
+  fprintf(out,"        case yy0(value: CitronToken)\n");
   for(i=0; i<arraysize; i++){
     if( types[i]==0 ) continue;
     fprintf(out,"        case yy%d(value: %s)\n",i+1,types[i]);
@@ -3493,27 +3493,27 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Types\n\n");
 
-  fprintf(out, "    typealias SymbolCode = %s\n\n",
+  fprintf(out, "    typealias CitronSymbolCode = %s\n\n",
     minimum_size_type(0, lemp->nsymbol+1, &szCodeType));
 
   const char *tokenPrefix = lemp->tokenprefix ? lemp->tokenprefix : "";
-  fprintf(out, "    enum TokenCode: SymbolCode {\n");
+  fprintf(out, "    enum CitronTokenCode: CitronSymbolCode {\n");
   for(i=1; i<lemp->nterminal; i++){
     fprintf(out, "      case %s%-30s = %3d\n", tokenPrefix, lemp->symbols[i]->name, i);
   }
   fprintf(out, "    }\n\n");
 
-  fprintf(out,"    typealias ActionCode = %s\n\n",
+  fprintf(out,"    typealias CitronActionCode = %s\n\n",
     minimum_size_type(0,lemp->nstate+lemp->nrule*2+5,&szActionType));
 
   assert(lemp->tokentype != 0);
-  fprintf(out,"    typealias Token = %s\n\n", lemp->tokentype); // %token_type
+  fprintf(out,"    typealias CitronToken = %s\n\n", lemp->tokentype); // %token_type
 
   print_symbol_enumeration(out, lemp); // Generates "enum Symbol {...}"
   fprintf(out, "\n");
 
   struct symbol *start_symbol = find_start_symbol(lemp);
-  fprintf(out,"    typealias Result = %s\n\n", type_string_of_symbol(start_symbol, lemp));
+  fprintf(out,"    typealias CitronResult = %s\n\n", type_string_of_symbol(start_symbol, lemp));
 
   // Action tables computation
 
@@ -3593,7 +3593,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Counts\n\n");
 
-  fprintf(out, "    let yyInvalidSymbolCode: SymbolCode = %d\n", lemp->nsymbol+1);
+  fprintf(out, "    let yyInvalidSymbolCode: CitronSymbolCode = %d\n", lemp->nsymbol+1);
   fprintf(out, "    let yyNumberOfStates: Int = %d\n",lemp->nxstate);
   fprintf(out, "    let yyNumberOfRules: Int = %d\n\n",lemp->nrule);
 
@@ -3601,16 +3601,16 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Action tables\n\n");
 
-  fprintf(out, "    let yyMaxShift: ActionCode = %d\n",lemp->nxstate-1);
-  fprintf(out, "    let yyMinShiftReduce: ActionCode = %d\n",lemp->nstate);
+  fprintf(out, "    let yyMaxShift: CitronActionCode = %d\n",lemp->nxstate-1);
+  fprintf(out, "    let yyMinShiftReduce: CitronActionCode = %d\n",lemp->nstate);
   i = lemp->nstate + lemp->nrule;
-  fprintf(out, "    let yyMaxShiftReduce: ActionCode = %d\n", i-1);
-  fprintf(out, "    let yyMinReduce: ActionCode = %d\n", i);
+  fprintf(out, "    let yyMaxShiftReduce: CitronActionCode = %d\n", i-1);
+  fprintf(out, "    let yyMinReduce: CitronActionCode = %d\n", i);
   i = lemp->nstate + lemp->nrule*2;
-  fprintf(out, "    let yyMaxReduce: ActionCode = %d\n", i-1);
-  fprintf(out, "    let yyErrorAction: ActionCode = %d\n", i);
-  fprintf(out, "    let yyAcceptAction: ActionCode = %d\n", i+1);
-  fprintf(out, "    let yyNoAction: ActionCode = %d\n", i+2);
+  fprintf(out, "    let yyMaxReduce: CitronActionCode = %d\n", i-1);
+  fprintf(out, "    let yyErrorAction: CitronActionCode = %d\n", i);
+  fprintf(out, "    let yyAcceptAction: CitronActionCode = %d\n", i+1);
+  fprintf(out, "    let yyNoAction: CitronActionCode = %d\n", i+2);
 
   /* Now output the action table and its associates:
   **
@@ -3628,8 +3628,8 @@ void ReportTable(struct lemon *lemp){
 
   lemp->nactiontab = n = acttab_size(pActtab);
   lemp->tablesize += n*szActionType;
-  fprintf(out,"    let yyNumberOfActionCodes: ActionCode = %d\n\n", n);
-  fprintf(out,"    let yyAction: [ActionCode] = [\n");
+  fprintf(out,"    let yyNumberOfActionCodes: CitronActionCode = %d\n\n", n);
+  fprintf(out,"    let yyAction: [CitronActionCode] = [\n");
   for(i=j=0; i<n; i++){
     int action = acttab_yyaction(pActtab, i);
     if( action<0 ) action = lemp->nstate + lemp->nrule + 2;
@@ -3646,7 +3646,7 @@ void ReportTable(struct lemon *lemp){
 
   /* Output the yy_lookahead table */
   lemp->tablesize += n*szCodeType;
-  fprintf(out, "    let yyLookahead: [SymbolCode] = [\n");
+  fprintf(out, "    let yyLookahead: [CitronSymbolCode] = [\n");
   for(i=j=0; i<n; i++){
     int la = acttab_yylookahead(pActtab, i);
     if( la<0 ) la = lemp->nsymbol;
@@ -3712,7 +3712,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    ]\n\n");
 
   /* Output the default action table */
-  fprintf(out, "    let yyDefault: [ActionCode] = [\n");
+  fprintf(out, "    let yyDefault: [CitronActionCode] = [\n");
   n = lemp->nxstate;
   lemp->tablesize += n*szActionType;
   for(i=j=0; i<n; i++){
@@ -3734,7 +3734,7 @@ void ReportTable(struct lemon *lemp){
 
   if( lemp->has_fallback ){
     fprintf(out, "    let yyHasFallback: Bool = true\n");
-    fprintf(out, "    let yyFallback: [SymbolCode] = [\n");
+    fprintf(out, "    let yyFallback: [CitronSymbolCode] = [\n");
     int mx = lemp->nterminal - 1;
     while( mx>0 && lemp->symbols[mx]->fallback==0 ){ mx--; }
     lemp->tablesize += (mx+1)*szCodeType;
@@ -3750,7 +3750,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    ]\n\n");
   } else {
     fprintf(out, "    let yyHasFallback: Bool = false\n");
-    fprintf(out, "    let yyFallback: [SymbolCode] = []\n\n");
+    fprintf(out, "    let yyFallback: [CitronSymbolCode] = []\n\n");
   }
 
   // Wildcard
@@ -3758,16 +3758,16 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    // Wildcard\n\n");
 
   if( lemp->wildcard ) {
-    fprintf(out, "    let yyWildcard: SymbolCode? = %d\n\n", lemp->wildcard->index);
+    fprintf(out, "    let yyWildcard: CitronSymbolCode? = %d\n\n", lemp->wildcard->index);
   } else {
-    fprintf(out, "    let yyWildcard: SymbolCode? = nil\n\n");
+    fprintf(out, "    let yyWildcard: CitronSymbolCode? = nil\n\n");
   }
 
   // Rules
 
   fprintf(out, "    // Rules\n\n");
 
-  fprintf(out, "    let yyRuleInfo: [(lhs: SymbolCode, nrhs: UInt)] = [\n");
+  fprintf(out, "    let yyRuleInfo: [(lhs: CitronSymbolCode, nrhs: UInt)] = [\n");
   for(rp=lemp->rule; rp; rp=rp->next){
     fprintf(out, "        (lhs: %d, nrhs: %d),\n",rp->lhs->index,rp->nrhs); lineno++;
   }
@@ -3777,7 +3777,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Stack\n\n");
 
-  fprintf(out, "    var yyStack: [(state: Int , symbolCode: SymbolCode, symbol: Symbol)]  = [\n");
+  fprintf(out, "    var yyStack: [(state: Int , symbolCode: CitronSymbolCode, symbol: CitronSymbol)]  = [\n");
   fprintf(out, "        (state: 0, symbolCode: 0, symbol: .yyBaseOfStack)\n");
   fprintf(out, "    ]\n");
   fprintf(out, "    var maxStackSize: Int? = nil\n");
@@ -3787,7 +3787,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Error handling\n\n");
 
-  fprintf(out, "    var onSyntaxError: ((Token, TokenCode) -> Void)? = nil\n\n");
+  fprintf(out, "    var onSyntaxError: ((CitronToken, CitronTokenCode) -> Void)? = nil\n\n");
 
   // Tracing
 
@@ -3821,12 +3821,12 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Function definitions\n\n");
 
-  fprintf(out, "    func yyTokenToSymbol(_ token: Token) -> Symbol {\n");
+  fprintf(out, "    func yyTokenToSymbol(_ token: CitronToken) -> CitronSymbol {\n");
   fprintf(out, "        return .yy0(value: token)\n");
   fprintf(out, "    }\n\n");
 
   /* Generate code which execution during each REDUCE action */
-  fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: Int) throws -> Symbol {\n");
+  fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: Int) throws -> CitronSymbol {\n");
   fprintf(out, "        switch (ruleNumber) {\n");
   int ruleNumberMaxDigits = 0;
   i = lemp->nrule;
@@ -3895,12 +3895,12 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "        fatalError(\"Can't resolve types correctly for invoking code block for rule number \\(ruleNumber)\")\n");
   fprintf(out, "    }\n\n"); // Close func invokeCodeBlockForRule(ruleNumber:)
 
-  fprintf(out, "    private func yySymbolOnStack(distanceFromTop: Int) -> Symbol {\n");
+  fprintf(out, "    private func yySymbolOnStack(distanceFromTop: Int) -> CitronSymbol {\n");
   fprintf(out, "        assert(yyStack.count > distanceFromTop)\n");
   fprintf(out, "        return yyStack[yyStack.count - 1 - distanceFromTop].symbol\n");
   fprintf(out, "    }\n\n");
 
-  fprintf(out, "    func yyUnwrapResultFromSymbol(_ symbol: Symbol) -> Result {\n");
+  fprintf(out, "    func yyUnwrapResultFromSymbol(_ symbol: CitronSymbol) -> CitronResult {\n");
   fprintf(out, "        if case .yy%d(let result) = symbol {\n", dtnum_of_symbol(start_symbol));
   fprintf(out, "            return result\n");
   fprintf(out, "        } else {\n");
