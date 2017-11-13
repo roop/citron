@@ -2295,7 +2295,7 @@ to follow the previous rule.");
         psp->state = IN_RHS;
       }else{
         ErrorMsg(psp->filename,psp->tokenlineno,
-          "Missing \"->\" following: \"%s(%s)\".",
+          "Missing \"::=\" following: \"%s(%s)\".",
            psp->lhs->name,psp->lhsalias);
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_RULE_ERROR;
