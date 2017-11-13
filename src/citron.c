@@ -224,9 +224,6 @@ struct s_options {
   const char *message;
 };
 int    OptInit(char**,struct s_options*,char **,FILE*);
-int    OptNArgs(void);
-char  *OptArg(int);
-void   OptErr(int);
 void   OptPrint(void);
 
 /******** From the file "parse.h" *****************************************/
@@ -2061,33 +2058,6 @@ int OptInit(char **a, struct s_options *o, char **input_filename, FILE *err)
     exit(1);
   }
   return 0;
-}
-
-int OptNArgs(void){
-  int cnt = 0;
-  int dashdash = 0;
-  int i;
-  if( argv!=0 && argv[0]!=0 ){
-    for(i=1; argv[i]; i++){
-      if( dashdash || !ISOPT(argv[i]) ) cnt++;
-      if( strcmp(argv[i],"--")==0 ) dashdash = 1;
-    }
-  }
-  return cnt;
-}
-
-char *OptArg(int n)
-{
-  int i;
-  i = argindex(n);
-  return i>=0 ? argv[i] : 0;
-}
-
-void OptErr(int n)
-{
-  int i;
-  i = argindex(n);
-  if( i>=0 ) errline(i,0,errstream);
 }
 
 void OptPrint(void){
