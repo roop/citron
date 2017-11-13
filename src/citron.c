@@ -3826,7 +3826,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    }\n\n");
 
   /* Generate code which execution during each REDUCE action */
-  fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: Int) -> Symbol {\n");
+  fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: Int) throws -> Symbol {\n");
   fprintf(out, "        switch (ruleNumber) {\n");
   int ruleNumberMaxDigits = 0;
   i = lemp->nrule;
@@ -3857,7 +3857,7 @@ void ReportTable(struct lemon *lemp){
     assert(rp->lhs);
     const char *lhstype = type_string_of_symbol(rp->lhs, lemp);
     assert(lhstype);
-    fprintf(out, ") -> %s {", lhstype);
+    fprintf(out, ") throws -> %s {", lhstype);
     assert(rp->noCode == 0);
     if (rp->code) {
       fprintf(out, "%s", rp->code);
@@ -3876,7 +3876,7 @@ void ReportTable(struct lemon *lemp){
       }
     }
     fprintf(out, " {\n");
-    fprintf(out, "                return .yy%d(value: codeBlockForRule%0*d(",
+    fprintf(out, "                return .yy%d(value: try codeBlockForRule%0*d(",
             rp->lhs->dtnum, ruleNumberMaxDigits, rp->iRule);
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
