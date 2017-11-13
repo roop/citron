@@ -2131,9 +2131,6 @@ enum e_state {
   WAITING_FOR_PRECEDENCE_SYMBOL,
   WAITING_FOR_ARROW,
   IN_RHS,
-  LHS_ALIAS_1,
-  LHS_ALIAS_2,
-  LHS_ALIAS_3,
   RHS_ALIAS_1,
   RHS_ALIAS_2,
   PRECEDENCE_MARK_1,
@@ -2259,44 +2256,15 @@ to follow the previous rule.");
       if( x[0]==':' && x[1]==':' && x[2]=='=' ){
         psp->state = IN_RHS;
       }else if( x[0]=='(' ){
-        psp->state = LHS_ALIAS_1;
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Expected to see a \":\" following the LHS symbol \"%s\", but got \"(\". LHS symbols don't have aliases.",
+          psp->lhs->name);
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
       }else{
         ErrorMsg(psp->filename,psp->tokenlineno,
           "Expected to see a \":\" following the LHS symbol \"%s\".",
           psp->lhs->name);
-        psp->errorcnt++;
-        psp->state = RESYNC_AFTER_RULE_ERROR;
-      }
-      break;
-    case LHS_ALIAS_1:
-      if( ISALPHA(x[0]) ){
-        psp->lhsalias = x;
-        psp->state = LHS_ALIAS_2;
-      }else{
-        ErrorMsg(psp->filename,psp->tokenlineno,
-          "\"%s\" is not a valid alias for the LHS \"%s\"\n",
-          x,psp->lhs->name);
-        psp->errorcnt++;
-        psp->state = RESYNC_AFTER_RULE_ERROR;
-      }
-      break;
-    case LHS_ALIAS_2:
-      if( x[0]==')' ){
-        psp->state = LHS_ALIAS_3;
-      }else{
-        ErrorMsg(psp->filename,psp->tokenlineno,
-          "Missing \")\" following LHS alias name \"%s\".",psp->lhsalias);
-        psp->errorcnt++;
-        psp->state = RESYNC_AFTER_RULE_ERROR;
-      }
-      break;
-    case LHS_ALIAS_3:
-      if( x[0]==':' && x[1]==':' && x[2]=='=' ){
-        psp->state = IN_RHS;
-      }else{
-        ErrorMsg(psp->filename,psp->tokenlineno,
-          "Missing \"::=\" following: \"%s(%s)\".",
-           psp->lhs->name,psp->lhsalias);
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_RULE_ERROR;
       }
