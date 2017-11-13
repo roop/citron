@@ -299,7 +299,7 @@ private extension CitronParser {
     func yyReduce(ruleNumber: Int) throws -> CitronSymbol? {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
-        tracePrint("Reduce with rule [", yyRuleText[ruleNumber], "] and go to state", "\(yyStack[yyStack.count - 1 - Int(yyRuleInfo[ruleNumber].nrhs)].state)")
+        tracePrint("Reducing with rule:", yyRuleText[ruleNumber])
 
         let resultSymbol = try yyInvokeCodeBlockForRule(ruleNumber: ruleNumber)
 
