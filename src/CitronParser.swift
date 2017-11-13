@@ -78,7 +78,7 @@ protocol CitronParser: class {
     var yyErrorAction: CitronActionCode { get } // YY_ERROR_ACTION in lemon
     var yyAcceptAction: CitronActionCode { get } // YY_ACCEPT_ACTION in lemon
     var yyNoAction: CitronActionCode { get } // YY_NO_ACTION in lemon
-    var yyNumberOfActionCodes: CitronActionCode { get } // YY_ACTTAB_COUNT in lemon
+    var yyNumberOfActionCodes: Int { get } // YY_ACTTAB_COUNT in lemon
 
     var yyAction: [CitronActionCode] { get } // yy_action in lemon
 

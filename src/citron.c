@@ -3628,7 +3628,7 @@ void ReportTable(struct lemon *lemp){
 
   lemp->nactiontab = n = acttab_size(pActtab);
   lemp->tablesize += n*szActionType;
-  fprintf(out,"    let yyNumberOfActionCodes: CitronActionCode = %d\n\n", n);
+  fprintf(out,"    let yyNumberOfActionCodes: Int = %d\n\n", n);
   fprintf(out,"    let yyAction: [CitronActionCode] = [\n");
   for(i=j=0; i<n; i++){
     int action = acttab_yyaction(pActtab, i);
