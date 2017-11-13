@@ -324,12 +324,6 @@ private extension CitronParser {
             return nil
         }
     }
-
-    func yyAccept() {
-        tracePrint("Parsing complete")
-        // TODO: assert something about the stack size
-        traceStack()
-    }
 }
 
 // Private helpers
