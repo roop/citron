@@ -223,7 +223,7 @@ struct s_options {
   char *arg;
   const char *message;
 };
-int    OptInit(char**,struct s_options*,char **,FILE*);
+int    OptInit(char**,int,struct s_options*,char **,FILE*);
 void   OptPrint(void);
 
 /******** From the file "parse.h" *****************************************/
@@ -1590,7 +1590,7 @@ int main(int argc, char **argv)
   struct rule *rp;
   char *input_filename = 0;
 
-  OptInit(argv,options,&input_filename,stderr);
+  OptInit(argv,argc,options,&input_filename,stderr);
   if( version ){
      printf("Citron version 1.0\n");
      exit(0);
@@ -1844,6 +1844,7 @@ static char *msort(
 }
 /************************ From the file "option.c" **************************/
 static char **argv;
+static int argc;
 static struct s_options *op;
 static FILE *errstream;
 
@@ -1919,9 +1920,15 @@ static int handleflags(int i, FILE *err, int *skipnext)
     (*(void(*)(int))(op[j].arg))(v);
   }else if( op[j].type==OPT_FSTR ){
     char *string_value = &argv[i][2]; // E.g.: Skip "-x" in "-xarg"
-    if (string_value==0 || string_value[0]==0) {
+    if((string_value==0 || string_value[0]==0) && ((i+1)<argc)) {
       string_value = argv[i+1];
       (*skipnext) = 1;
+    }else{
+      if( err ){
+        fprintf(err,"%smissing argument on switch.\n",emsg);
+        errline(i,1,err);
+      }
+    errcnt++;
     }
     (*(void(*)(char *))(op[j].arg))(string_value);
   }else{
@@ -2024,11 +2031,12 @@ static int handleswitch(int i, FILE *err)
   return errcnt;
 }
 
-int OptInit(char **a, struct s_options *o, char **input_filename, FILE *err)
+int OptInit(char **a, int ac, struct s_options *o, char **input_filename, FILE *err)
 {
   int errcnt = 0;
   int filenamecnt = 0;
   argv = a;
+  argc = ac;
   op = o;
   errstream = err;
   if( argv && *argv && op ){
