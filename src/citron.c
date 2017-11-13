@@ -3595,7 +3595,6 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    let yyInvalidSymbolCode: CitronSymbolCode = %d\n", lemp->nsymbol+1);
   fprintf(out, "    let yyNumberOfStates: Int = %d\n",lemp->nxstate);
-  fprintf(out, "    let yyNumberOfRules: Int = %d\n\n",lemp->nrule);
 
   // Action tables output
 

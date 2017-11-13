@@ -66,7 +66,6 @@ protocol CitronParser: class {
 
     var yyInvalidSymbolCode: CitronSymbolCode { get } // YYNOCODE in lemon
     var yyNumberOfStates: Int { get } // YYNSTATE in lemon
-    var yyNumberOfRules: Int { get } // YNRULE in lemon
 
     // Action tables
 
