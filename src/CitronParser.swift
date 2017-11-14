@@ -224,14 +224,12 @@ private extension CitronParser {
         if (state >= yyMinReduce) {
             return CitronActionCode(state)
         }
-        assert(state <= yyShiftOffsetIndexMax)
         var i: Int = 0
         var lookAhead = la
         while (true) {
-            guard let shiftOffset = yyShiftOffset[safe: state] else { fatalError("Invalid state") }
-            i = shiftOffset
+            assert(state < yyShiftOffset.count)
             assert(lookAhead != yyInvalidSymbolCode)
-            i += Int(lookAhead)
+            i = yyShiftOffset[state] + Int(lookAhead)
             if (i < 0 || i >= yyNumberOfActionCodes || yyLookahead[i] != lookAhead) {
                 // Fallback
                 if let fallback = yyFallback[safe: lookAhead], fallback > 0 {
@@ -261,7 +259,7 @@ private extension CitronParser {
     }
 
     func yyFindReduceAction(state: Int, lookAhead: CitronSymbolCode) -> CitronActionCode {
-        assert(state <= yyReduceOffsetIndexMax)
+        assert(state < yyReduceOffset.count)
         var i = yyReduceOffset[state]
 
         assert(i != yyReduceUseDefault)
