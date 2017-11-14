@@ -3788,7 +3788,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    var isTracingEnabled: Bool = false\n");
 
   /* Generate a table containing the symbolic name of every symbol */
-  fprintf(out, "    let yyTokenName: [String] = [\n");
+  fprintf(out, "    let yySymbolName: [String] = [\n");
   for(i=0; i<lemp->nsymbol; i++){
     lemon_sprintf(line,"\"%s\",",lemp->symbols[i]->name);
     fprintf(out,"        %-15s",line);
