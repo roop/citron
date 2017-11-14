@@ -3664,7 +3664,6 @@ void ReportTable(struct lemon *lemp){
   n = lemp->nxstate;
   while( n>0 && lemp->sorted[n-1]->iTknOfst==NO_OFFSET ) n--;
   fprintf(out, "    let yyShiftUseDefault: Int = %d\n", lemp->nactiontab);
-  fprintf(out, "    let yyShiftOffsetIndexMax: Int = %d\n", n-1);
   fprintf(out, "    let yyShiftOffsetMin: Int = %d\n", mnTknOfst);
   fprintf(out, "    let yyShiftOffsetMax: Int = %d\n", mxTknOfst);
   fprintf(out, "    let yyShiftOffset: [Int] = [\n");
@@ -3689,7 +3688,6 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    let yyReduceUseDefault: Int = %d\n", mnNtOfst-1);
   n = lemp->nxstate;
   while( n>0 && lemp->sorted[n-1]->iNtOfst==NO_OFFSET ) n--;
-  fprintf(out, "    let yyReduceOffsetIndexMax: Int = %d\n", n-1);
   fprintf(out, "    let yyReduceOffsetMin: Int =   %d\n", mnNtOfst);
   fprintf(out, "    let yyReduceOffsetMax: Int =   %d\n", mxNtOfst);
   fprintf(out, "    let yyReduceOffset: [Int] = [\n");

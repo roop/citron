@@ -84,13 +84,11 @@ protocol CitronParser: class {
     var yyLookahead: [CitronSymbolCode] { get } // yy_lookahead in lemon
 
     var yyShiftUseDefault: Int { get } // YY_SHIFT_USE_DFLT in lemon
-    var yyShiftOffsetIndexMax: Int { get } // YY_SHIFT_COUNT in lemon
     var yyShiftOffsetMin: Int { get } // YY_SHIFT_MIN in lemon
     var yyShiftOffsetMax: Int { get } // YY_SHIFT_MAX in lemon
     var yyShiftOffset: [Int] { get } // yy_shift_ofst in lemon
 
     var yyReduceUseDefault: Int { get } // YY_REDUCE_USE_DFLT in lemon
-    var yyReduceOffsetIndexMax: Int { get } // YY_REDUCE_COUNT in lemon
     var yyReduceOffsetMin: Int { get } // YY_REDUCE_MIN in lemon
     var yyReduceOffsetMax: Int { get } // YY_REDUCE_MAX in lemon
     var yyReduceOffset: [Int] { get } // yy_reduce_ofst in lemon
