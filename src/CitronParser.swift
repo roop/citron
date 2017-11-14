@@ -145,7 +145,7 @@ enum CitronParseError<Token, TokenCode>: Error {
 extension CitronParser {
     func consume(token: CitronToken, code tokenCode: CitronTokenCode) throws {
         let symbolCode = tokenCode.rawValue
-        tracePrint("Input:", safeTokenName(at: Int(symbolCode)))
+        tracePrint("Input:", symbolNameFor(code:symbolCode))
         while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: symbolCode)
             if (action <= yyMaxShiftReduce) {
@@ -208,7 +208,7 @@ private extension CitronParser {
     func yyPop() {
         let last = yyStack.popLast()
         if let last = last {
-            tracePrint("Popping", safeTokenName(at: Int(last.symbolCode)))
+            tracePrint("Popping", symbolNameFor(code:last.symbolCode))
         }
     }
 
@@ -226,28 +226,28 @@ private extension CitronParser {
         }
         assert(state <= yyShiftOffsetIndexMax)
         var i: Int = 0
-        var lookAhead = Int(la)
+        var lookAhead = la
         while (true) {
             guard let shiftOffset = yyShiftOffset[safe: state] else { fatalError("Invalid state") }
             i = shiftOffset
             assert(lookAhead != yyInvalidSymbolCode)
-            i += lookAhead
+            i += Int(lookAhead)
             if (i < 0 || i >= yyNumberOfActionCodes || yyLookahead[i] != lookAhead) {
                 // Fallback
                 if let fallback = yyFallback[safe: lookAhead], fallback > 0 {
-                    tracePrint("Fallback:", safeTokenName(at: lookAhead), "=>", safeTokenName(at: Int(fallback)))
+                    tracePrint("Fallback:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code:fallback))
                     precondition((yyFallback[safe: fallback] ?? -1) == 0, "Fallback loop detected")
-                    lookAhead = Int(fallback)
+                    lookAhead = fallback
                     continue
                 }
                 // Wildcard
                 if let yyWildcard = yyWildcard {
-                    let wildcard = Int(yyWildcard)
-                    let j = i - lookAhead + wildcard
-                    if ((yyShiftOffsetMin + wildcard >= 0 || j >= 0) &&
-                        (yyShiftOffsetMax + wildcard < yyNumberOfActionCodes || j < yyNumberOfActionCodes) &&
+                    let wildcard = yyWildcard
+                    let j = i - Int(lookAhead) + Int(wildcard)
+                    if ((yyShiftOffsetMin + Int(wildcard) >= 0 || j >= 0) &&
+                        (yyShiftOffsetMax + Int(wildcard) < yyNumberOfActionCodes || j < yyNumberOfActionCodes) &&
                         (yyLookahead[j] == wildcard && lookAhead > 0)) {
-                        tracePrint("Wildcard:", safeTokenName(at: lookAhead), "=>", safeTokenName(at: wildcard))
+                        tracePrint("Wildcard:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code: wildcard))
                         return yyAction[j]
                     }
                 }
@@ -280,7 +280,7 @@ private extension CitronParser {
             newState += Int(yyMinReduce) - Int(yyMinShiftReduce)
         }
         try yyPush(state: newState, symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
-        tracePrint("Shift:", safeTokenName(at: Int(symbolCode)))
+        tracePrint("Shift:", symbolNameFor(code:symbolCode))
         if (newState < yyNumberOfStates) {
             tracePrint("       and go to state", "\(newState)")
         }
@@ -315,7 +315,7 @@ private extension CitronParser {
         } else {
             let newState = action
             try yyPush(state: Int(newState), symbolCode: lhsSymbolCode, symbol: resultSymbol)
-            tracePrint("Shift:", safeTokenName(at: Int(lhsSymbolCode)))
+            tracePrint("Shift:", symbolNameFor(code:lhsSymbolCode))
             if (newState < yyNumberOfStates) {
                 tracePrint("       and go to state", "\(newState)")
             }
@@ -361,15 +361,16 @@ private extension CitronParser {
         }
     }
 
-    func safeTokenName(at i: Int) -> String {
-        return yySymbolName[safe: i] ?? "(Unknown token)"
+    func symbolNameFor(code i: CitronSymbolCode) -> String {
+        if (i > 0 && i < yySymbolName.count) { return yySymbolName[Int(i)] }
+        return "?"
     }
 
     func traceStack() {
         if (isTracingEnabled) {
             print("STACK contents:")
             for (i, e) in yyStack.enumerated() {
-                print("    \(i): (state: \(e.state), symbol: \(safeTokenName(at: Int(e.symbolCode))) [\(e.symbolCode)])")
+                print("    \(i): (state: \(e.state), symbol: \(symbolNameFor(code:e.symbolCode)) [\(e.symbolCode)])")
             }
         }
     }
