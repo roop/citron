@@ -2401,15 +2401,15 @@ to follow the previous rule.");
         }else if( strcmp(x,"start_symbol")==0 ){
           psp->declargslot = &(psp->gp->start);
           psp->insertLineMacro = 0;
-        }else if( strcmp(x,"left")==0 ){
+        }else if( strcmp(x,"left_associative")==0 ){
           psp->preccounter++;
           psp->declassoc = LEFT;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
-        }else if( strcmp(x,"right")==0 ){
+        }else if( strcmp(x,"right_associative")==0 ){
           psp->preccounter++;
           psp->declassoc = RIGHT;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
-        }else if( strcmp(x,"nonassoc")==0 ){
+        }else if( strcmp(x,"non_associative")==0 ){
           psp->preccounter++;
           psp->declassoc = NONE;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
