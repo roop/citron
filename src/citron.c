@@ -406,7 +406,7 @@ struct lemon {
   int errorcnt;            /* Number of errors */
   struct symbol *wildcard; /* Token that matches anything */
   char *className;         /* Name of the generated parser class */
-  char *extraArgType;      /* Type of the 4th argument to parser */
+  char *extraClassMembers; /* Extra members to be part of the parser class */
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
   char *start;             /* Name of the start symbol for the grammar */
@@ -2389,8 +2389,8 @@ to follow the previous rule.");
         }else if( strcmp(x,"token_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
-        }else if( strcmp(x,"extra_argument_type")==0 ){
-          psp->declargslot = &(psp->gp->extraArgType);
+        }else if( strcmp(x,"extra_class_members")==0 ){
+          psp->declargslot = &(psp->gp->extraClassMembers);
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"token_type")==0 ){
           psp->declargslot = &(psp->gp->tokentype);
@@ -3806,6 +3806,13 @@ void ReportTable(struct lemon *lemp){
     fprintf(out,"\",\n");
   }
   fprintf(out, "    ]\n\n");
+
+  // Extra class members
+
+  if (lemp->extraClassMembers) {
+    fprintf(out, "    // Extra class members\n\n");
+    fprintf(out, "%s\n\n", lemp->extraClassMembers);
+  }
 
   // Function definitions
 
