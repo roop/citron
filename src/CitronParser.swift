@@ -30,6 +30,16 @@ Citron: Modifications to Lemon to generate a parser in Swift
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+
+// This file is part of the Citron parser generator.
+//
+// This file defines the CitronParser protocol. Citron shall
+// auto-generate a class conforming to this protocol based on the input
+// grammar.
+//
+// The CitronParser protocol defined below is compatible with Swift code
+// generated using Citron version 1.x.
+
 protocol CitronParser: class {
 
     // Types
