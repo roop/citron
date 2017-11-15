@@ -3313,10 +3313,10 @@ void print_symbol_enumeration(
   /* Print out the definition of Symbol as a "union"-ish enum */
   fprintf(out,"    enum CitronSymbol {\n");
   fprintf(out,"        case yyBaseOfStack\n");
-  fprintf(out,"        case yy0(value: CitronToken)\n");
+  fprintf(out,"        case yy0(CitronToken)\n");
   for(i=0; i<arraysize; i++){
     if( types[i]==0 ) continue;
-    fprintf(out,"        case yy%d(value: %s)\n",i+1,types[i]);
+    fprintf(out,"        case yy%d(%s)\n",i+1,types[i]);
     free(types[i]);
   }
   free(stddt);
@@ -3820,7 +3820,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    // Function definitions\n\n");
 
   fprintf(out, "    func yyTokenToSymbol(_ token: CitronToken) -> CitronSymbol {\n");
-  fprintf(out, "        return .yy0(value: token)\n");
+  fprintf(out, "        return .yy0(token)\n");
   fprintf(out, "    }\n\n");
 
   /* Generate code which execution during each REDUCE action */
@@ -3874,7 +3874,7 @@ void ReportTable(struct lemon *lemp){
       }
     }
     fprintf(out, " {\n");
-    fprintf(out, "                return .yy%d(value: try codeBlockForRule%0*d(",
+    fprintf(out, "                return .yy%d(try codeBlockForRule%0*d(",
             rp->lhs->dtnum, ruleNumberMaxDigits, rp->iRule);
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
