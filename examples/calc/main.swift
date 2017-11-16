@@ -1,4 +1,6 @@
 
+// Parse tree node type
+
 enum ArithmeticExpression {
     case number(Int)
     indirect case addition(ArithmeticExpression, ArithmeticExpression)
@@ -24,17 +26,51 @@ extension ArithmeticExpression: CustomStringConvertible {
     }
 }
 
-var parser = ArithmeticExpressionParser()
-do {
-    try parser.consume(token: 1, code: .INTEGER)
-    try parser.consume(token: 0, code: .ADD)
-    try parser.consume(token: 2, code: .INTEGER)
-    try parser.consume(token: 0, code: .MULTIPLY)
-    try parser.consume(token: 3, code: .INTEGER)
-    let tree = try parser.endParsing()
-    print("\(tree)")
-} catch {
-    print("Error during parsing")
+// Create parser
+
+let parser = ArithmeticExpressionParser()
+// parser.isTracingEnabled = true
+
+// Create lexer
+
+typealias Lexer = CitronLexer<(token: Int, code: ArithmeticExpressionParser.CitronTokenCode)>
+
+let lexer = Lexer(rules: [
+
+        // Numbers
+
+        .regexPattern("[0-9]+", { str in
+            if let number = Int(str) {
+                return (token: number, code: .INTEGER)
+            }
+            return nil
+        }),
+
+        // Operators
+
+        .string("+", (token: 0, code: .ADD)),
+        .string("-", (token: 0, code: .SUBTRACT)),
+        .string("*", (token: 0, code: .MULTIPLY)),
+        .string("/", (token: 0, code: .DIVIDE)),
+
+        // Whitespace
+
+        .regexPattern("\\s", { _ in nil })
+    ])
+
+// Tokenize and parse
+
+if CommandLine.argc < 2 {
+    print("Pass the expression to be parsed as a quoted argument.")
+} else {
+    let inputString = CommandLine.arguments[1]
+    do {
+        try lexer.tokenize(inputString) { tokenData in
+            try parser.consume(token: tokenData.token, code: tokenData.code)
+        }
+        let tree = try parser.endParsing()
+        print("\(tree)")
+    } catch {
+        print("Error during parsing")
+    }
 }
-
-

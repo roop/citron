@@ -10,7 +10,7 @@ CITRON = ${BIN}/citron
 build: ${NAME}
 
 run: ${NAME}
-	./${NAME}
+	./${NAME} "1 + 2 * 3 - 4"
 
 clean:
 	rm -rf ./${NAME} ${GRAMMAR}.swift ${CITRON}
@@ -21,5 +21,5 @@ ${CITRON}: ${SRC}/citron.c
 ${GRAMMAR}.swift: ${CITRON} ${GRAMMAR}.y
 	${CITRON} -o $@ ${GRAMMAR}.y
 
-${NAME}: ${SRC}/CitronParser.swift ${GRAMMAR}.swift main.swift
+${NAME}: ${SRC}/CitronParser.swift ${SRC}/CitronLexer.swift ${GRAMMAR}.swift main.swift
 	${SWIFTC} $^ -o $@
