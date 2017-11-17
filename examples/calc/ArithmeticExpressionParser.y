@@ -1,12 +1,31 @@
-%class_name ArithmeticExpressionParser
-%token_type Int
-%default_nonterminal_type ArithmeticExpression
+// Name of the output Swift class
 
-// (MULTIPLY, DIVIDE) have higher priority than (ADD, SUBTRACT)
-// All four are defined as left associative.
+%class_name ArithmeticExpressionParser
+
+
+// Type for terminals
+
+%token_type Int
+
+
+// Type for non-terminals
+
+%nonterminal_type root ArithmeticExpression
+%nonterminal_type expr ArithmeticExpression
+
+// The ArithmeticExpression type is defined in main.swift
+
+
+// Associativity and precedences
 
 %left_associative ADD SUBTRACT.
 %left_associative MULTIPLY DIVIDE.
+
+// (MULTIPLY, DIVIDE) have higher precedence than (ADD, SUBTRACT)
+// All four are defined as left associative.
+
+
+// Grammar rules
 
 root ::= expr(a). {
     return a
