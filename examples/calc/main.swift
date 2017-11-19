@@ -33,7 +33,7 @@ let parser = ArithmeticExpressionParser()
 
 // Create lexer
 
-typealias Lexer = CitronLexer<(token: Int, code: ArithmeticExpressionParser.CitronTokenCode)>
+typealias Lexer = CitronLexer<(Int, ArithmeticExpressionParser.CitronTokenCode)>
 
 let lexer = Lexer(rules: [
 
@@ -41,17 +41,17 @@ let lexer = Lexer(rules: [
 
         .regexPattern("[0-9]+", { str in
             if let number = Int(str) {
-                return (token: number, code: .INTEGER)
+                return (number, .INTEGER)
             }
             return nil
         }),
 
         // Operators
 
-        .string("+", (token: 0, code: .ADD)),
-        .string("-", (token: 0, code: .SUBTRACT)),
-        .string("*", (token: 0, code: .MULTIPLY)),
-        .string("/", (token: 0, code: .DIVIDE)),
+        .string("+", (0, .ADD)),
+        .string("-", (0, .SUBTRACT)),
+        .string("*", (0, .MULTIPLY)),
+        .string("/", (0, .DIVIDE)),
 
         // Whitespace
 
@@ -65,8 +65,8 @@ if CommandLine.argc < 2 {
 } else {
     let inputString = CommandLine.arguments[1]
     do {
-        try lexer.tokenize(inputString) { tokenData in
-            try parser.consume(token: tokenData.token, code: tokenData.code)
+        try lexer.tokenize(inputString) { (t, c) in
+            try parser.consume(token: t, code: c)
         }
         let tree = try parser.endParsing()
         print("\(tree)")
