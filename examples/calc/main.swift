@@ -70,7 +70,7 @@ if CommandLine.argc != 2 {
         }
         let tree = try parser.endParsing()
         print("\(tree)")
-    } catch {
-        print("Error during parsing")
+    } catch (let error) {
+        print("Error during parsing: \(error)")
     }
 }
