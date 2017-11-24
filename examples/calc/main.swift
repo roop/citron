@@ -60,7 +60,7 @@ let lexer = Lexer(rules: [
 
 // Tokenize and parse
 
-if CommandLine.argc < 2 {
+if CommandLine.argc != 2 {
     print("Pass the expression to be parsed as a quoted argument.")
 } else {
     let inputString = CommandLine.arguments[1]
