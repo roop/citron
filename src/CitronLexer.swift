@@ -55,7 +55,7 @@ class CitronLexer<TokenData> {
                         if let tokenData = tokenData {
                             try onFound(tokenData)
                         }
-                        index = string.index(index, offsetBy: ruleString.characters.count)
+                        index = string.index(index, offsetBy: ruleString.count)
                         matched = true
                     }
                 case .regex(let ruleRegex, let handler):
@@ -71,7 +71,7 @@ class CitronLexer<TokenData> {
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
                             }
-                            index = string.index(index, offsetBy: matchingString.characters.count)
+                            index = string.index(index, offsetBy: matchingString.count)
                             matched = true
 
                         }
