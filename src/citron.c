@@ -2343,9 +2343,14 @@ to follow the previous rule.");
         }
       }else if( x[0]=='(' && psp->nrhs>0 ){
         psp->state = RHS_ALIAS_1;
-      }else{
+      }else if( x[0]==':' || x[0]=='%' ){
         ErrorMsg(psp->filename,psp->tokenlineno,
           "Illegal character on RHS of rule: \"%s\" (Did you forget to finish the previous rule with a '.'?).",x);
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
+      }else{
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Illegal character on RHS of rule: \"%s\".",x);
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_RULE_ERROR;
       }
