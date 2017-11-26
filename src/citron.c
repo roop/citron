@@ -1641,10 +1641,6 @@ int main(int argc, char **argv)
   for(i=1; ISUPPER(lem.symbols[i]->name[0]); i++);
   lem.nterminal = i;
 
-  /* Make sure all symbols have type definitions. Error out otherwise. */
-  CheckTypeDefinitions(&lem);
-  if( lem.errorcnt ) exit(lem.errorcnt);
-
   /* Assign sequential rule numbers.  Start with 0.  Put rules that have no
   ** reduce action C-code associated with them last, so that the switch()
   ** statement that selects reduction actions will have a smaller jump table.
@@ -1697,6 +1693,10 @@ int main(int argc, char **argv)
 
     /* Generate a report of the parser generated.  (the "y.output" file) */
     if( printReport ) ReportOutput(&lem);
+
+    /* Make sure all symbols have type definitions. Error out otherwise. */
+    CheckTypeDefinitions(&lem);
+    if( lem.errorcnt ) exit(lem.errorcnt);
 
     /* Generate the source code for the parser */
     ReportTable(&lem);
