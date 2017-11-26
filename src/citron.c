@@ -228,7 +228,9 @@ void   OptPrint(void);
 
 /******** From the file "parse.h" *****************************************/
 void Parse(struct lemon *lemp);
+
 void CheckTypeDefinitions(struct lemon *lemp);
+void CheckCodeBlocks(struct lemon *lemp);
 
 /********* From the file "plink.h" ***************************************/
 struct plink *Plink_new(void);
@@ -1696,6 +1698,9 @@ int main(int argc, char **argv)
 
     /* Make sure all symbols have type definitions. Error out otherwise. */
     CheckTypeDefinitions(&lem);
+
+    /* Make sure all rules have code blocks. Error out otherwise. */
+    CheckCodeBlocks(&lem);
     if( lem.errorcnt ) exit(lem.errorcnt);
 
     /* Generate the source code for the parser */
@@ -2786,6 +2791,17 @@ void CheckTypeDefinitions(struct lemon *lemp) {
 "Type for one or more nonterminals is undefined. Please use \
 %%nonterminal_type or %%default_nonterminal_type to define them.");
     lemp->errorcnt++;
+  }
+}
+
+void CheckCodeBlocks(struct lemon *lemp) {
+  struct rule *rp;
+  for(rp=lemp->rule; rp; rp=rp->next){
+    if ( rp->noCode || rp->code==0 ) {
+      ErrorMsg(lemp->filename, rp->ruleline,
+"Rule should be followed by a code block.");
+      lemp->errorcnt++;
+    }
   }
 }
 
