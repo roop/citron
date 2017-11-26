@@ -2169,8 +2169,6 @@ struct pstate {
   struct rule *lastrule;     /* Pointer to the most recently parsed rule */
 };
 
-static const char *type_string_of_symbol(struct symbol *sp, struct lemon *lemp);
-
 /* Parse a single token */
 static void parseonetoken(struct pstate *psp)
 {
@@ -2191,11 +2189,6 @@ static void parseonetoken(struct pstate *psp)
       if( x[0]=='%' ){
         psp->state = WAITING_FOR_DECL_KEYWORD;
       }else if( ISLOWER(x[0]) ){
-        if ( psp->prevrule!=0 && psp->prevrule->code == 0) {
-          ErrorMsg(psp->filename,psp->prevrule->ruleline,
-"Rule is not followed by a code block.");
-          psp->errorcnt++;
-        }
         psp->lhs = Symbol_new(x);
         psp->nrhs = 0;
         psp->lhsalias = 0;
