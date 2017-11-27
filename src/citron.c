@@ -1701,10 +1701,11 @@ int main(int argc, char **argv)
 
     /* Make sure all rules have code blocks. Error out otherwise. */
     CheckCodeBlocks(&lem);
-    if( lem.errorcnt ) exit(lem.errorcnt);
 
     /* Generate the source code for the parser */
-    ReportTable(&lem);
+    if( lem.errorcnt==0 ) {
+      ReportTable(&lem);
+    }
   }
   if( statistics ){
     printf("Parser statistics:\n");
@@ -1714,8 +1715,10 @@ int main(int argc, char **argv)
     stats_line("rules", lem.nrule);
     stats_line("states", lem.nxstate);
     stats_line("conflicts", lem.nconflict);
-    stats_line("action table entries", lem.nactiontab);
-    stats_line("total table size (bytes)", lem.tablesize);
+    if ( lem.errorcnt==0 ) {
+      stats_line("action table entries", lem.nactiontab);
+      stats_line("total table size (bytes)", lem.tablesize);
+    }
   }
   if( lem.nconflict > 0 ){
     fprintf(stderr,"%d parsing conflicts.\n",lem.nconflict);
