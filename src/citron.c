@@ -2392,7 +2392,7 @@ to follow the previous rule.");
           psp->declargslot = &(psp->gp->preface);
         }else if( strcmp(x,"epilogue")==0 ){
           psp->declargslot = &(psp->gp->epilogue);
-        }else if( strcmp(x,"token_prefix")==0 ){
+        }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"extra_class_members")==0 ){
@@ -2415,7 +2415,7 @@ to follow the previous rule.");
           psp->preccounter++;
           psp->declassoc = RIGHT;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
-        }else if( strcmp(x,"non_associative")==0 ){
+        }else if( strcmp(x,"nonassociative")==0 ){
           psp->preccounter++;
           psp->declassoc = NONE;
           psp->state = WAITING_FOR_PRECEDENCE_SYMBOL;
