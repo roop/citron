@@ -42,6 +42,15 @@ SQL statements in SQLite.
 [Lemon]: https://www.hwaci.com/sw/lemon/lemon.html
 [Richard Hipp]: http://www.hwaci.com/drh/
 
+## Requirements
+
+Using Citron requires Swift 4. The parser has no dependancies other than
+the [Swift Standard Library][stdlib]. The lexer is dependant on
+[Foundation][foundation] for the use of regular expressions.
+
+[stdlib]: https://developer.apple.com/documentation/swift
+[foundation]: https://developer.apple.com/documentation/foundation
+
 ## Using Citron
 
 To make use of Citron, you should:
