@@ -178,7 +178,7 @@ For example, we could represent the terminals in the above grammar with
 an enum like this:
 
 ~~~ Swift
-enum FunctionToken {
+enum Token {
     case keyword // for FUNC, THROWS, INOUT, etc.
     case punctuation // for (, ), ->, etc.
     case identifier(String) // for IDENTIFIER
@@ -225,8 +225,8 @@ this:
 The sematic type for all terminals, and the semantic type for each
 non-terminal should be specified in the Citron grammar file.
 
-It's a good practice to keep the type specifications of nonterminals
-closer to the rules that use these nonterminals, so that the code blocks
+It's a good practice to keep the type specifications of non-terminals
+closer to the rules that use these non-terminals, so that the code blocks
 for the rules are easier to read.
 
 We can place the type definitions anywhere in our project, and should
@@ -297,11 +297,12 @@ parser is compiled.
 The code blocks are a great way to build a data structure (usually a
 parse tree) representing the parsed data. Typically, the code block for
 a rule builds the data structure representing the LHS symbol of the
-rule. This data structure will eventually get passed as input to code
-blocks of rules that use this rule's LHS symbol in the RHS, and thereby
-get incorporated into higher level data structures (in case of a
-parse-tree, higher level nodes). Finally, the start symbol's code block
-returns the complete data structure representing the whole input data.
+rule. This data structure will eventually get passed as input to a code
+block of a rule that uses this rule's LHS symbol in the RHS, and thereby
+get incorporated into a higher level data structure (in case of a
+parse-tree, a higher level node i.e. a node closer to the root of the
+tree). Finally, a start symbol rule's code block shall return the
+complete data structure representing the whole input data.
 
 ## Directives
 
@@ -550,8 +551,8 @@ grammar.
 
 Specifies that a nonterminal should be treated as a set of tokens.
 
-For example, in the above grammar, the `throws_clause` nonterminal would
-have to be defined like this, along with type specifications and code
+For example, in the above grammar, the `throws_clause` nonterminal might
+get defined like this, along with type specifications and code
 blocks:
 
 ~~~ Text
