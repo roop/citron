@@ -126,10 +126,10 @@ func_name ::= IDENTIFIER.
 
 func_signature ::= param_clause.
 func_signature ::= param_clause func_result.
-func_signature ::= param_clause throw_clause func_result.
-func_signature ::= param_clause throw_clause.
-throw_clause ::= THROWS.
-throw_clause ::= RETHROWS.
+func_signature ::= param_clause throws_clause func_result.
+func_signature ::= param_clause throws_clause.
+throws_clause ::= THROWS.
+throws_clause ::= RETHROWS.
 func_result ::= FUNC_ARROW type.
 
 param_clause ::= L_BR R_BR.
@@ -550,21 +550,21 @@ grammar.
 
 Specifies that a nonterminal should be treated as a set of tokens.
 
-For example, in the above grammar, the `throw_clause` nonterminal would
+For example, in the above grammar, the `throws_clause` nonterminal would
 have to be defined like this, along with type specifications and code
 blocks:
 
 ~~~ Text
-%nonterminal_type throw_clause FunctionToken // same as %token_type
+%nonterminal_type throws_clause FunctionToken // same as %token_type
 
-throw_clause ::= THROWS(t). { return t }
-throw_clause ::= RETHROWS(t). { return t }
+throws_clause ::= THROWS(t). { return t }
+throws_clause ::= RETHROWS(t). { return t }
 ~~~
 
 You can replace all those lines with a token set specification like
 this:
 
 ~~~ Text
-%token_set throw_clause THROWS | RETHROWS.
+%token_set throws_clause THROWS | RETHROWS.
 ~~~
 
