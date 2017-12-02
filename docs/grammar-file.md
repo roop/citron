@@ -62,8 +62,8 @@ Some parser generators ([Bison][bison_literal_token] for example) allow
 literal characters and strings to be directly used in a grammar rule,
 but Citron does not. In Citron, all terminals should be named.
 
-We also call terminals as tokens. Some Citron directives and
-types use the term "token" to denote terminal symbols.
+We also call terminals as tokens. Citron directives
+use the term "token" to denote a terminal symbol.
 
 [term-non-term]: https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols
 [cfg]: https://en.wikipedia.org/wiki/Context-free_grammar
