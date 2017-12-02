@@ -84,12 +84,12 @@ class CitronLexer<TokenData> {
                 }
             }
             if (!matched) {
-                throw CitronLexerError.unrecognizedCharacter(in: string, at: index)
+                throw CitronLexerError.noMatchingRuleAt(index: index, in: string)
             }
         }
     }
 }
 
 enum CitronLexerError: Error {
-    case unrecognizedCharacter(in: String, at: String.Index)
+    case noMatchingRuleAt(index: String.Index, in: String)
 }
