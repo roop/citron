@@ -1,6 +1,6 @@
 
 GRAMMAR = ArithmeticExpressionParser
-NAME = calc
+NAME = expr
 CC = clang
 SWIFTC = swiftc
 BIN = ../../bin
