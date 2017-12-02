@@ -137,12 +137,12 @@ protocol CitronParser: class {
 
     // Error handling
 
-    typealias CitronError = CitronParseError<CitronToken, CitronTokenCode>
+    typealias CitronParserError = _CitronParserError<CitronToken, CitronTokenCode>
 }
 
 // Error handling
 
-enum CitronParseError<Token, TokenCode>: Error {
+enum _CitronParserError<Token, TokenCode>: Error {
     case syntaxErrorAt(token: Token, tokenCode: TokenCode)
     case unexpectedEndOfInput
     case stackOverflow
@@ -164,7 +164,7 @@ extension CitronParser {
                 assert(resultSymbol == nil) // Can be non-nil only in endParsing()
                 continue
             } else if (action == yyErrorAction) {
-                throw CitronError.syntaxErrorAt(token: token, tokenCode: tokenCode)
+                throw CitronParserError.syntaxErrorAt(token: token, tokenCode: tokenCode)
             } else {
                 fatalError("Unexpected action")
             }
@@ -185,7 +185,7 @@ extension CitronParser {
                 }
                 continue
             } else if (action == yyErrorAction) {
-                throw CitronError.unexpectedEndOfInput
+                throw CitronParserError.unexpectedEndOfInput
             } else {
                 fatalError("Unexpected action")
             }
@@ -208,7 +208,7 @@ private extension CitronParser {
     func yyPush(state: Int, symbolCode: CitronSymbolCode, symbol: CitronSymbol) throws {
         if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
             // Can't grow stack anymore
-            throw CitronError.stackOverflow
+            throw CitronParserError.stackOverflow
         }
         yyStack.append((state: state, symbolCode: symbolCode, symbol: symbol))
     }
