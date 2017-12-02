@@ -186,7 +186,7 @@ enum FunctionToken {
 ~~~
 
 We can specify that the semantic type for all terminals is
-`FunctionToken` by using the [%token_type](#token-type) directive in the
+`FunctionToken` by using the [%token_type](#token_type) directive in the
 grammar file, like this:
 
 ~~~ Text
@@ -207,7 +207,7 @@ struct FunctionParameter {
 ~~~
 
 We can specify that the semantic type for the non-terminal `param` is
-`FunctionParameter` by using the [%nonterminal_type](nonterminal_type)
+`FunctionParameter` by using the [%nonterminal_type](#nonterminal_type)
 directive in the grammar file, like this:
 
 ~~~ Text
