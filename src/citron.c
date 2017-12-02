@@ -3890,8 +3890,11 @@ void ReportTable(struct lemon *lemp){
         is_first_rhs_item = 0;
       }
     }
-    fprintf(out, " {\n");
-    fprintf(out, "                return .yy%d(try codeBlockForRule%0*d(",
+    int has_aliased_rhs_items = (is_first_rhs_item == 0);
+    if (has_aliased_rhs_items) {
+        fprintf(out, " {\n    "); // Open if case
+    }
+    fprintf(out, "            return .yy%d(try codeBlockForRule%0*d(",
             rp->lhs->dtnum, ruleNumberMaxDigits, rp->iRule);
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
@@ -3902,7 +3905,9 @@ void ReportTable(struct lemon *lemp){
       }
     }
     fprintf(out, "))\n");
-    fprintf(out, "            }\n"); // Close if case
+    if (has_aliased_rhs_items) {
+        fprintf(out, "            }\n"); // Close if case
+    }
   }
   fprintf(out, "        default:\n");
   fprintf(out, "            fatalError(\"Can't invoke code block for rule number \\(ruleNumber) - no such rule\")\n");
