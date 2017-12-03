@@ -87,3 +87,9 @@ A few examples of how Citron is used for parsing can be found in the
 ["examples" folder][eg] in the project repository.
 
 [eg]: https://github.com/roop/citron/tree/master/examples/
+
+## See also
+
+  - _[Introducing Citron]_: A quick overview of Citron and how to use it
+
+[Introducing Citron]: http://roopc.net/posts/2017/introducing-citron/
