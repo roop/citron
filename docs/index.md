@@ -17,13 +17,13 @@ grammar, Citron creates a reentrant type-safe parser in Swift.
 
   - **Reentrant**
 
-    You can have different instances of a Citron-generated parser class
+    We can have different instances of a Citron-generated parser class
     in the same program, and the different instances can be used
-    concurrently. You can also have different Citron-generated parser
+    concurrently. We can also have different Citron-generated parser
     classes in the same program, and instances of those classes can be
     used concurrently.
 
-    However, you should not access the same instance of a parser class
+    However, we should not access the same instance of a parser class
     from multiple threads at the same time (i.e. Citron-generated
     parsers are not thread-safe).
 
@@ -53,7 +53,7 @@ the [Swift Standard Library][stdlib]. The lexer is dependant on
 
 ## Using Citron
 
-To make use of Citron, you should:
+To make use of Citron, we should:
 
  1. Create a grammar file
 
@@ -66,7 +66,7 @@ To make use of Citron, you should:
 
  2. Generate the parser
 
-    To generate a parser, you should compile Citron and then run Citron
+    To generate a parser, we should compile Citron and then run Citron
     on the grammar file.
 
     See [_Generating the parser_](generating-the-parser/) for the
@@ -74,12 +74,12 @@ To make use of Citron, you should:
 
  3. Use the parser
 
-    You can then use the parser class in your code, and provide it with
-    inputs. You can optionally use Citron's lexer to generate the inputs
+    We can then use the parser class in our code, and provide it with
+    inputs. We can optionally use Citron's lexer to generate the inputs
     for the parser.
 
     See [_The Parsing Interface_](parsing-interface/) for information on
-    how your code should use the parser.
+    how we can use the parser in our code.
 
 ## Examples
 
