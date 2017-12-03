@@ -1,10 +1,9 @@
 
 # Citron
 
-Citron is an LALR parser generator for Swift.
-
-Given an input grammar file, Citron helps you create a parser for inputs
-conforming to that grammar.
+[Citron](http://roopc.net/citron/) is an LALR parser generator for
+Swift. For a given input grammar, Citron creates a reentrant type-safe
+parser in Swift.
 
 Citron's parser generation engine is based on [Lemon].
 
