@@ -61,7 +61,7 @@ To make use of Citron, you should:
     Citron to create a parser. It contains grammar rules, code blocks
     associated with the rules and Citron directives.
 
-    See _The Citron Grammar File_ for information on how to write a
+    See [_The Citron Grammar File_](grammar-file/) for information on how to write a
     grammar file.
 
  2. Generate the parser
