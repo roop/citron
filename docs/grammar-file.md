@@ -304,6 +304,10 @@ parse-tree, a higher level node i.e. a node closer to the root of the
 tree). Finally, a start symbol rule's code block shall return the
 complete data structure representing the whole input data.
 
+Once we have the grammar rules, type specifications and code blocks, we
+can ask Citron to [generate a parser](/citron/generating-the-parser/)
+for us.
+
 ## Directives
 
 ### Type specification

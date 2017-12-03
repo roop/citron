@@ -61,16 +61,16 @@ To make use of Citron, you should:
     Citron to create a parser. It contains grammar rules, code blocks
     associated with the rules and Citron directives.
 
-    See [_The Citron Grammar File_](grammar-file/) for information on how to write a
-    grammar file.
+    See [_The Citron Grammar File_](grammar-file/) for information on
+    how to write a grammar file.
 
  2. Generate the parser
 
     To generate a parser, you should compile Citron and then run Citron
     on the grammar file.
 
-    See _Generating the parser_ for the commands that can accomplish
-    this.
+    See [_Generating the parser_](generating-the-parser/) for the
+    commands that can accomplish this.
 
  3. Use the parser
 
@@ -78,6 +78,12 @@ To make use of Citron, you should:
     inputs. You can optionally use Citron's lexer to generate the inputs
     for the parser.
 
-    See _The Parsing Interface_ for information on how your code should
-    use the parser.
+    See [_The Parsing Interface_](parsing-interface/) for information on
+    how your code should use the parser.
 
+## Examples
+
+A few examples of how Citron is used for parsing can be found in the
+["examples" folder][eg] in the project repository.
+
+[eg]: https://github.com/roop/citron/tree/master/examples/
