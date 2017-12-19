@@ -284,12 +284,13 @@ private extension CitronParser {
         var newState = yyNewState
         if (newState > yyMaxShift) {
             newState += Int(yyMinReduce) - Int(yyMinShiftReduce)
-        }
-        try yyPush(state: newState, symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
-        tracePrint("Shift:", symbolNameFor(code:symbolCode))
-        if (newState < yyNumberOfStates) {
+            tracePrint("ShiftReduce: Shift", symbolNameFor(code:symbolCode))
+            tracePrint("       and reduce with rule: ", "\(newState - Int(yyMinReduce))")
+        } else if (newState < yyNumberOfStates) {
+            tracePrint("Shift: Shift", symbolNameFor(code:symbolCode))
             tracePrint("       and go to state", "\(newState)")
         }
+        try yyPush(state: newState, symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
     }
 
     // yyReduce: Reduces using the specified rule number.
