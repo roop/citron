@@ -414,6 +414,7 @@ struct lemon {
   char *start;             /* Name of the start symbol for the grammar */
   char *preface;           /* Code to put at the start of the generated file */
   char *epilogue;          /* Code to put at the end of the generated file */
+  char *defaultCodeBlock;  /* Code to use as the default code block */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the .h file */
@@ -2392,6 +2393,8 @@ to follow the previous rule.");
           psp->declargslot = &(psp->gp->preface);
         }else if( strcmp(x,"epilogue")==0 ){
           psp->declargslot = &(psp->gp->epilogue);
+        }else if( strcmp(x,"default_code_block")==0 ){
+          psp->declargslot = &(psp->gp->defaultCodeBlock);
         }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -2798,6 +2801,9 @@ void CheckTypeDefinitions(struct lemon *lemp) {
 }
 
 void CheckCodeBlocks(struct lemon *lemp) {
+  if (lemp->defaultCodeBlock != 0) {
+    return;
+  }
   struct rule *rp;
   for(rp=lemp->rule; rp; rp=rp->next){
     if ( rp->noCode || rp->code==0 ) {
@@ -3864,9 +3870,11 @@ void ReportTable(struct lemon *lemp){
     const char *lhstype = type_string_of_symbol(rp->lhs, lemp);
     assert(lhstype);
     fprintf(out, ") throws -> %s {", lhstype);
-    assert(rp->noCode == 0);
+    assert(rp->noCode == 0 || lemp->defaultCodeBlock != 0);
     if (rp->code) {
       fprintf(out, "%s", rp->code);
+    } else if (lemp->defaultCodeBlock) {
+      fprintf(out, "%s", lemp->defaultCodeBlock);
     }
     fprintf(out, " }\n");
     is_first_rhs_item = 1;
