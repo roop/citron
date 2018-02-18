@@ -106,6 +106,7 @@ protocol CitronParser: class {
     var yyStack: [(stateOrRule: CitronStateOrRule, symbolCode: CitronSymbolCode,
         symbol: CitronSymbol)] { get set }
     var maxStackSize: Int? { get set }
+    var maxAttainedStackSize: Int { get set }
 
     // Tracing
 
@@ -218,6 +219,9 @@ private extension CitronParser {
             throw CitronParserError.stackOverflow
         }
         yyStack.append((stateOrRule: stateOrRule, symbolCode: symbolCode, symbol: symbol))
+        if (maxAttainedStackSize < yyStack.count) {
+            maxAttainedStackSize = yyStack.count
+        }
     }
 
     func yyPop() {

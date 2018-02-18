@@ -3786,6 +3786,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "        (stateOrRule: .state(0), symbolCode: 0, symbol: .yyBaseOfStack)\n");
   fprintf(out, "    ]\n");
   fprintf(out, "    var maxStackSize: Int? = nil\n");
+  fprintf(out, "    var maxAttainedStackSize: Int = 0\n");
 
   // Tracing
 
