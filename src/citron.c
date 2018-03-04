@@ -2449,14 +2449,14 @@ to follow the previous rule.");
     case WAITING_FOR_DATATYPE_SYMBOL:
       if( !ISALPHA(x[0]) ){
         ErrorMsg(psp->filename,psp->tokenlineno,
-          "Symbol name missing after %%type keyword");
+          "Symbol name missing after %%nonterminal_type keyword");
         psp->errorcnt++;
         psp->state = RESYNC_AFTER_DECL_ERROR;
       }else{
         struct symbol *sp = Symbol_find(x);
         if((sp) && (sp->datatype)){
           ErrorMsg(psp->filename,psp->tokenlineno,
-            "Symbol %%type \"%s\" already defined", x);
+            "Symbol %%nonterminal_type \"%s\" already defined", x);
           psp->errorcnt++;
           psp->state = RESYNC_AFTER_DECL_ERROR;
         }else{
