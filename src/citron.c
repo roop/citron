@@ -293,6 +293,7 @@ struct symbol {
   int dtnum;               /* The data type number.  In the parser, the value
                            ** stack is a union.  The .yy%d element of this
                            ** union is the correct data type for this object */
+  const char *code;              /* Default code block. Only used if type==NONTERMINAL */
   /* The following fields are used by MULTITERMINALs only */
   int nsubsym;             /* Number of constituent symbols in the MULTI */
   struct symbol **subsym;  /* Array of constituent symbols */
@@ -411,10 +412,10 @@ struct lemon {
   char *extraClassMembers; /* Extra members to be part of the parser class */
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
+  const char *defaultCodeBlock;  /* Code to use as the default code block for default-typed non-terminals */
   char *start;             /* Name of the start symbol for the grammar */
   char *preface;           /* Code to put at the start of the generated file */
   char *epilogue;          /* Code to put at the end of the generated file */
-  char *defaultCodeBlock;  /* Code to use as the default code block */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the .h file */
@@ -2168,6 +2169,9 @@ struct pstate {
   struct symbol *rhs[MAXRHS];  /* RHS symbols */
   const char *alias[MAXRHS]; /* Aliases for each RHS symbol (or NULL) */
   struct rule *prevrule;     /* Previous rule parsed */
+  struct symbol *prevnonterminaltype;   /* Previous nonterminal_type parsed */
+  int is_prev_decl_default_nonterminal_type; /* True if the previous parsed construct
+                                                was %default_nonterminal_type */
   const char *declkeyword;   /* Keyword of a declaration */
   char **declargslot;        /* Where the declaration argument should be put */
   int insertLineMacro;       /* Add #line before declaration insert */
@@ -2193,6 +2197,8 @@ static void parseonetoken(struct pstate *psp)
       psp->preccounter = 0;
       psp->firstrule = psp->lastrule = 0;
       psp->gp->nrule = 0;
+      psp->prevnonterminaltype = 0;
+      psp->is_prev_decl_default_nonterminal_type = 0;
       /* Fall thru to next case */
     case WAITING_FOR_DECL_OR_RULE:
       if( x[0]=='%' ){
@@ -2203,20 +2209,44 @@ static void parseonetoken(struct pstate *psp)
         psp->lhsalias = 0;
         psp->state = WAITING_FOR_ARROW;
       }else if( x[0]=='{' ){
-        if( psp->prevrule==0 ){
+        if( psp->prevrule==0 && psp->prevnonterminaltype == 0 && psp->is_prev_decl_default_nonterminal_type == 0){
           ErrorMsg(psp->filename,psp->tokenlineno,
 "There is no prior rule upon which to attach the code \
 block which begins on this line.");
           psp->errorcnt++;
-        }else if( psp->prevrule->code!=0 ){
-          ErrorMsg(psp->filename,psp->tokenlineno,
-"Code block beginning on this line is not the first \
-to follow the previous rule.");
-          psp->errorcnt++;
-        }else{
-          psp->prevrule->line = psp->tokenlineno;
-          psp->prevrule->code = &x[1];
-          psp->prevrule->noCode = 0;
+        } else if (psp->prevrule != 0) {
+            if (psp->prevrule->code!=0){
+              ErrorMsg(psp->filename,psp->tokenlineno,
+    "Code block beginning on this line is not the first \
+    to follow the previous rule.");
+              psp->errorcnt++;
+            } else {
+              psp->prevrule->line = psp->tokenlineno;
+              psp->prevrule->code = &x[1];
+              psp->prevrule->noCode = 0;
+            }
+        } else if (psp->prevnonterminaltype != 0) {
+            if (psp->prevnonterminaltype->code!=0){
+              ErrorMsg(psp->filename,psp->tokenlineno,
+    "Code block beginning on this line is not the first \
+    to follow the nonterminal_type declaration.");
+              psp->errorcnt++;
+            } else {
+              psp->prevnonterminaltype->code = &x[1];
+            }
+            psp->prevnonterminaltype = 0;
+        } else if (psp->is_prev_decl_default_nonterminal_type != 0) {
+            if (psp->gp->vartype!=0){
+                if (psp->gp->defaultCodeBlock!=0){
+                  ErrorMsg(psp->filename,psp->tokenlineno,
+        "Code block beginning on this line is not the first \
+        to follow the default_nonterminal_type declaration.");
+                  psp->errorcnt++;
+                } else {
+                  psp->gp->defaultCodeBlock = &x[1];
+                }
+            }
+            psp->is_prev_decl_default_nonterminal_type = 0;
         }
       }else if( x[0]=='[' ){
         psp->state = PRECEDENCE_MARK_1;
@@ -2393,8 +2423,6 @@ to follow the previous rule.");
           psp->declargslot = &(psp->gp->preface);
         }else if( strcmp(x,"epilogue")==0 ){
           psp->declargslot = &(psp->gp->epilogue);
-        }else if( strcmp(x,"default_code_block")==0 ){
-          psp->declargslot = &(psp->gp->defaultCodeBlock);
         }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -2407,6 +2435,7 @@ to follow the previous rule.");
         }else if( strcmp(x,"default_nonterminal_type")==0 ){
           psp->declargslot = &(psp->gp->vartype);
           psp->insertLineMacro = 0;
+          psp->is_prev_decl_default_nonterminal_type = 1;
         }else if( strcmp(x,"start_symbol")==0 ){
           psp->declargslot = &(psp->gp->start);
           psp->insertLineMacro = 0;
@@ -2465,6 +2494,7 @@ to follow the previous rule.");
           }
           psp->declargslot = &sp->datatype;
           psp->insertLineMacro = 0;
+          psp->prevnonterminaltype = sp;
           psp->state = WAITING_FOR_DECL_ARG;
         }
       }
@@ -2801,16 +2831,15 @@ void CheckTypeDefinitions(struct lemon *lemp) {
 }
 
 void CheckCodeBlocks(struct lemon *lemp) {
-  if (lemp->defaultCodeBlock != 0) {
-    return;
-  }
   struct rule *rp;
-  for(rp=lemp->rule; rp; rp=rp->next){
-    if ( rp->noCode || rp->code==0 ) {
-      ErrorMsg(lemp->filename, rp->ruleline,
+  for(rp=lemp->rule; rp; rp=rp->next) {
+    if (rp->code != 0) { continue; } // Rule has code block
+    if (rp->lhs->datatype != 0 && rp->lhs->code != 0) { continue; } // Rule's lhs nonterminal has default code block
+    if (rp->lhs->datatype == 0 && // Rule's lhs nonterminal doesn't have type definition
+        lemp->defaultCodeBlock != 0) { continue; } // and default_nonterminal_type has default code block
+  ErrorMsg(lemp->filename, rp->ruleline,
 "Rule should be followed by a code block.");
-      lemp->errorcnt++;
-    }
+  lemp->errorcnt++;
   }
 }
 
@@ -3837,8 +3866,23 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "        return .yy0(token)\n");
   fprintf(out, "    }\n\n");
 
+
   /* Generate code which execution during each REDUCE action */
   fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: CitronRuleNumber) throws -> CitronSymbol {\n");
+  if (lemp->vartype && lemp->defaultCodeBlock) {
+    fprintf(out, "        func defaultCodeBlockForDefaultNonterminalType() -> %s {", lemp->vartype);
+    fprintf(out, "%s", lemp->defaultCodeBlock);
+    fprintf(out, "        }\n");
+  }
+  for (i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
+    struct symbol *sp = lemp->symbols[i];
+    if (sp->type==NONTERMINAL && sp->datatype != 0 && sp->code != 0) {
+      fprintf(out, "        func defaultCodeBlockForType%d() -> %s {", sp->dtnum, sp->datatype);
+      fprintf(out, "%s", sp->code);
+      fprintf(out, "        }\n");
+    }
+  }
+
   fprintf(out, "        switch (ruleNumber) {\n");
   int ruleNumberMaxDigits = 0;
   i = lemp->nrule;
@@ -3870,11 +3914,12 @@ void ReportTable(struct lemon *lemp){
     const char *lhstype = type_string_of_symbol(rp->lhs, lemp);
     assert(lhstype);
     fprintf(out, ") throws -> %s {", lhstype);
-    assert(rp->noCode == 0 || lemp->defaultCodeBlock != 0);
     if (rp->code) {
       fprintf(out, "%s", rp->code);
-    } else if (lemp->defaultCodeBlock) {
-      fprintf(out, "%s", lemp->defaultCodeBlock);
+    } else if (rp->lhs->datatype && rp->lhs->code) {
+      fprintf(out, " return defaultCodeBlockForType%d() ", rp->lhs->dtnum);
+    } else if (rp->lhs->datatype == 0 && lemp->defaultCodeBlock) {
+      fprintf(out, " return defaultCodeBlockForDefaultNonterminalType() ");
     }
     fprintf(out, " }\n");
     is_first_rhs_item = 1;
@@ -4357,6 +4402,7 @@ struct symbol *Symbol_new(const char *x)
     sp->destLineno = 0;
     sp->datatype = 0;
     sp->useCnt = 0;
+    sp->code = 0;
     Symbol_insert(sp,sp->name);
   }
   sp->useCnt++;

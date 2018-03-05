@@ -19,7 +19,7 @@
 
 %nonterminal_type func_header FunctionHeader
 // FunctionHeader is defined in main.swift
-%nonterminal_type func_name TypeIdentifier
+%nonterminal_type func_name TypeIdentifier { return "" }
 %nonterminal_type func_signature "([FunctionParameter], FunctionHeader.Throwability, TypeIdentifier)"
 
 func_header ::= FUNC func_name(n) func_signature(sig). {
