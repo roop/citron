@@ -38,23 +38,23 @@ func parseFunctionHeader(input: String) -> FunctionHeader? {
 
             // Keywords
 
-            .string("func", (.keyword, .FUNC)),
-            .string("throws", (.keyword, .THROWS)),
-            .string("rethrows", (.keyword, .RETHROWS)),
-            .string("inout", (.keyword, .INOUT)),
+            .string("func", (.keyword, .funcHeaderKeywordFunc)),
+            .string("throws", (.keyword, .funcHeaderKeywordThrows)),
+            .string("rethrows", (.keyword, .funcHeaderKeywordRethrows)),
+            .string("inout", (.keyword, .funcHeaderKeywordInout)),
 
             // Punctuations
 
-            .string("->", (.punctuation, .FUNC_ARROW)),
-            .string("(", (.punctuation, .L_BR)),
-            .string(")", (.punctuation, .R_BR)),
-            .string(",", (.punctuation, .COMMA)),
-            .string(":", (.punctuation, .COLON)),
+            .string("->", (.punctuation, .funcHeaderArrow)),
+            .string("(", (.punctuation, .funcHeaderOpenBracket)),
+            .string(")", (.punctuation, .funcHeaderCloseBracket)),
+            .string(",", (.punctuation, .funcHeaderComma)),
+            .string(":", (.punctuation, .funcHeaderColon)),
 
             // Identifiers
 
             .regexPattern("[a-zA-Z0-9_]+", { str in
-                (.identifier(str), .IDENTIFIER)
+                (.identifier(str), .funcHeaderIdentifier)
             }),
 
             // Ignore whitespace
