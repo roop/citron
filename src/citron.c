@@ -3505,6 +3505,33 @@ static void print_swift_file_intro(FILE *out) {
     "\n");
 }
 
+void dump_config_info(struct config *cfg) {
+    printf("  Rule %d: %s <-", cfg->rp->index, cfg->rp->lhs->name);
+    for (int i = 0; i < cfg->rp->nrhs; i++) {
+        if (i == cfg->dot) { printf(" ."); }
+        printf(" %s", cfg->rp->rhs[i]->name);
+    }
+    if (cfg->rp->nrhs == cfg->dot) { printf(" ."); }
+}
+
+void dump_state_info(int index, struct state *stp) {
+    printf("State %d\n", index);
+    int i = 1;
+    printf("  Basis configs:\n");
+    for (struct config *cfg = stp->bp; cfg != 0; cfg = cfg->bp) {
+        printf("    %d:", i++);
+        dump_config_info(cfg);
+        printf("\n");
+    }
+    i = 1;
+    printf("  All configs:\n");
+    for (struct config *cfg = stp->cfp; cfg != 0; cfg = cfg->next) {
+        printf("    %d:", i++);
+        dump_config_info(cfg);
+        printf("\n");
+    }
+}
+
 /* Generate C source code for the parser */
 void ReportTable(struct lemon *lemp){
   FILE *out;
@@ -3586,6 +3613,7 @@ void ReportTable(struct lemon *lemp){
     ax[i*2+1].stp = stp;
     ax[i*2+1].isTkn = 0;
     ax[i*2+1].nAction = stp->nNtAct;
+    // dump_state_info(i, stp);
   }
   mxTknOfst = mnTknOfst = 0;
   mxNtOfst = mnNtOfst = 0;
