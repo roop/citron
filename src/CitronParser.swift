@@ -325,15 +325,20 @@ private extension CitronParser {
         let lhsSymbolCode = ruleInfo.lhs
         let numberOfRhsSymbols = ruleInfo.nrhs
         assert(yyStack.count > numberOfRhsSymbols)
-        let nextStateOrRule = yyStack[yyStack.count - 1 - Int(numberOfRhsSymbols)].stateOrRule
-        guard case .state(let nextState) = nextStateOrRule else {
-            fatalError("Expecting state got rule") // FIXME: Is this correct?
-        }
-        let action = yyFindReduceAction(state: nextState, lookAhead: lhsSymbolCode)
 
         for _ in (0 ..< numberOfRhsSymbols) {
             yyPop()
         }
+
+        return try yyPerformReduceAction(symbol: resultSymbol, code: lhsSymbolCode)
+    }
+
+    func yyPerformReduceAction(symbol resultSymbol: CitronSymbol, code lhsSymbolCode: CitronSymbolCode) throws -> CitronSymbol? {
+
+        guard case .state(let stateInStack) = yyStack.last!.stateOrRule else {
+            fatalError("Expecting state got rule") // FIXME: Is this correct?
+        }
+        let action = yyFindReduceAction(state: stateInStack, lookAhead: lhsSymbolCode)
 
         let stateOrRule: CitronStateOrRule
         switch (action) {
