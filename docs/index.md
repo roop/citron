@@ -78,7 +78,7 @@ To make use of Citron, we should:
     inputs. We can optionally use Citron's lexer to generate the inputs
     for the parser.
 
-    See [_The Parsing Interface_](parsing-interface/) for information on
+    See [_The Parsing Interface_](parser-interface/) for information on
     how we can use the parser in our code.
 
 ## Examples
