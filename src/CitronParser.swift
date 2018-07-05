@@ -73,8 +73,9 @@ protocol CitronParser: class {
 
     // Action tables
 
-    var yyLookaheadAction: [(CitronSymbolCode,
-        CitronParsingAction)] { get } // yy_action + yy_lookahead in lemon
+    // The action (CitronParsingAction) is applicable only if
+    // the look ahead symbol (CitronSymbolCode) matches
+    var yyLookaheadAction: [(CitronSymbolCode, CitronParsingAction)] { get } // yy_action + yy_lookahead in lemon
 
     var yyShiftUseDefault: Int { get } // YY_SHIFT_USE_DFLT in lemon
     var yyShiftOffsetMin: Int { get } // YY_SHIFT_MIN in lemon
@@ -138,8 +139,6 @@ enum _CitronParserError<Token, TokenCode>: Error {
 // Parser actions and states
 
 enum _CitronParsingAction<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
-    // Each action applies only if the look ahead symbol
-    // matches the CitronSymbolCode in the action
     case SH(StateNumber) // Shift token, then go to state <state>
     case RD(RuleNumber)  // Reduce with rule number <rule>
     case SR(RuleNumber)  // Shift token, then reduce with rule number <rule>
