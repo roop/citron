@@ -253,33 +253,38 @@ private extension CitronParser {
             assert(Int(state) < yyShiftOffset.count)
             assert(lookAhead < yyNumberOfSymbols)
             i = yyShiftOffset[Int(state)] + Int(lookAhead)
-            let (actionLookahead, action) = yyLookaheadAction[i]
-            if (i < 0 || i >= yyLookaheadAction.count || actionLookahead != lookAhead) {
-                // Fallback
-                if let fallback = yyFallback[safe: lookAhead], fallback > 0 {
-                    tracePrint("Fallback:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code:fallback))
-                    precondition((yyFallback[safe: fallback] ?? -1) == 0, "Fallback loop detected")
-                    lookAhead = fallback
-                    continue
+
+            // Check action table
+            if (i >= 0 && i < yyLookaheadAction.count) {
+                let (actionLookahead, action) = yyLookaheadAction[i]
+                if (actionLookahead == lookAhead) {
+                    return action // Pick action from action table
                 }
-                // Wildcard
-                if let yyWildcard = yyWildcard {
-                    let wildcard = yyWildcard
-                    let j = i - Int(lookAhead) + Int(wildcard)
-                    let (actionLookahead, action) = yyLookaheadAction[j]
-                    if ((yyShiftOffsetMin + Int(wildcard) >= 0 || j >= 0) &&
-                        (yyShiftOffsetMax + Int(wildcard) < yyLookaheadAction.count || j < yyLookaheadAction.count) &&
-                        (actionLookahead == wildcard && lookAhead > 0)) {
-                        tracePrint("Wildcard:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code: wildcard))
-                        return action
-                    }
-                }
-                // No fallback and no wildcard. Pick the default action for this state.
-                return yyDefaultAction[Int(state)]
-            } else {
-                // Pick action from action table
-                return action
             }
+
+            // Check for fallback
+            if let fallback = yyFallback[safe: lookAhead], fallback > 0 {
+                tracePrint("Fallback:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code:fallback))
+                precondition((yyFallback[safe: fallback] ?? -1) == 0, "Fallback loop detected")
+                lookAhead = fallback
+                continue
+            }
+
+            // Check for wildcard
+            if let yyWildcard = yyWildcard {
+                let wildcard = yyWildcard
+                let j = i - Int(lookAhead) + Int(wildcard)
+                let (actionLookahead, action) = yyLookaheadAction[j]
+                if ((yyShiftOffsetMin + Int(wildcard) >= 0 || j >= 0) &&
+                    (yyShiftOffsetMax + Int(wildcard) < yyLookaheadAction.count || j < yyLookaheadAction.count) &&
+                    (actionLookahead == wildcard && lookAhead > 0)) {
+                    tracePrint("Wildcard:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code: wildcard))
+                    return action
+                }
+            }
+
+            // Pick the default action for this state.
+            return yyDefaultAction[Int(state)]
         }
     }
 
