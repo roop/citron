@@ -68,8 +68,12 @@ extern int access(const char *path, int mode);
 
 #ifdef TEST
 #define MAXRHS 5       /* Set low to exercise exception code */
+#define MAX_ERR_CAPTURE_TOKENS 5
+#define MAX_ERR_CAPTURE_TOKEN_SEQUENCES 5
 #else
 #define MAXRHS 1000
+#define MAX_ERR_CAPTURE_TOKENS 1000
+#define MAX_ERR_CAPTURE_TOKEN_SEQUENCES 1000
 #endif
 
 static int showPrecedenceConflict = 0;
@@ -187,6 +191,7 @@ static void lemon_strcat(char *dest, const char *src){
 struct rule;
 struct lemon;
 struct action;
+struct token_sequence;
 
 static struct action *Action_new(void);
 static struct action *Action_sort(struct action *);
@@ -231,6 +236,7 @@ void Parse(struct lemon *lemp);
 
 void CheckTypeDefinitions(struct lemon *lemp);
 void CheckCodeBlocks(struct lemon *lemp);
+void CheckErrorCaptureDirectives(struct lemon *lemp);
 
 /********* From the file "plink.h" ***************************************/
 struct plink *Plink_new(void);
@@ -297,6 +303,21 @@ struct symbol {
   /* The following fields are used by MULTITERMINALs only */
   int nsubsym;             /* Number of constituent symbols in the MULTI */
   struct symbol **subsym;  /* Array of constituent symbols */
+  int error_capture_line;  /* Line number of error capture directive */
+  struct token_sequence *error_capture_end_before_sequences;
+  int num_error_capture_end_before_sequences;
+  struct token_sequence *error_capture_end_after_sequences;
+  int num_error_capture_end_after_sequences;
+};
+
+/* A token sequence that triggers error capturing */
+union token_sequence_tokens {
+  struct symbol *single_token; // In most cases, we'll have just one token in the sequence (count == 1)
+  struct symbol **multiple_tokens; // In some cases, we can have multiple tokens in the sequence (count > 1)
+};
+struct token_sequence {
+  int count;
+  union token_sequence_tokens tokens;
 };
 
 /* Each production rule in the grammar is stored in the following
@@ -424,6 +445,7 @@ struct lemon {
   int tablesize;           /* Total table size of all tables in bytes */
   int basisflag;           /* Print only basis configurations */
   int has_fallback;        /* True if any %fallback is seen in the grammar */
+  int has_error_capture;   /* True if any %capture_errors is seen in the grammar */
   char *argv0;             /* Name of the program */
   // FIXME: Members to be removed
   char *name;
@@ -1704,6 +1726,9 @@ int main(int argc, char **argv)
     /* Make sure all rules have code blocks. Error out otherwise. */
     CheckCodeBlocks(&lem);
 
+    /* Make sure %capture_errors directives are clean */
+    CheckErrorCaptureDirectives(&lem);
+
     /* Generate the source code for the parser */
     if( lem.errorcnt==0 ) {
       ReportTable(&lem);
@@ -2152,7 +2177,14 @@ enum e_state {
   WAITING_FOR_WILDCARD_ID,
   WAITING_FOR_CLASS_ID,
   WAITING_FOR_CLASS_TOKEN,
-  WAITING_FOR_TOKEN_NAME
+  WAITING_FOR_TOKEN_NAME,
+  WAITING_FOR_CAPTURE_ERROR_DATATYPE_SYMBOL,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_OPEN,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS_SEPARATOR,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST,
+  WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST_SEPARATOR
 };
 struct pstate {
   char *filename;       /* Name of the input file */
@@ -2172,6 +2204,12 @@ struct pstate {
   struct symbol *prevnonterminaltype;   /* Previous nonterminal_type parsed */
   int is_prev_decl_default_nonterminal_type; /* True if the previous parsed construct
                                                 was %default_nonterminal_type */
+  struct symbol *prevnonterminalcaptureerrors;   /* nonterminal from current %capture_errors */
+  int is_in_error_capture_end_after_clause;
+  struct symbol* error_capture_tokens[MAX_ERR_CAPTURE_TOKENS];
+  int num_error_capture_tokens;
+  struct token_sequence error_capture_token_sequences[MAX_ERR_CAPTURE_TOKEN_SEQUENCES];
+  int num_error_capture_token_sequences;
   const char *declkeyword;   /* Keyword of a declaration */
   char **declargslot;        /* Where the declaration argument should be put */
   int insertLineMacro;       /* Add #line before declaration insert */
@@ -2462,6 +2500,8 @@ to follow the previous rule.");
           psp->state = WAITING_FOR_WILDCARD_ID;
         }else if( strcmp(x,"token_set")==0 ){
           psp->state = WAITING_FOR_CLASS_ID;
+        }else if( strcmp(x,"capture_errors")==0 ){
+          psp->state = WAITING_FOR_CAPTURE_ERROR_DATATYPE_SYMBOL;
         }else{
           ErrorMsg(psp->filename,psp->tokenlineno,
             "Unknown declaration keyword: \"%%%s\".",x);
@@ -2497,6 +2537,181 @@ to follow the previous rule.");
           psp->prevnonterminaltype = sp;
           psp->state = WAITING_FOR_DECL_ARG;
         }
+      }
+      break;
+    case WAITING_FOR_CAPTURE_ERROR_DATATYPE_SYMBOL:
+      if( !ISALPHA(x[0]) ){
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Symbol name missing after %%capture_errors keyword");
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_DECL_ERROR;
+      }else{
+        struct symbol *sp = Symbol_find(x);
+        if (!sp){
+          sp = Symbol_new(x);
+        }
+        sp->error_capture_line = psp->tokenlineno;
+        psp->prevnonterminalcaptureerrors = sp;
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE;
+      }
+      break;
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE:
+      if( x[0]=='.' ){
+        psp->num_error_capture_tokens = 0;
+        psp->num_error_capture_token_sequences = 0;
+        psp->state = WAITING_FOR_DECL_OR_RULE;
+      } else if (strcmp(x, "end_before") == 0) {
+        psp->is_in_error_capture_end_after_clause = 0;
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_OPEN;
+      } else if (strcmp(x, "end_after") == 0) {
+        psp->is_in_error_capture_end_after_clause = 1;
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_OPEN;
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Expecting an end_before or end_after clause after '%%capture_errors %s'", psp->prevnonterminalcaptureerrors->name);
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_DECL_ERROR;
+      }
+      break;
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_OPEN:
+      if( x[0]=='(' ){
+        psp->num_error_capture_token_sequences = 0;
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS;
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Expecting \"(\" after \"end_before\" or \"end_after\", got \"%s\"",x);
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_DECL_ERROR;
+      }
+      break;
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS_SEPARATOR:
+      if( x[0]==',' || x[0] == '|' ){
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS;
+        break;
+      } else if( x[0]==')' ){
+        if (psp->num_error_capture_token_sequences > 0) {
+          struct symbol *sp = psp->prevnonterminalcaptureerrors;
+          struct token_sequence **token_sequences_slot = 0;
+          int *num_token_sequences_slot = 0;
+          if (psp->is_in_error_capture_end_after_clause) {
+            token_sequences_slot = &sp->error_capture_end_after_sequences;
+            num_token_sequences_slot = &sp->num_error_capture_end_after_sequences;
+          } else {
+            token_sequences_slot = &sp->error_capture_end_before_sequences;
+            num_token_sequences_slot = &sp->num_error_capture_end_before_sequences;
+          }
+          if (*token_sequences_slot == 0) {
+            (*token_sequences_slot) = (struct token_sequence *) calloc(psp->num_error_capture_token_sequences, sizeof(struct token_sequence));
+          } else {
+            (*token_sequences_slot) = (struct token_sequence *) realloc((*token_sequences_slot), ((*num_token_sequences_slot) + psp->num_error_capture_token_sequences) * sizeof(struct token_sequence));
+          }
+          int n = (*num_token_sequences_slot);
+          for (int i = 0; i < psp->num_error_capture_token_sequences; i++) {
+            (*token_sequences_slot)[n + i] = psp->error_capture_token_sequences[i];
+          }
+          (*num_token_sequences_slot) = n + psp->num_error_capture_token_sequences;
+          psp->gp->has_error_capture = 1;
+          psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE;
+        }
+        break;
+      } else if( ISUPPER(x[0]) || x[0] == '[' ){
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Missing separator ( \",\" or \"|\") between token sequences in \"%s\" clause",
+            (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        // fallthrough
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Error in \"%s\" clause",
+          (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
+        break;
+      }
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS:
+      if( ISUPPER(x[0]) ){
+        if (psp->num_error_capture_token_sequences>=MAX_ERR_CAPTURE_TOKEN_SEQUENCES) {
+          ErrorMsg(psp->filename,psp->tokenlineno,
+            "Too many token sequences in \"%s\" clause, beginning from token \"%s\".",
+            (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"),
+            x);
+          psp->errorcnt++;
+          psp->state = RESYNC_AFTER_RULE_ERROR;
+        } else {
+          psp->error_capture_token_sequences[psp->num_error_capture_token_sequences].tokens.single_token = Symbol_new(x);
+          psp->error_capture_token_sequences[psp->num_error_capture_token_sequences].count = 1;
+          psp->num_error_capture_token_sequences++;
+          psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS_SEPARATOR;
+        }
+      } else if( x[0]=='[' ){
+        if (psp->is_in_error_capture_end_after_clause == 0) {
+          ErrorMsg(psp->filename,psp->tokenlineno,
+            "end_before clause should not contain any token sequences.");
+          psp->errorcnt++;
+        }
+        psp->num_error_capture_tokens = 0;
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST;
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Error in \"%s\" clause",
+          (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
+      }
+      break;
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST_SEPARATOR:
+      if( x[0]==','){
+        psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST;
+        break;
+      } else if( x[0]==']' ){
+        int token_count = psp->num_error_capture_tokens;
+        if (token_count > 0) {
+          if (token_count == 1) {
+            psp->error_capture_token_sequences[psp->num_error_capture_token_sequences].tokens.single_token = psp->error_capture_tokens[0];
+          } else {
+            struct symbol **mt = (struct symbol **) calloc(token_count, sizeof(struct symbol *));
+            for (int i = 0; i < token_count; i++) {
+              mt[i] = psp->error_capture_tokens[i];
+            }
+            psp->error_capture_token_sequences[psp->num_error_capture_token_sequences].tokens.multiple_tokens = mt;
+          }
+          psp->error_capture_token_sequences[psp->num_error_capture_token_sequences].count = token_count;
+          psp->num_error_capture_token_sequences++;
+          psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKENS_SEPARATOR;
+        }
+        break;
+      } else if( ISUPPER(x[0]) ){
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Missing separator ( \",\" ) between tokens in list in \"%s\" clause",
+            (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        // fallthrough
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Error in \"%s\" clause",
+          (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
+        break;
+      }
+    case WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST:
+      if( ISUPPER(x[0]) ){
+        if (psp->num_error_capture_tokens>=MAX_ERR_CAPTURE_TOKENS) {
+          ErrorMsg(psp->filename,psp->tokenlineno,
+            "Too many tokens in sequence in \"%s\" clause, beginning from token \"%s\".",
+            (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"),
+            x);
+          psp->errorcnt++;
+          psp->state = RESYNC_AFTER_RULE_ERROR;
+        } else {
+          psp->error_capture_tokens[psp->num_error_capture_tokens] = Symbol_new(x);
+          psp->num_error_capture_tokens++;
+          psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE_TOKEN_LIST_SEPARATOR;
+        }
+      } else {
+        ErrorMsg(psp->filename,psp->tokenlineno,
+          "Error in \"%s\" clause",
+          (psp->is_in_error_capture_end_after_clause ? "end_after" : "end_before"));
+        psp->errorcnt++;
+        psp->state = RESYNC_AFTER_RULE_ERROR;
       }
       break;
     case WAITING_FOR_PRECEDENCE_SYMBOL:
@@ -2840,6 +3055,30 @@ void CheckCodeBlocks(struct lemon *lemp) {
   ErrorMsg(lemp->filename, rp->ruleline,
 "Rule should be followed by a code block.");
   lemp->errorcnt++;
+  }
+}
+
+static struct symbol *find_start_symbol(struct lemon *lemp);
+
+void CheckErrorCaptureDirectives(struct lemon *lemp) {
+  struct symbol *start_symbol = find_start_symbol(lemp);
+  for (int i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
+    struct symbol *sp = lemp->symbols[i];
+    if (sp == start_symbol) {
+      if (sp->num_error_capture_end_before_sequences > 0 || sp->num_error_capture_end_after_sequences > 0) {
+        ErrorMsg(lemp->filename, sp->error_capture_line,
+"%%capture_errors on start symbol '%s' should not have any 'end_before' or 'end_after' clauses.", sp->name);
+        lemp->errorcnt++;
+      }
+    } else {
+      if (sp->error_capture_line > 0) {
+        if (sp->num_error_capture_end_before_sequences == 0 && sp->num_error_capture_end_after_sequences == 0) {
+          ErrorMsg(lemp->filename, sp->error_capture_line,
+"%%capture_errors on symbol '%s' should have an 'end_before' clause, or an 'end_after' clause, or both.", sp->name);
+          lemp->errorcnt++;
+        }
+      }
+    }
   }
 }
 
@@ -4431,6 +4670,11 @@ struct symbol *Symbol_new(const char *x)
     sp->datatype = 0;
     sp->useCnt = 0;
     sp->code = 0;
+    sp->error_capture_line = 0;
+    sp->num_error_capture_end_before_sequences = 0;
+    sp->num_error_capture_end_after_sequences = 0;
+    sp->error_capture_end_before_sequences = 0;
+    sp->error_capture_end_after_sequences = 0;
     Symbol_insert(sp,sp->name);
   }
   sp->useCnt++;

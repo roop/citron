@@ -61,6 +61,10 @@ param ::= external_param_name(epn) local_param_name(lpn) type_annotation(ta). {
             externalName: epn, type: ta.type, isInout: ta.isInout)
 }
 
+%capture_errors param
+    end_before(Comma | CloseBracket)
+    end_after([Colon, Identifier] | [KeywordInout, Identifier]).
+
 %nonterminal_type external_param_name String
 %nonterminal_type local_param_name String
 
