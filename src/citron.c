@@ -4239,6 +4239,157 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "        }\n");
   fprintf(out, "    }\n\n");
 
+  // Error capturing
+
+  fprintf(out, "    // Error capturing\n\n");
+
+  int num_of_states_with_error_capturing = 0;
+  if (lemp->has_error_capture) {
+    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [");
+    for(i=0; i<lemp->nxstate; i++) {
+      struct state *stp = lemp->sorted[i];
+      int num_of_error_capturing_sequences = 0;
+      struct symbol *last_seen_symbol = 0;
+      for (struct config *cfg = stp->cfp; cfg != 0; cfg = cfg->next) {
+        // We need only configs that begin with the dot
+        if (cfg->dot > 0) { continue; }
+        struct symbol *lhs_symbol = cfg->rp->lhs;
+        if (lhs_symbol == last_seen_symbol) {
+          continue;
+        }
+        last_seen_symbol = lhs_symbol;
+        // We need only symbols that have %capture_errors defined on them
+        if (lhs_symbol->num_error_capture_end_before_sequences == 0 &&
+            lhs_symbol->num_error_capture_end_after_sequences == 0) {
+          continue;
+        }
+        // We consider only symbols that can be shifted in from this state
+        int is_symbol_shiftable = 0;
+        for (struct action *ap = stp->ap; ap != 0; ap = ap->next) {
+          if (ap->sp == lhs_symbol && (ap->type == SHIFT || ap->type == ACCEPT || ap->type == SHIFTREDUCE)) {
+            is_symbol_shiftable = 1;
+            break;
+          }
+        }
+        if (!is_symbol_shiftable) {
+          continue;
+        }
+        // We now have a valid symbol we can write out
+        if (num_of_error_capturing_sequences == 0) {
+            fprintf(out, "\n        %3d : [", i);
+        } else {
+          fprintf(out, ", ");
+        }
+        fprintf(out, "%d", lhs_symbol->index);
+        num_of_error_capturing_sequences++;
+      }
+      if (num_of_error_capturing_sequences > 0) {
+        fprintf(out, "],");
+        num_of_states_with_error_capturing++;
+      }
+    }
+    if (num_of_states_with_error_capturing > 0) {
+      fprintf(out, "\n    ]\n");
+    } else {
+      fprintf(out, ":]\n");
+    }
+  }
+  if (num_of_states_with_error_capturing > 0) {
+    fprintf(out, "    let yyCanErrorCapture: Bool = true\n");
+
+    int *is_error_capture_end_before_token = (int *) calloc(lemp->nsymbol, sizeof(int));
+    int *is_error_capture_end_after_sequence_last_token = (int *) calloc(lemp->nsymbol, sizeof(int));
+    for(int i=0; i<lemp->nsymbol; i++){
+      is_error_capture_end_before_token[i] = 0;
+      is_error_capture_end_after_sequence_last_token[i] = 0;
+    }
+
+    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [\n");
+    int is_first_error_capture_symbol = 1;
+    for(int i=0; i<lemp->nsymbol; i++){
+      struct symbol *sp = lemp->symbols[i];
+      if (sp->num_error_capture_end_before_sequences == 0 &&
+          sp->num_error_capture_end_after_sequences == 0) {
+        continue;
+      }
+      if (is_first_error_capture_symbol == 0) { fprintf(out, ",\n"); }
+      is_first_error_capture_symbol = 0;
+      struct token_sequence *end_sequence_lists[] = {
+        sp->error_capture_end_before_sequences,
+        sp->error_capture_end_after_sequences,
+      };
+      int end_sequence_list_lengths[] = {
+        sp->num_error_capture_end_before_sequences,
+        sp->num_error_capture_end_after_sequences,
+      };
+      const char *tokenPrefix = lemp->tokenprefix ? lemp->tokenprefix : "";
+      fprintf(out, "       %3d : (endAfter: [", sp->index);
+      for (int i = 0; i < sp->num_error_capture_end_after_sequences; i++) {
+        struct token_sequence seq = sp->error_capture_end_after_sequences[i];
+        if (i > 0) { fprintf(out, ", "); }
+        if (seq.count == 1) {
+          struct symbol *ts = seq.tokens.single_token;
+          fprintf(out, "[.%s%s]", tokenPrefix, ts->name);
+          is_error_capture_end_after_sequence_last_token[ts->index] = 1;
+        } else if (seq.count > 1) {
+          fprintf(out, "[");
+          for (int j = 0; j < seq.count; j++) {
+            if (j > 0) { fprintf(out, ", "); }
+            struct symbol *ts = seq.tokens.multiple_tokens[j];
+            fprintf(out, ".%s%s", tokenPrefix, ts->name);
+            if (j == seq.count - 1) { // If this is the last token in the sequence
+              is_error_capture_end_after_sequence_last_token[ts->index] = 1;
+            }
+          }
+          fprintf(out, "]");
+        }
+      }
+      fprintf(out, "],\n");
+      fprintf(out, "              endBefore: [");
+      for (int i = 0; i < sp->num_error_capture_end_before_sequences; i++) {
+        struct token_sequence seq = sp->error_capture_end_before_sequences[i];
+        if (i > 0) { fprintf(out, ", "); }
+        assert(seq.count == 1); /* token sequences are not allowed in end_before clauses */
+        if (seq.count == 1) {
+          struct symbol *ts = seq.tokens.single_token;
+          fprintf(out, ".%s%s", tokenPrefix, ts->name);
+          is_error_capture_end_before_token[ts->index] = 1;
+        }
+      }
+      fprintf(out, "])");
+    }
+    fprintf(out, "\n    ]\n");
+
+    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = [\n");
+    fprintf(out, "        ");
+    int is_first_error_capture_end_before_token = 1;
+    for(int i=0; i<lemp->nsymbol; i++){
+      if (is_error_capture_end_before_token[i]) {
+        if (is_first_error_capture_end_before_token == 0) { fprintf(out, ", "); }
+        is_first_error_capture_end_before_token = 0;
+        fprintf(out, "%d", lemp->symbols[i]->index);
+      }
+    }
+    fprintf(out, "\n    ]\n");
+    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = [\n");
+    fprintf(out, "        ");
+    int is_first_error_capture_end_after_sequence_last_token = 1;
+    for(int i=0; i<lemp->nsymbol; i++){
+      if (is_error_capture_end_after_sequence_last_token[i]) {
+        if (is_first_error_capture_end_after_sequence_last_token == 0) { fprintf(out, ", "); }
+        is_first_error_capture_end_after_sequence_last_token = 0;
+        fprintf(out, "%d", lemp->symbols[i]->index);
+      }
+    }
+    fprintf(out, "\n    ]\n\n");
+  } else {
+    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [:]\n");
+    fprintf(out, "    let yyCanErrorCapture: Bool = false\n");
+    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
+    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = []\n\n");
+    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = []\n\n");
+  }
+
   fprintf(out, "}\n\n"); // Closing class Parser
 
   // Epilogue

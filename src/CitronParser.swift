@@ -121,6 +121,14 @@ protocol CitronParser: class {
     func yyInvokeCodeBlockForRule(ruleNumber: CitronRuleNumber) throws -> CitronSymbol
     func yyUnwrapResultFromSymbol(_ symbol: CitronSymbol) -> CitronResult
 
+    // Error capturing
+
+    var yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] { get }
+    var yyCanErrorCapture: Bool { get }
+    var yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] { get }
+    var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> { get }
+    var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> { get }
+
     // Error handling
 
     typealias CitronParserError = _CitronParserError<CitronToken, CitronTokenCode>
