@@ -266,6 +266,10 @@ private extension CitronParser {
         }
     }
 
+    func yyPop(times n: Int) {
+        for _ in 0 ..< n { yyPop() }
+    }
+
     func yyFindShiftAction(lookAhead la: CitronSymbolCode) -> CitronParsingAction {
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
 
@@ -360,9 +364,7 @@ private extension CitronParser {
         let numberOfRhsSymbols = ruleInfo.nrhs
         assert(yyStack.count > numberOfRhsSymbols)
 
-        for _ in (0 ..< numberOfRhsSymbols) {
-            yyPop()
-        }
+        yyPop(times: Int(numberOfRhsSymbols))
 
         return try yyPerformReduceAction(symbol: resultSymbol, code: lhsSymbolCode)
     }
