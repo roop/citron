@@ -129,6 +129,8 @@ protocol CitronParser: class {
     var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> { get }
     var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> { get }
 
+    var yyErrorCaptureSavedError: UnexpectedTokenError? { get set }
+
     // Error handling
 
     typealias UnexpectedTokenError = _CitronParserUnexpectedTokenError<CitronToken, CitronTokenCode>
@@ -201,7 +203,8 @@ extension CitronParser {
                 assert(resultSymbol == nil) // Can be non-nil only in endParsing()
                 continue LOOP
             case .ERROR:
-                throw UnexpectedTokenError(token: token, tokenCode: tokenCode)
+                try throwOrSave(UnexpectedTokenError(token: token, tokenCode: tokenCode))
+                break LOOP
             default:
                 fatalError("Unexpected action")
             }
@@ -234,6 +237,34 @@ extension CitronParser {
         tracePrint("Resetting the parser")
         while (yyStack.count > 1) {
             yyPop()
+        }
+    }
+}
+
+// Private methods for error capturing
+
+private extension CitronParser {
+    func throwOrSave(_ error: UnexpectedTokenError) throws {
+        guard (self.yyCanErrorCapture) else { throw error }
+        var canCapture: Bool = false
+        for i in stride(from: yyStack.count - 1, through: 0, by: -1) {
+            let stackEntry = yyStack[i]
+            switch(stackEntry.stateOrRule) {
+            case .state(let s):
+                if let _ = yyErrorCaptureSymbolCodesForState[s] {
+                    canCapture = true
+                }
+            default:
+                break
+            }
+        }
+        if (canCapture) {
+            tracePrint("Saved error for later capturing: UnexpectedTokenError(token: \(error.token), tokenCode: \(error.tokenCode))")
+            self.yyErrorCaptureSavedError = error
+            // This error will later get either captured or thrown
+        } else {
+            self.yyErrorCaptureSavedError = nil
+            throw error
         }
     }
 }

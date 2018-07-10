@@ -4390,6 +4390,8 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = []\n\n");
   }
 
+  fprintf(out, "    var yyErrorCaptureSavedError: UnexpectedTokenError? = nil\n");
+
   fprintf(out, "}\n\n"); // Closing class Parser
 
   // Epilogue
