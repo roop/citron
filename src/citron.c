@@ -4391,6 +4391,7 @@ void ReportTable(struct lemon *lemp){
   }
 
   fprintf(out, "    var yyErrorCaptureSavedError: UnexpectedTokenError? = nil\n");
+  fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
 

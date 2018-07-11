@@ -130,6 +130,7 @@ protocol CitronParser: class {
     var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> { get }
 
     var yyErrorCaptureSavedError: UnexpectedTokenError? { get set }
+    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
 
     // Error handling
 
@@ -141,6 +142,7 @@ protocol CitronParser: class {
 
     typealias CitronParsingAction = _CitronParsingAction<CitronStateNumber, CitronRuleNumber>
     typealias CitronStateOrRule = _CitronStateOrRule<CitronStateNumber, CitronRuleNumber>
+    typealias CitronErrorCaptureResult = _CitronErrorCaptureResult<CitronSymbol>
 }
 
 // Error handling
@@ -183,12 +185,37 @@ enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
     case rule(RuleNumber)
 }
 
+// Error capturing
+
+enum _CitronErrorCaptureResult<Symbol> {
+    case notCaptured
+    case capturedOnIntermediateSymbol
+    case capturedOnFinalResult(result: Symbol)
+}
+
 // Parsing interface
 
 extension CitronParser {
     func consume(token: CitronToken, code tokenCode: CitronTokenCode) throws {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", symbolNameFor(code:symbolCode))
+
+        if (yyShouldAttemptErrorCapture()) {
+            tracePrint("Error capture being attempted")
+            let result = yyAttemptErrorCapture(lookAhead: tokenCode)
+            switch (result) {
+            case .notCaptured:
+                tracePrint("Error capture failed")
+                yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
+                return
+            case .capturedOnIntermediateSymbol:
+                tracePrint("Error capture succeeded")
+                yyErrorCaptureSavedError = nil
+            case .capturedOnFinalResult(_):
+                fatalError() // Can happen only in endParsing()
+            }
+        }
+
         LOOP: while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: symbolCode)
             switch (action) {
@@ -214,6 +241,24 @@ extension CitronParser {
 
     func endParsing() throws -> CitronResult {
         tracePrint("End of input")
+
+        if (yyShouldAttemptErrorCapture()) {
+            tracePrint("Error capture being attempted")
+            let result = yyAttemptErrorCapture(lookAhead: nil)
+            switch (result) {
+            case .notCaptured:
+                tracePrint("Error capture failed")
+                guard let savedError = yyErrorCaptureSavedError else { fatalError() }
+                throw savedError
+            case .capturedOnIntermediateSymbol:
+                fatalError() // Can happen only in consume()
+            case .capturedOnFinalResult(let resultSymbol):
+                tracePrint("Error capture succeeded")
+                yyErrorCaptureSavedError = nil
+                return yyUnwrapResultFromSymbol(resultSymbol)
+            }
+        }
+
         LOOP: while (!yyStack.isEmpty) {
             let action = yyFindShiftAction(lookAhead: 0)
             switch (action) {
@@ -266,6 +311,14 @@ private extension CitronParser {
             self.yyErrorCaptureSavedError = nil
             throw error
         }
+    }
+
+    func yyShouldAttemptErrorCapture() -> Bool {
+        return (self.yyErrorCaptureSavedError != nil)
+    }
+
+    func yyAttemptErrorCapture(lookAhead: CitronTokenCode?) -> CitronErrorCaptureResult {
+        return .notCaptured
     }
 }
 
