@@ -210,23 +210,24 @@ extension CitronParser {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", symbolNameFor(code:symbolCode))
 
-        if (yyShouldAttemptErrorCapture()) {
-            tracePrint("Error capture: Trying to capture saved error")
-            let result = try yyAttemptErrorCapture(nextToken: (token: token, tokenCode: tokenCode))
-            switch (result) {
-            case .notCaptured:
-                tracePrint("Error capture: Failed")
-                yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
-                return
-            case .capturedOnIntermediateSymbol:
-                tracePrint("Error capture: Succeeded")
-                yyErrorCaptureSavedError = nil
-            case .capturedOnFinalResult(_):
-                fatalError() // Can happen only in endParsing()
-            }
-        }
-
         LOOP: while (!yyStack.isEmpty) {
+
+            if (yyShouldAttemptErrorCapture()) {
+                tracePrint("Error capture: Trying to capture saved error")
+                let result = try yyAttemptErrorCapture(nextToken: (token: token, tokenCode: tokenCode))
+                switch (result) {
+                case .notCaptured:
+                    tracePrint("Error capture: Failed")
+                    yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
+                    return
+                case .capturedOnIntermediateSymbol:
+                    tracePrint("Error capture: Succeeded")
+                    yyErrorCaptureSavedError = nil
+                case .capturedOnFinalResult(_):
+                    fatalError() // Can happen only in endParsing()
+                }
+            }
+
             let action = yyFindShiftAction(lookAhead: symbolCode)
             switch (action) {
             case .SH(let s):
@@ -241,7 +242,7 @@ extension CitronParser {
                 continue LOOP
             case .ERROR:
                 try throwOrSave(UnexpectedTokenError(token: token, tokenCode: tokenCode))
-                break LOOP
+                continue LOOP // if error is saved, not thrown, we should attempt to capture it right away
             default:
                 fatalError("Unexpected action")
             }
