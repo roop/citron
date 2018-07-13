@@ -43,6 +43,7 @@ Citron: Modifications to Lemon to generate a parser in Swift
 #define ISALPHA(X) isalpha((unsigned char)(X))
 #define ISUPPER(X) isupper((unsigned char)(X))
 #define ISLOWER(X) islower((unsigned char)(X))
+#define TOUPPER(X) toupper((unsigned char)(X))
 
 
 #ifndef __WIN32__
@@ -3608,11 +3609,24 @@ void print_symbol_enumeration(
   for(i=0; i<arraysize; i++){
     if( types[i]==0 ) continue;
     fprintf(out,"        case yy%d(%s)\n",i+1,types[i]);
+  }
+  fprintf(out,"\n");
+  fprintf(out,"        func typeErasedContent() -> Any {\n"); // Used in error capturing
+  fprintf(out,"            switch (self) {\n");
+  fprintf(out,"            case .yyBaseOfStack: fatalError()\n");
+  fprintf(out,"            case .yy0(let value): return value as Any\n");
+  for(i=0; i<arraysize; i++){
+    if( types[i]==0 ) continue;
+    fprintf(out,"            case .yy%d(let value): return value as Any\n",i+1);
+  }
+  fprintf(out,"            }\n");
+  fprintf(out,"        }\n");
+  fprintf(out,"    }\n");
+  free(stddt);
+  for(i=0; i<arraysize; i++){
     free(types[i]);
   }
-  free(stddt);
   free(types);
-  fprintf(out,"    }\n");
 }
 
 /*
@@ -4243,6 +4257,8 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Error capturing\n\n");
 
+  fprintf(out, "    typealias CitronErrorCaptureDelegate = _%sCitronErrorCaptureDelegate\n\n", lemp->className);
+  fprintf(out, "    weak var errorCaptureDelegate: CitronErrorCaptureDelegate? = nil\n\n");
   int num_of_states_with_error_capturing = 0;
   if (lemp->has_error_capture) {
     fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [");
@@ -4382,18 +4398,76 @@ void ReportTable(struct lemon *lemp){
       }
     }
     fprintf(out, "\n    ]\n\n");
+
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: UnexpectedTokenError,\n");
+    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
+    fprintf(out, "        unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],\n");
+    fprintf(out, "        nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol? {\n");
+    fprintf(out, "\n");
+    fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
+    fprintf(out, "            print(\"Error capture: Not capturing error because errorCaptureDelegate is not set\")\n");
+    fprintf(out, "            return nil\n");
+    fprintf(out, "        }\n");
+    fprintf(out, "\n");
+    fprintf(out, "        switch (symbolCode) {\n");
+    for(int i=0; i<lemp->nsymbol; i++){
+      struct symbol *sp = lemp->symbols[i];
+      if (sp->num_error_capture_end_before_sequences == 0 &&
+          sp->num_error_capture_end_after_sequences == 0) {
+        continue;
+      }
+      fprintf(out, "        case %d: /* %s */\n", i, sp->name);
+      fprintf(out, "            return .yy%d(delegate.captureErrorOn%c%s(error: error, resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken))\n", sp->dtnum, TOUPPER(sp->name[0]), sp->name + 1);
+    }
+    fprintf(out, "        default:\n");
+    fprintf(out, "            fatalError(\"yyCaptureError: Symbol code \\(symbolCode) is not an error capturing symbol code\")\n");
+    fprintf(out, "        }\n");
+    fprintf(out, "    }\n\n");
   } else {
     fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [:]\n");
     fprintf(out, "    let yyCanErrorCapture: Bool = false\n");
     fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
     fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = []\n\n");
     fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = []\n\n");
+
+    fprintf(out, "    func yyCaptureError(on: CitronSymbolCode, error: UnexpectedTokenError,\n");
+    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
+    fprintf(out, "        unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],\n");
+    fprintf(out, "        nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol? {\n");
+    fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
+    fprintf(out, "    }\n\n");
   }
 
+  fprintf(out, "    func yySymbolContent(_ symbol: CitronSymbol) -> Any { return symbol.typeErasedContent() }\n\n");
+  fprintf(out, "    let yyStartSymbolCode: CitronSymbolCode = %d\n\n", start_symbol->index);
   fprintf(out, "    var yyErrorCaptureSavedError: UnexpectedTokenError? = nil\n");
   fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
+  fprintf(out, "    var yyErrorCaptureStackIndices: [Int] = []\n");
+  fprintf(out, "    var yyErrorCaptureStartSymbolStackIndex: Int? = nil\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
+
+  fprintf(out, "protocol _%sCitronErrorCaptureDelegate : class {\n", lemp->className);
+  fprintf(out, "    func shouldSaveErrorForCapturing(error: %s.UnexpectedTokenError) -> Bool\n", lemp->className);
+  for(int i=0; i<lemp->nsymbol; i++){
+    struct symbol *sp = lemp->symbols[i];
+    if (sp->num_error_capture_end_before_sequences == 0 &&
+        sp->num_error_capture_end_after_sequences == 0) {
+      continue;
+    }
+    fprintf(out, "\n    /* %s */\n", sp->name);
+    fprintf(out, "    func captureErrorOn%c%s(error: %s.UnexpectedTokenError,\n", TOUPPER(sp->name[0]), sp->name + 1, lemp->className);
+    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
+    fprintf(out, "        unclaimedTokens: [(token: %s.CitronToken, tokenCode: %s.CitronTokenCode)],\n", lemp->className, lemp->className);
+    fprintf(out, "        nextToken: (token: %s.CitronToken, tokenCode: %s.CitronTokenCode)?)\n", lemp->className, lemp->className);
+    fprintf(out, "        -> %s\n", sp->datatype);
+  }
+  fprintf(out, "}\n\n");
+  fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);
+  fprintf(out, "    func shouldSaveErrorForCapturing(error _: %s.UnexpectedTokenError) -> Bool {\n", lemp->className);
+  fprintf(out, "        return true\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "}\n\n");
 
   // Epilogue
 

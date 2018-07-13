@@ -53,7 +53,7 @@ protocol CitronParser: class {
 
     // Token code: An enum representing the terminals. The raw value shall
     // be equal to the symbol code representing the terminal.
-    associatedtype CitronTokenCode: RawRepresentable where CitronTokenCode.RawValue == CitronSymbolCode
+    associatedtype CitronTokenCode: RawRepresentable, Equatable where CitronTokenCode.RawValue == CitronSymbolCode
 
     // Token: The type representing a terminal, defined using %token_type in the grammar.
     // ParseTOKENTYPE in lemon.
@@ -129,8 +129,18 @@ protocol CitronParser: class {
     var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> { get }
     var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> { get }
 
+    var yyStartSymbolCode: CitronSymbolCode { get }
+
     var yyErrorCaptureSavedError: UnexpectedTokenError? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
+    var yyErrorCaptureStackIndices: [Int] { get set }
+    var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
+
+    func yyCaptureError(on: CitronSymbolCode, error: UnexpectedTokenError,
+            resolvedSymbols: [(name: String, value: Any)],
+            unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],
+            nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol?
+    func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
     // Error handling
 
@@ -201,15 +211,15 @@ extension CitronParser {
         tracePrint("Input:", symbolNameFor(code:symbolCode))
 
         if (yyShouldAttemptErrorCapture()) {
-            tracePrint("Error capture being attempted")
-            let result = yyAttemptErrorCapture(lookAhead: tokenCode)
+            tracePrint("Error capture: Trying to capture saved error")
+            let result = try yyAttemptErrorCapture(nextToken: (token: token, tokenCode: tokenCode))
             switch (result) {
             case .notCaptured:
-                tracePrint("Error capture failed")
+                tracePrint("Error capture: Failed")
                 yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
                 return
             case .capturedOnIntermediateSymbol:
-                tracePrint("Error capture succeeded")
+                tracePrint("Error capture: Succeeded")
                 yyErrorCaptureSavedError = nil
             case .capturedOnFinalResult(_):
                 fatalError() // Can happen only in endParsing()
@@ -243,17 +253,19 @@ extension CitronParser {
         tracePrint("End of input")
 
         if (yyShouldAttemptErrorCapture()) {
-            tracePrint("Error capture being attempted")
-            let result = yyAttemptErrorCapture(lookAhead: nil)
+            tracePrint("Error capture: Trying to capture saved error")
+            let result = try yyAttemptErrorCapture(nextToken: nil)
             switch (result) {
             case .notCaptured:
-                tracePrint("Error capture failed")
+                tracePrint("Error capture: Failed")
                 guard let savedError = yyErrorCaptureSavedError else { fatalError() }
+                tracePrint("Error capture: At end of input, throwing saved uncaptured error")
                 throw savedError
             case .capturedOnIntermediateSymbol:
-                fatalError() // Can happen only in consume()
+                tracePrint("Error capture: Succeeded")
+                yyErrorCaptureSavedError = nil
             case .capturedOnFinalResult(let resultSymbol):
-                tracePrint("Error capture succeeded")
+                tracePrint("Error capture: Succeeded")
                 yyErrorCaptureSavedError = nil
                 return yyUnwrapResultFromSymbol(resultSymbol)
             }
@@ -292,23 +304,34 @@ private extension CitronParser {
     func throwOrSave(_ error: UnexpectedTokenError) throws {
         guard (self.yyCanErrorCapture) else { throw error }
         var canCapture: Bool = false
+        var stackIndices: [Int] = []
+        var startSymbolStackIndex: Int? = nil
         for i in stride(from: yyStack.count - 1, through: 0, by: -1) {
             let stackEntry = yyStack[i]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
-                if let _ = yyErrorCaptureSymbolCodesForState[s] {
+                if let symbolCodes = yyErrorCaptureSymbolCodesForState[s] {
                     canCapture = true
+                    stackIndices.append(i)
+                    if (startSymbolStackIndex == nil && symbolCodes.contains(yyStartSymbolCode)) {
+                        startSymbolStackIndex = i
+                    }
                 }
             default:
                 break
             }
         }
         if (canCapture) {
-            tracePrint("Saved error for later capturing: UnexpectedTokenError(token: \(error.token), tokenCode: \(error.tokenCode))")
+            tracePrint("Error capture: Saved error for later capturing: UnexpectedTokenError(token: \(error.token), tokenCode: \(error.tokenCode))")
+            // Save this error for either capturing or throwing later
             self.yyErrorCaptureSavedError = error
-            // This error will later get either captured or thrown
+            // Save some info for determining when to capture the error
+            self.yyErrorCaptureStackIndices = stackIndices
+            self.yyErrorCaptureStartSymbolStackIndex = startSymbolStackIndex
         } else {
             self.yyErrorCaptureSavedError = nil
+            self.yyErrorCaptureStackIndices = []
+            self.yyErrorCaptureStartSymbolStackIndex = nil
             throw error
         }
     }
@@ -317,8 +340,92 @@ private extension CitronParser {
         return (self.yyErrorCaptureSavedError != nil)
     }
 
-    func yyAttemptErrorCapture(lookAhead: CitronTokenCode?) -> CitronErrorCaptureResult {
-        return .notCaptured
+    func yyAttemptErrorCapture(nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) throws -> CitronErrorCaptureResult {
+        guard let savedError = yyErrorCaptureSavedError else {
+            fatalError("No error saved for capturing")
+        }
+
+        guard let info = stackUnwindInfoForErrorCapture(lookAhead: nextToken?.tokenCode) else {
+            tracePrint("Error capture: No match in the stack for the current sequence of tokens")
+            return .notCaptured
+        }
+
+        assert(info.stackIndex < yyStack.count)
+        tracePrint("Error capture: Found match at stack index \(info.stackIndex) on symbol \"\(yySymbolName[Int(info.symbolCode)])\"")
+
+        let stackEntry = yyStack[info.stackIndex]
+        guard case .state(_) = stackEntry.stateOrRule else {
+            fatalError("Expecting state got rule while attempting error capture")
+        }
+        let resolvedSymbols: [(name: String, value: Any)] = yyStack[(info.stackIndex + 1) ..< yyStack.count].map {
+            (name: yySymbolName[Int($0.symbolCode)], value: yySymbolContent($0.symbol))
+        }
+        let unclaimedTokens = yyErrorCaptureTokensSinceError
+
+        if (resolvedSymbols.isEmpty && unclaimedTokens.isEmpty) {
+            tracePrint("Error capture: Cannot capture error on an empty symbol")
+            return .notCaptured
+        }
+
+        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError,
+            resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken) else {
+            return .notCaptured
+        }
+
+        yyPop(times: yyStack.count - info.stackIndex - 1)
+        let resultSymbol = try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode)
+        if let resultSymbol = resultSymbol {
+            return .capturedOnFinalResult(result: resultSymbol)
+        } else {
+            return .capturedOnIntermediateSymbol
+        }
+    }
+
+    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?) -> (stackIndex: Int, symbolCode: CitronSymbolCode)? {
+        let isAtEndOfInput: Bool = (lookAhead == nil)
+
+        if (isAtEndOfInput) {
+            if let startSymbolStackIndex = yyErrorCaptureStartSymbolStackIndex {
+                return (stackIndex: startSymbolStackIndex, symbolCode: yyStartSymbolCode)
+            }
+        }
+
+        let lastSeenTokenSymbolCode: CitronSymbolCode? = yyErrorCaptureTokensSinceError.last?.tokenCode.rawValue
+        let isEndBeforeMatchPossible = ((lookAhead != nil) &&
+            yyErrorCaptureEndBeforeTokens.contains(lookAhead!.rawValue))
+        let isEndAfterMatchPossible = ((lastSeenTokenSymbolCode != nil) &&
+            yyErrorCaptureEndAfterSequenceEndingTokens.contains(lastSeenTokenSymbolCode!))
+
+        guard (isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
+
+        for stackIndex in yyErrorCaptureStackIndices {
+            var symbolCodes: [CitronSymbolCode] = []
+            let stackEntry = yyStack[stackIndex]
+            switch(stackEntry.stateOrRule) {
+            case .state(let s):
+                if let sc = yyErrorCaptureSymbolCodesForState[s] {
+                    symbolCodes = sc
+                }
+            default:
+                break
+            }
+            for s in symbolCodes {
+                guard let directive = yyErrorCaptureDirectives[s] else {
+                    continue
+                }
+                if (lookAhead != nil && directive.endBefore.contains(lookAhead!)) {
+                    tracePrint("Error capture: Match for endBefore clause for symbol \"\(yySymbolName[Int(s)])\"")
+                    return (stackIndex: stackIndex, symbolCode: s)
+                }
+                for endAfterTokenSequence in directive.endAfter {
+                    if (yyErrorCaptureTokensSinceError.map({ $0.tokenCode }).hasSuffix(endAfterTokenSequence)) {
+                        tracePrint("Error capture: Match for endAfter clause for symbol \"\(yySymbolName[Int(s)])\"")
+                        return (stackIndex: stackIndex, symbolCode: s)
+                    }
+                }
+            }
+        }
+        return nil
     }
 }
 
@@ -533,3 +640,13 @@ private extension Array {
     }
 }
 
+private extension Array where Element : Equatable {
+    func hasSuffix(_ suffix: Array<Element>) -> Bool {
+        let start: Int = count - suffix.count
+        if (start < 0) { return false }
+        for (i, e) in suffix.enumerated() {
+            if (self[start + i] != e) { return false }
+        }
+        return true
+    }
+}
