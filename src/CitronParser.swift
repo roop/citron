@@ -199,7 +199,7 @@ enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
 
 enum _CitronErrorCaptureResult<Symbol> {
     case notCaptured
-    case capturedOnIntermediateSymbol
+    case capturedOnIntermediateSymbol(didMatchEndBeforeClause: Bool)
     case capturedOnFinalResult(result: Symbol)
 }
 
@@ -209,6 +209,8 @@ extension CitronParser {
     func consume(token: CitronToken, code tokenCode: CitronTokenCode) throws {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", symbolNameFor(code:symbolCode))
+
+        var isErrorCapturedUsingEndBeforeClause: Bool = false
 
         LOOP: while (!yyStack.isEmpty) {
 
@@ -220,10 +222,11 @@ extension CitronParser {
                     tracePrint("Error capture: Failed")
                     yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
                     return
-                case .capturedOnIntermediateSymbol:
+                case .capturedOnIntermediateSymbol(let didMatchEndBeforeClause):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
                     yyErrorCaptureTokensSinceError = []
+                    isErrorCapturedUsingEndBeforeClause = didMatchEndBeforeClause
                 case .capturedOnFinalResult(_):
                     fatalError() // Can happen only in endParsing()
                 }
@@ -242,6 +245,13 @@ extension CitronParser {
                 assert(resultSymbol == nil) // Can be non-nil only in endParsing()
                 continue LOOP
             case .ERROR:
+                if (isErrorCapturedUsingEndBeforeClause) {
+                    tracePrint("Error capture: Capture using end_before clause is immediately followed by an error for the same token, indicating that the endBefore clause is inconsistent with the grammar.")
+                    // If we save this error and then try to capture it with the same lookAhead,
+                    // we'll cause an infinite loop. So, we just ignore this error.
+                    yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
+                    return
+                }
                 try throwOrSave(UnexpectedTokenError(token: token, tokenCode: tokenCode))
                 continue LOOP // if error is saved, not thrown, we should attempt to capture it right away
             default:
@@ -263,7 +273,7 @@ extension CitronParser {
                 guard let savedError = yyErrorCaptureSavedError else { fatalError() }
                 tracePrint("Error capture: At end of input, throwing saved uncaptured error")
                 throw savedError
-            case .capturedOnIntermediateSymbol:
+            case .capturedOnIntermediateSymbol(_):
                 tracePrint("Error capture: Succeeded")
                 yyErrorCaptureSavedError = nil
                 yyErrorCaptureTokensSinceError = []
@@ -383,16 +393,16 @@ private extension CitronParser {
         if let resultSymbol = resultSymbol {
             return .capturedOnFinalResult(result: resultSymbol)
         } else {
-            return .capturedOnIntermediateSymbol
+            return .capturedOnIntermediateSymbol(didMatchEndBeforeClause: info.didMatchEndBeforeClause)
         }
     }
 
-    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?) -> (stackIndex: Int, symbolCode: CitronSymbolCode)? {
+    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?) -> (stackIndex: Int, symbolCode: CitronSymbolCode, didMatchEndBeforeClause: Bool)? {
         let isAtEndOfInput: Bool = (lookAhead == nil)
 
         if (isAtEndOfInput) {
             if let startSymbolStackIndex = yyErrorCaptureStartSymbolStackIndex {
-                return (stackIndex: startSymbolStackIndex, symbolCode: yyStartSymbolCode)
+                return (stackIndex: startSymbolStackIndex, symbolCode: yyStartSymbolCode, didMatchEndBeforeClause: false)
             }
         }
 
@@ -421,12 +431,12 @@ private extension CitronParser {
                 }
                 if (lookAhead != nil && directive.endBefore.contains(lookAhead!)) {
                     tracePrint("Error capture: Match for endBefore clause for symbol \"\(yySymbolName[Int(s)])\"")
-                    return (stackIndex: stackIndex, symbolCode: s)
+                    return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: true)
                 }
                 for endAfterTokenSequence in directive.endAfter {
                     if (yyErrorCaptureTokensSinceError.map({ $0.tokenCode }).hasSuffix(endAfterTokenSequence)) {
                         tracePrint("Error capture: Match for endAfter clause for symbol \"\(yySymbolName[Int(s)])\"")
-                        return (stackIndex: stackIndex, symbolCode: s)
+                        return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: false)
                     }
                 }
             }
