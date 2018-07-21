@@ -223,6 +223,7 @@ extension CitronParser {
                 case .capturedOnIntermediateSymbol:
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
+                    yyErrorCaptureTokensSinceError = []
                 case .capturedOnFinalResult(_):
                     fatalError() // Can happen only in endParsing()
                 }
@@ -265,9 +266,11 @@ extension CitronParser {
             case .capturedOnIntermediateSymbol:
                 tracePrint("Error capture: Succeeded")
                 yyErrorCaptureSavedError = nil
+                yyErrorCaptureTokensSinceError = []
             case .capturedOnFinalResult(let resultSymbol):
                 tracePrint("Error capture: Succeeded")
                 yyErrorCaptureSavedError = nil
+                yyErrorCaptureTokensSinceError = []
                 return yyUnwrapResultFromSymbol(resultSymbol)
             }
         }
@@ -326,11 +329,13 @@ private extension CitronParser {
             tracePrint("Error capture: Saved error for later capturing: UnexpectedTokenError(token: \(error.token), tokenCode: \(error.tokenCode))")
             // Save this error for either capturing or throwing later
             self.yyErrorCaptureSavedError = error
+            self.yyErrorCaptureTokensSinceError = []
             // Save some info for determining when to capture the error
             self.yyErrorCaptureStackIndices = stackIndices
             self.yyErrorCaptureStartSymbolStackIndex = startSymbolStackIndex
         } else {
             self.yyErrorCaptureSavedError = nil
+            self.yyErrorCaptureTokensSinceError = []
             self.yyErrorCaptureStackIndices = []
             self.yyErrorCaptureStartSymbolStackIndex = nil
             throw error
