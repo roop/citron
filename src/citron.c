@@ -3065,6 +3065,10 @@ void CheckErrorCaptureDirectives(struct lemon *lemp) {
   struct symbol *start_symbol = find_start_symbol(lemp);
   for (int i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
     struct symbol *sp = lemp->symbols[i];
+    if (sp->error_capture_line == 0) { continue; }
+    // The start symbol should have no end_before or end_after clauses.
+    // Non-start-symbols should always have either an end_before or an
+    // end_after clause, or both.
     if (sp == start_symbol) {
       if (sp->num_error_capture_end_before_sequences > 0 || sp->num_error_capture_end_after_sequences > 0) {
         ErrorMsg(lemp->filename, sp->error_capture_line,
@@ -3072,12 +3076,10 @@ void CheckErrorCaptureDirectives(struct lemon *lemp) {
         lemp->errorcnt++;
       }
     } else {
-      if (sp->error_capture_line > 0) {
-        if (sp->num_error_capture_end_before_sequences == 0 && sp->num_error_capture_end_after_sequences == 0) {
-          ErrorMsg(lemp->filename, sp->error_capture_line,
-"%%capture_errors on symbol '%s' should have an 'end_before' clause, or an 'end_after' clause, or both.", sp->name);
-          lemp->errorcnt++;
-        }
+      if (sp->num_error_capture_end_before_sequences == 0 && sp->num_error_capture_end_after_sequences == 0) {
+        ErrorMsg(lemp->filename, sp->error_capture_line,
+"%%capre_errors on symbol '%s' should have an 'end_before' clause, or an 'end_after' clause, or both.", sp->name);
+        lemp->errorcnt++;
       }
     }
   }
