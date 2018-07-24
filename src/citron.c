@@ -2551,6 +2551,11 @@ to follow the previous rule.");
         if (!sp){
           sp = Symbol_new(x);
         }
+        if (sp->error_capture_line > 0) {
+          ErrorMsg(psp->filename,psp->tokenlineno,
+            "Symbol '%s' already has %%capture_errors defined earlier in line %d", sp->name, sp->error_capture_line);
+          psp->errorcnt++;
+        }
         sp->error_capture_line = psp->tokenlineno;
         psp->prevnonterminalcaptureerrors = sp;
         psp->state = WAITING_FOR_CAPTURE_ERROR_END_CLAUSE;
