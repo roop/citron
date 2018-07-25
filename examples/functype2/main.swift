@@ -12,17 +12,27 @@ struct FunctionHeader {
         case nonthrowing
     }
     let name: String
-    let parameters: [FunctionParameter]
+    let parameters: [FunctionParameter?]
     let returnType: String
     let throwability: Throwability
 
     func typeString() -> String {
         return "("
                 + parameters.map { p in
-                    p.isInout ? "inout \(p.type)" : p.type
+                    p == nil ? "ERROR" :
+                      (p!.isInout ? "inout \(p!.type)" : p!.type)
                 }.joined(separator: ", ")
                 + (throwability == .nonthrowing ? ") -> " : ") throws -> ")
                 + returnType
+    }
+}
+
+extension FunctionHeaderParser : FunctionHeaderParser.CitronErrorCaptureDelegate {
+    func shouldCaptureErrorOnParam(error: FunctionHeaderParser.UnexpectedTokenError,
+        resolvedSymbols: [(name: String, value: Any)],
+        unclaimedTokens: [(token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)],
+        nextToken: (token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)?) -> CitronErrorCaptureResponse<FunctionParameter?> {
+        return .captureAs(nil)
     }
 }
 
@@ -30,6 +40,7 @@ func parseFunctionHeader(input: String) -> FunctionHeader? {
 
     // Create parser
     let parser = FunctionHeaderParser()
+    parser.errorCaptureDelegate = parser
 
     // Create lexer
     typealias Lexer = CitronLexer<(FunctionHeaderParser.CitronToken,

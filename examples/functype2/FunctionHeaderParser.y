@@ -21,7 +21,7 @@
 %nonterminal_type func_header FunctionHeader
 // FunctionHeader is defined in main.swift
 %nonterminal_type func_name TypeIdentifier { return "" }
-%nonterminal_type func_signature "([FunctionParameter], FunctionHeader.Throwability, TypeIdentifier)"
+%nonterminal_type func_signature "([FunctionParameter?], FunctionHeader.Throwability, TypeIdentifier)"
 
 func_header ::= KeywordFunc func_name(n) func_signature(sig). {
     return FunctionHeader(name: n, parameters: sig.0,
@@ -43,9 +43,9 @@ throw_clause ::= KeywordThrows(t). { return .throwing }
 throw_clause ::= KeywordRethrows(t). { return .rethrowing }
 func_result ::= Arrow type(t). { return t }
 
-%nonterminal_type param_clause "[FunctionParameter]"
-%nonterminal_type param_list "[FunctionParameter]"
-%nonterminal_type param FunctionParameter
+%nonterminal_type param_clause "[FunctionParameter?]"
+%nonterminal_type param_list "[FunctionParameter?]"
+%nonterminal_type param "FunctionParameter?"
 // FunctionParameter is defined in main.swift
 
 param_clause ::= OpenBracket CloseBracket. { return [] }
