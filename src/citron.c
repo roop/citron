@@ -3083,7 +3083,7 @@ void CheckErrorCaptureDirectives(struct lemon *lemp) {
     } else {
       if (sp->num_error_capture_end_before_sequences == 0 && sp->num_error_capture_end_after_sequences == 0) {
         ErrorMsg(lemp->filename, sp->error_capture_line,
-"%%capre_errors on symbol '%s' should have an 'end_before' clause, or an 'end_after' clause, or both.", sp->name);
+"%%capture_errors on symbol '%s' should have an 'end_before' clause, or an 'end_after' clause, or both.", sp->name);
         lemp->errorcnt++;
       }
     }
