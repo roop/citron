@@ -203,6 +203,11 @@ enum _CitronErrorCaptureResult<Symbol> {
     case capturedOnFinalResult(result: Symbol)
 }
 
+enum CitronErrorCaptureResponse<T> {
+    case captureAs(T)
+    case dontCapture
+}
+
 // Parsing interface
 
 extension CitronParser {

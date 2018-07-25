@@ -4424,7 +4424,13 @@ void ReportTable(struct lemon *lemp){
         continue;
       }
       fprintf(out, "        case %d: /* %s */\n", i, sp->name);
-      fprintf(out, "            return .yy%d(delegate.captureErrorOn%c%s(error: error, resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken))\n", sp->dtnum, TOUPPER(sp->name[0]), sp->name + 1);
+      fprintf(out, "            let delegateResponse = delegate.shouldCaptureErrorOn%c%s(error: error, resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken)\n", TOUPPER(sp->name[0]), sp->name + 1);
+      fprintf(out, "            switch (delegateResponse) {\n");
+      fprintf(out, "            case .captureAs(let symbol):\n");
+      fprintf(out, "                return .yy%d(symbol)\n", sp->dtnum);
+      fprintf(out, "            case .dontCapture:\n");
+      fprintf(out, "                return nil\n");
+      fprintf(out, "            }\n");
     }
     fprintf(out, "        default:\n");
     fprintf(out, "            fatalError(\"yyCaptureError: Symbol code \\(symbolCode) is not an error capturing symbol code\")\n");
@@ -4463,11 +4469,11 @@ void ReportTable(struct lemon *lemp){
       continue;
     }
     fprintf(out, "\n    /* %s */\n", sp->name);
-    fprintf(out, "    func captureErrorOn%c%s(error: %s.UnexpectedTokenError,\n", TOUPPER(sp->name[0]), sp->name + 1, lemp->className);
+    fprintf(out, "    func shouldCaptureErrorOn%c%s(error: %s.UnexpectedTokenError,\n", TOUPPER(sp->name[0]), sp->name + 1, lemp->className);
     fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
     fprintf(out, "        unclaimedTokens: [(token: %s.CitronToken, tokenCode: %s.CitronTokenCode)],\n", lemp->className, lemp->className);
     fprintf(out, "        nextToken: (token: %s.CitronToken, tokenCode: %s.CitronTokenCode)?)\n", lemp->className, lemp->className);
-    fprintf(out, "        -> %s\n", sp->datatype);
+    fprintf(out, "        -> CitronErrorCaptureResponse<%s>\n", sp->datatype);
   }
   fprintf(out, "}\n\n");
   fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);
