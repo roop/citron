@@ -394,9 +394,11 @@ private extension CitronParser {
         }
 
         yyPop(times: yyStack.count - info.stackIndex - 1)
-        let resultSymbol = try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode)
-        if let resultSymbol = resultSymbol {
-            return .capturedOnFinalResult(result: resultSymbol)
+
+        var isAccepted: Bool = false
+        try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode, isAccepted: &isAccepted)
+        if (isAccepted) {
+            return .capturedOnFinalResult(result: errorCapturedSymbol)
         } else {
             return .capturedOnIntermediateSymbol(didMatchEndBeforeClause: info.didMatchEndBeforeClause)
         }
@@ -578,10 +580,17 @@ private extension CitronParser {
 
         yyPop(times: Int(numberOfRhsSymbols))
 
-        return try yyPerformReduceAction(symbol: resultSymbol, code: lhsSymbolCode)
+        var isAccepted: Bool = false
+        try yyPerformReduceAction(symbol: resultSymbol, code: lhsSymbolCode, isAccepted: &isAccepted)
+
+        if (isAccepted) {
+            return resultSymbol
+        } else {
+            return nil
+        }
     }
 
-    func yyPerformReduceAction(symbol resultSymbol: CitronSymbol, code lhsSymbolCode: CitronSymbolCode) throws -> CitronSymbol? {
+    func yyPerformReduceAction(symbol resultSymbol: CitronSymbol, code lhsSymbolCode: CitronSymbolCode, isAccepted: inout Bool) throws {
 
         guard case .state(let stateInStack) = yyStack.last!.stateOrRule else {
             fatalError("Expecting state got rule") // FIXME: Is this correct?
@@ -597,8 +606,12 @@ private extension CitronParser {
         case .RD(let r): stateOrRule = .rule(r)
         case .ERROR: fatalError("Unexpected error action after a reduce")
         // It is not possible for a REDUCE to be followed by an error.
-        case .ACCEPT: return resultSymbol
+        case .ACCEPT:
+            isAccepted = true
+            return
         }
+
+        isAccepted = false
 
         try yyPush(stateOrRule: stateOrRule, symbolCode: lhsSymbolCode, symbol: resultSymbol)
         tracePrint("Shift:", symbolNameFor(code:lhsSymbolCode))
@@ -611,7 +624,6 @@ private extension CitronParser {
             }
         }
         traceStack()
-        return nil
     }
 }
 
