@@ -4,7 +4,7 @@
     typealias TypeIdentifier = String
 }
 
-%token_type Token
+%token_type "(token: Token, position: Lexer.LexingPosition)"
 %tokencode_prefix funcHeader
 
 %nonterminal_type func_header FunctionHeader
@@ -16,7 +16,7 @@ func_header ::= KeywordFunc func_name(n) func_signature(sig). {
         returnType: sig.2, throwability: sig.1)
 }
 
-func_name ::= Identifier(token). { return token.toIdentifierString()! }
+func_name ::= Identifier(t). { return t.token.toIdentifierString()! }
 
 func_signature ::= param_clause(p). { return (p, .nonthrowing, "Void") }
 func_signature ::= param_clause(p) func_result(r). { return (p, .nonthrowing, r) }
@@ -54,12 +54,12 @@ param ::= external_param_name(epn) local_param_name(lpn) type_annotation(ta). {
 %nonterminal_type external_param_name String
 %nonterminal_type local_param_name String
 
-external_param_name ::= Identifier(token). { return token.toIdentifierString()! }
-local_param_name ::= Identifier(token). { return token.toIdentifierString()! }
+external_param_name ::= Identifier(t). { return t.token.toIdentifierString()! }
+local_param_name ::= Identifier(t). { return t.token.toIdentifierString()! }
 
 %nonterminal_type type_annotation "(type: String, isInout: Bool)"
 %nonterminal_type type TypeIdentifier
 
 type_annotation ::= Colon type(t). { return (type: t, isInout: false) }
 type_annotation ::= Colon KeywordInout type(t). { return (type: t, isInout: true) }
-type ::= Identifier(token). { return token.toIdentifierString()! }
+type ::= Identifier(t). { return t.token.toIdentifierString()! }

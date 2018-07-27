@@ -39,15 +39,14 @@ struct FunctionHeader {
     }
 }
 
+typealias Lexer = CitronLexer<(Token, FunctionHeaderParser.CitronTokenCode)>
+
 func parseFunctionHeader(input: String) -> FunctionHeader? {
 
     // Create parser
     let parser = FunctionHeaderParser()
-    parser.errorCaptureDelegate = parser
 
     // Create lexer
-    typealias Lexer = CitronLexer<(FunctionHeaderParser.CitronToken,
-                        FunctionHeaderParser.CitronTokenCode)>
     let lexer = Lexer(rules: [
 
             // Keywords
@@ -76,11 +75,15 @@ func parseFunctionHeader(input: String) -> FunctionHeader? {
             .regexPattern("\\s", { _ in nil })
         ])
 
+    // Enable error capturing
+    let errorReporter = ErrorReporter(input: input)
+    parser.errorCaptureDelegate = errorReporter
+
     // Tokenize and parse
     var funcHeader: FunctionHeader? = nil
     do {
         try lexer.tokenize(input) { (t, c) in
-            try parser.consume(token: t, code: c)
+            try parser.consume(token: (token: t, position: lexer.currentPosition), code: c)
         }
         funcHeader = try parser.endParsing()
     } catch CitronLexerError.noMatchingRuleAt(let index, let string) {
