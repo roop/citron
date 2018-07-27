@@ -32,6 +32,10 @@ class CitronLexer<TokenData> {
     }
     let rules: [LexingRule]
 
+    typealias LexingPosition = (tokenPosition: String.Index, linePosition: String.Index, lineNumber: Int)
+
+    var currentPosition: LexingPosition
+
     init(rules: [LexingRule]) {
         self.rules = rules.map { rule in
             // Convert .regexPattern values to equivalent .regex values
@@ -42,27 +46,28 @@ class CitronLexer<TokenData> {
                 return rule
             }
         }
+        currentPosition = (tokenPosition: String.Index(encodedOffset: 0), linePosition: String.Index(encodedOffset: 0), lineNumber: 0)
     }
 
     func tokenize(_ string: String, onFound: Action) throws {
-        var index = string.startIndex
-        while (index < string.endIndex) {
+        currentPosition = (tokenPosition: string.startIndex, linePosition: string.startIndex, lineNumber: 1)
+        while (currentPosition.tokenPosition < string.endIndex) {
             var matched = false
             for rule in rules {
                 switch (rule) {
                 case .string(let ruleString, let tokenData):
-                    if (string.suffix(from: index).hasPrefix(ruleString)) {
+                    if (string.suffix(from: currentPosition.tokenPosition).hasPrefix(ruleString)) {
                         if let tokenData = tokenData {
                             try onFound(tokenData)
                         }
-                        index = string.index(index, offsetBy: ruleString.count)
+                        currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: ruleString.count)
                         matched = true
                     }
                 case .regex(let ruleRegex, let handler):
                     let result = ruleRegex.firstMatch(in: string, options: .anchored, range:
                         NSRange(
-                            location: string.prefix(upTo: index).utf16.count,
-                            length: string.suffix(from: index).utf16.count)
+                            location: string.prefix(upTo: currentPosition.tokenPosition).utf16.count,
+                            length: string.suffix(from: currentPosition.tokenPosition).utf16.count)
                     )
                     if let matchingRange = result?.range {
                         let start = string.utf16.index(string.utf16.startIndex, offsetBy: matchingRange.lowerBound)
@@ -71,7 +76,7 @@ class CitronLexer<TokenData> {
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
                             }
-                            index = string.index(index, offsetBy: matchingString.count)
+                            currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: matchingString.count)
                             matched = true
 
                         }
@@ -84,7 +89,7 @@ class CitronLexer<TokenData> {
                 }
             }
             if (!matched) {
-                throw CitronLexerError.noMatchingRuleAt(index: index, in: string)
+                throw CitronLexerError.noMatchingRuleAt(index: currentPosition.tokenPosition, in: string)
             }
         }
     }
@@ -92,4 +97,21 @@ class CitronLexer<TokenData> {
 
 enum CitronLexerError: Error {
     case noMatchingRuleAt(index: String.Index, in: String)
+}
+
+private extension CitronLexer {
+    func lexingPosition(in str: String, advancedFrom from: LexingPosition, by offset: Int) -> LexingPosition {
+         let tokenPosition = str.index(from.tokenPosition, offsetBy: offset)
+         var linePosition = from.linePosition
+         var lineNumber = from.lineNumber
+         var index = from.tokenPosition
+         while (index < tokenPosition) {
+            if (str[index] == "\n") {
+                lineNumber = lineNumber + 1
+                linePosition = str.index(after: index)
+            }
+            index = str.index(after: index)
+         }
+         return (tokenPosition: tokenPosition, linePosition: linePosition, lineNumber: lineNumber)
+    }
 }
