@@ -1,17 +1,6 @@
 %class_name FunctionHeaderParser
 
 %preface {
-    enum Token {
-        case keyword // for func, throws, inout, etc.
-        case punctuation // for (, ), ->, etc.
-        case identifier(String) // for identifiers
-        func toIdentifierString() -> String? {
-            if case .identifier(let id) = self {
-                return id
-            }
-            return nil
-        }
-    }
     typealias TypeIdentifier = String
 }
 
