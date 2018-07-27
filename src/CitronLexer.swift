@@ -25,6 +25,7 @@ import Foundation
 
 class CitronLexer<TokenData> {
     typealias Action = (TokenData) throws -> Void
+    typealias ErrorAction = (CitronLexerError) -> Void
     enum LexingRule {
         case string(String, TokenData?)
         case regex(NSRegularExpression, (String) -> TokenData?)
@@ -50,17 +51,26 @@ class CitronLexer<TokenData> {
     }
 
     func tokenize(_ string: String, onFound: Action) throws {
+        try tokenize(string, onFound: onFound, onError: nil)
+    }
+
+    func tokenize(_ string: String, onFound: Action, onError: ErrorAction?) throws {
         currentPosition = (tokenPosition: string.startIndex, linePosition: string.startIndex, lineNumber: 1)
+        var errorStartPosition: String.Index? = nil
         while (currentPosition.tokenPosition < string.endIndex) {
             var matched = false
             for rule in rules {
                 switch (rule) {
                 case .string(let ruleString, let tokenData):
                     if (string.suffix(from: currentPosition.tokenPosition).hasPrefix(ruleString)) {
+                        if let errorStartPosition = errorStartPosition {
+                            onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                        }
                         if let tokenData = tokenData {
                             try onFound(tokenData)
                         }
                         currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: ruleString.count)
+                        errorStartPosition = nil
                         matched = true
                     }
                 case .regex(let ruleRegex, let handler):
@@ -73,10 +83,14 @@ class CitronLexer<TokenData> {
                         let start = string.utf16.index(string.utf16.startIndex, offsetBy: matchingRange.lowerBound)
                         let end = string.utf16.index(string.utf16.startIndex, offsetBy: matchingRange.upperBound)
                         if let matchingString = String(string.utf16[start..<end]) {
+                            if let errorStartPosition = errorStartPosition {
+                                onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                            }
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
                             }
                             currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: matchingString.count)
+                            errorStartPosition = nil
                             matched = true
 
                         }
@@ -89,8 +103,16 @@ class CitronLexer<TokenData> {
                 }
             }
             if (!matched) {
-                throw CitronLexerError.noMatchingRuleAt(index: currentPosition.tokenPosition, in: string)
+                if (onError == nil) {
+                    throw CitronLexerError.noMatchingRuleAt(index: currentPosition.tokenPosition, in: string)
+                } else {
+                    errorStartPosition = currentPosition.tokenPosition
+                    currentPosition.tokenPosition = string.index(after: currentPosition.tokenPosition)
+                }
             }
+        }
+        if let errorStartPosition = errorStartPosition {
+            onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
         }
     }
 }
