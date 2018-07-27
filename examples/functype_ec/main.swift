@@ -27,15 +27,6 @@ struct FunctionHeader {
     }
 }
 
-extension FunctionHeaderParser : FunctionHeaderParser.CitronErrorCaptureDelegate {
-    func shouldCaptureErrorOnParam(error: FunctionHeaderParser.UnexpectedTokenError,
-        resolvedSymbols: [(name: String, value: Any)],
-        unclaimedTokens: [(token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)],
-        nextToken: (token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)?) -> CitronErrorCaptureResponse<FunctionParameter?> {
-        return .captureAs(nil)
-    }
-}
-
 func parseFunctionHeader(input: String) -> FunctionHeader? {
 
     // Create parser
