@@ -131,12 +131,12 @@ protocol CitronParser: class {
 
     var yyStartSymbolCode: CitronSymbolCode { get }
 
-    var yyErrorCaptureSavedError: UnexpectedTokenError? { get set }
+    var yyErrorCaptureSavedError: Error? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
-    func yyCaptureError(on: CitronSymbolCode, error: UnexpectedTokenError,
+    func yyCaptureError(on: CitronSymbolCode, error: Error,
             resolvedSymbols: [(name: String, value: Any)],
             unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],
             nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol?
@@ -320,7 +320,7 @@ extension CitronParser {
 // Private methods for error capturing
 
 private extension CitronParser {
-    func throwOrSave(_ error: UnexpectedTokenError) throws {
+    func throwOrSave(_ error: Error) throws {
         guard (self.yyCanErrorCapture) else { throw error }
         var canCapture: Bool = false
         var stackIndices: [Int] = []
@@ -341,7 +341,7 @@ private extension CitronParser {
             }
         }
         if (canCapture) {
-            tracePrint("Error capture: Saved error for later capturing: UnexpectedTokenError(token: \(error.token), tokenCode: \(error.tokenCode))")
+            tracePrint("Error capture: Saved error for later capturing: \(error)")
             // Save this error for either capturing or throwing later
             self.yyErrorCaptureSavedError = error
             self.yyErrorCaptureTokensSinceError = []

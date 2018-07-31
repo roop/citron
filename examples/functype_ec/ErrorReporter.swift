@@ -7,7 +7,7 @@ class ErrorReporter {
 }
 
 extension ErrorReporter : FunctionHeaderParser.CitronErrorCaptureDelegate {
-    func shouldCaptureErrorOnParam(error: FunctionHeaderParser.UnexpectedTokenError,
+    func shouldCaptureErrorOnParam(error: Error,
         resolvedSymbols: [(name: String, value: Any)],
         unclaimedTokens: [(token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)],
         nextToken: (token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)?) -> CitronErrorCaptureResponse<FunctionParameter?> {
