@@ -269,28 +269,30 @@ extension CitronParser {
     func endParsing() throws -> CitronResult {
         tracePrint("End of input")
 
-        if (yyShouldAttemptErrorCapture()) {
-            tracePrint("Error capture: Trying to capture saved error")
-            let result = try yyAttemptErrorCapture(nextToken: nil)
-            switch (result) {
-            case .notCaptured:
-                tracePrint("Error capture: Failed")
-                guard let savedError = yyErrorCaptureSavedError else { fatalError() }
-                tracePrint("Error capture: At end of input, throwing saved uncaptured error")
-                throw savedError
-            case .capturedOnIntermediateSymbol(_):
-                tracePrint("Error capture: Succeeded")
-                yyErrorCaptureSavedError = nil
-                yyErrorCaptureTokensSinceError = []
-            case .capturedOnFinalResult(let resultSymbol):
-                tracePrint("Error capture: Succeeded")
-                yyErrorCaptureSavedError = nil
-                yyErrorCaptureTokensSinceError = []
-                return yyUnwrapResultFromSymbol(resultSymbol)
-            }
-        }
-
         LOOP: while (!yyStack.isEmpty) {
+
+            if (yyShouldAttemptErrorCapture()) {
+                tracePrint("Error capture: Trying to capture saved error")
+                let result = try yyAttemptErrorCapture(nextToken: nil)
+                switch (result) {
+                case .notCaptured:
+                    tracePrint("Error capture: Failed")
+                    guard let savedError = yyErrorCaptureSavedError else { fatalError() }
+                    tracePrint("Error capture: At end of input, throwing saved uncaptured error")
+                    throw savedError
+                case .capturedOnIntermediateSymbol(let didMatchEndBeforeClause):
+                    tracePrint("Error capture: Succeeded")
+                    yyErrorCaptureSavedError = nil
+                    yyErrorCaptureTokensSinceError = []
+                    assert(didMatchEndBeforeClause == false)
+                case .capturedOnFinalResult(let resultSymbol):
+                    tracePrint("Error capture: Succeeded")
+                    yyErrorCaptureSavedError = nil
+                    yyErrorCaptureTokensSinceError = []
+                    return yyUnwrapResultFromSymbol(resultSymbol)
+                }
+            }
+
             let action = yyFindShiftAction(lookAhead: 0)
             switch (action) {
             case .RD(let r):
@@ -301,7 +303,8 @@ extension CitronParser {
                 }
                 continue LOOP
             case .ERROR:
-                throw UnexpectedEndOfInputError()
+                try throwOrSave(UnexpectedEndOfInputError())
+                continue LOOP // if error is saved, not thrown, we should attempt to capture it right away
             default:
                 fatalError("Unexpected action")
             }
