@@ -4282,8 +4282,7 @@ void ReportTable(struct lemon *lemp){
         }
         last_seen_symbol = lhs_symbol;
         // We need only symbols that have %capture_errors defined on them
-        if (lhs_symbol->num_error_capture_end_before_sequences == 0 &&
-            lhs_symbol->num_error_capture_end_after_sequences == 0) {
+        if (lhs_symbol->error_capture_line == 0) {
           continue;
         }
         // We consider only symbols that can be shifted in from this state
@@ -4419,8 +4418,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "        switch (symbolCode) {\n");
     for(int i=0; i<lemp->nsymbol; i++){
       struct symbol *sp = lemp->symbols[i];
-      if (sp->num_error_capture_end_before_sequences == 0 &&
-          sp->num_error_capture_end_after_sequences == 0) {
+      if (sp->error_capture_line == 0) {
         continue;
       }
       fprintf(out, "        case %d: /* %s */\n", i, sp->name);
@@ -4464,8 +4462,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    func shouldSaveErrorForCapturing(error: Error) -> Bool\n");
   for(int i=0; i<lemp->nsymbol; i++){
     struct symbol *sp = lemp->symbols[i];
-    if (sp->num_error_capture_end_before_sequences == 0 &&
-        sp->num_error_capture_end_after_sequences == 0) {
+    if (sp->error_capture_line == 0) {
       continue;
     }
     fprintf(out, "\n    /* %s */\n", sp->name);
