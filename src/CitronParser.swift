@@ -410,19 +410,13 @@ private extension CitronParser {
     func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?) -> (stackIndex: Int, symbolCode: CitronSymbolCode, didMatchEndBeforeClause: Bool)? {
         let isAtEndOfInput: Bool = (lookAhead == nil)
 
-        if (isAtEndOfInput) {
-            if let startSymbolStackIndex = yyErrorCaptureStartSymbolStackIndex {
-                return (stackIndex: startSymbolStackIndex, symbolCode: yyStartSymbolCode, didMatchEndBeforeClause: false)
-            }
-        }
-
         let lastSeenTokenSymbolCode: CitronSymbolCode? = yyErrorCaptureTokensSinceError.last?.tokenCode.rawValue
         let isEndBeforeMatchPossible = ((lookAhead != nil) &&
             yyErrorCaptureEndBeforeTokens.contains(lookAhead!.rawValue))
         let isEndAfterMatchPossible = ((lastSeenTokenSymbolCode != nil) &&
             yyErrorCaptureEndAfterSequenceEndingTokens.contains(lastSeenTokenSymbolCode!))
 
-        guard (isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
+        guard (isAtEndOfInput || isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
 
         for stackIndex in yyErrorCaptureStackIndices {
             var symbolCodes: [CitronSymbolCode] = []
@@ -436,6 +430,10 @@ private extension CitronParser {
                 break
             }
             for s in symbolCodes {
+                if (isAtEndOfInput) {
+                    tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(s)])\"")
+                    return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: false)
+                }
                 guard let directive = yyErrorCaptureDirectives[s] else {
                     continue
                 }
