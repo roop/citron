@@ -199,7 +199,7 @@ enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
 
 enum _CitronErrorCaptureResult<Symbol> {
     case notCaptured
-    case capturedOnIntermediateSymbol(didMatchEndBeforeClause: Bool)
+    case capturedOnIntermediateSymbol(symbol: String, didMatchEndBeforeClause: Bool)
     case capturedOnFinalResult(result: Symbol)
 }
 
@@ -227,7 +227,7 @@ extension CitronParser {
                     tracePrint("Error capture: Failed")
                     yyErrorCaptureTokensSinceError.append((token: token, tokenCode: tokenCode))
                     return
-                case .capturedOnIntermediateSymbol(let didMatchEndBeforeClause):
+                case .capturedOnIntermediateSymbol(_, let didMatchEndBeforeClause):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
                     yyErrorCaptureTokensSinceError = []
@@ -269,22 +269,27 @@ extension CitronParser {
     func endParsing() throws -> CitronResult {
         tracePrint("End of input")
 
+        var errorCaptureExcludeSymbols: Set<String> = []
+
         LOOP: while (!yyStack.isEmpty) {
 
             if (yyShouldAttemptErrorCapture()) {
                 tracePrint("Error capture: Trying to capture saved error")
-                let result = try yyAttemptErrorCapture(nextToken: nil)
+                let result = try yyAttemptErrorCapture(nextToken: nil, excludeSymbols: errorCaptureExcludeSymbols)
                 switch (result) {
                 case .notCaptured:
                     tracePrint("Error capture: Failed")
                     guard let savedError = yyErrorCaptureSavedError else { fatalError() }
                     tracePrint("Error capture: At end of input, throwing saved uncaptured error")
                     throw savedError
-                case .capturedOnIntermediateSymbol(let didMatchEndBeforeClause):
+                case .capturedOnIntermediateSymbol(let symbol, _):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
                     yyErrorCaptureTokensSinceError = []
-                    assert(didMatchEndBeforeClause == false)
+                    // Capturing again on the same symbol will
+                    // cause an infinite loop, so we exclude it
+                    // in further captures.
+                    errorCaptureExcludeSymbols.insert(symbol)
                 case .capturedOnFinalResult(let resultSymbol):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
@@ -364,12 +369,12 @@ private extension CitronParser {
         return (self.yyErrorCaptureSavedError != nil)
     }
 
-    func yyAttemptErrorCapture(nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) throws -> CitronErrorCaptureResult {
+    func yyAttemptErrorCapture(nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?, excludeSymbols: Set<String> = []) throws -> CitronErrorCaptureResult {
         guard let savedError = yyErrorCaptureSavedError else {
             fatalError("No error saved for capturing")
         }
 
-        guard let info = stackUnwindInfoForErrorCapture(lookAhead: nextToken?.tokenCode) else {
+        guard let info = stackUnwindInfoForErrorCapture(lookAhead: nextToken?.tokenCode, excludeSymbols: excludeSymbols) else {
             tracePrint("Error capture: No match in the stack for the current sequence of tokens")
             return .notCaptured
         }
@@ -403,11 +408,13 @@ private extension CitronParser {
         if (isAccepted) {
             return .capturedOnFinalResult(result: errorCapturedSymbol)
         } else {
-            return .capturedOnIntermediateSymbol(didMatchEndBeforeClause: info.didMatchEndBeforeClause)
+            return .capturedOnIntermediateSymbol(symbol: yySymbolName[Int(info.symbolCode)], didMatchEndBeforeClause: info.didMatchEndBeforeClause)
         }
     }
 
-    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?) -> (stackIndex: Int, symbolCode: CitronSymbolCode, didMatchEndBeforeClause: Bool)? {
+    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?, excludeSymbols: Set<String>)
+        -> (stackIndex: Int, symbolCode: CitronSymbolCode, didMatchEndBeforeClause: Bool)? {
+
         let isAtEndOfInput: Bool = (lookAhead == nil)
 
         let lastSeenTokenSymbolCode: CitronSymbolCode? = yyErrorCaptureTokensSinceError.last?.tokenCode.rawValue
@@ -430,6 +437,9 @@ private extension CitronParser {
                 break
             }
             for s in symbolCodes {
+                if (excludeSymbols.contains(yySymbolName[Int(s)])) {
+                    continue
+                }
                 if (isAtEndOfInput) {
                     tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(s)])\"")
                     return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: false)
