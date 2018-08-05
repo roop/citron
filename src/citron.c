@@ -440,7 +440,8 @@ struct lemon {
   char *epilogue;          /* Code to put at the end of the generated file */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
-  char *tokenprefix;       /* A prefix added to token names in the .h file */
+  char *tokenprefix;       /* A prefix added to token names in the generated enum */
+  char *nonterminalprefix; /* A prefix added to nonterminal names in the generated enum */
   int nconflict;           /* Number of parsing conflicts */
   int nactiontab;          /* Number of entries in the yy_action[] table */
   int tablesize;           /* Total table size of all tables in bytes */
@@ -2465,6 +2466,9 @@ to follow the previous rule.");
         }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
+        }else if( strcmp(x,"nonterminalcode_prefix")==0 ){
+          psp->declargslot = &psp->gp->nonterminalprefix;
+          psp->insertLineMacro = 0;
         }else if( strcmp(x,"extra_class_members")==0 ){
           psp->declargslot = &(psp->gp->extraClassMembers);
           psp->insertLineMacro = 0;
@@ -3846,6 +3850,13 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    enum CitronTokenCode: CitronSymbolCode {\n");
   for(i=1; i<lemp->nterminal; i++){
     fprintf(out, "      case %s%-30s = %3d\n", tokenPrefix, lemp->symbols[i]->name, i);
+  }
+  fprintf(out, "    }\n\n");
+
+  const char *nonterminalPrefix = lemp->nonterminalprefix ? lemp->nonterminalprefix : "";
+  fprintf(out, "    enum CitronNonTerminalCode: CitronSymbolCode {\n");
+  for(i=lemp->nterminal; i<lemp->nsymbol; i++){
+    fprintf(out, "      case %s%-30s = %3d\n", nonterminalPrefix, lemp->symbols[i]->name, i);
   }
   fprintf(out, "    }\n\n");
 
