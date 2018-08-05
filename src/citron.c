@@ -4405,11 +4405,7 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    ]\n\n");
 
-    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: Error,\n");
-    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
-    fprintf(out, "        unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],\n");
-    fprintf(out, "        nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol? {\n");
-    fprintf(out, "\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
     fprintf(out, "            print(\"Error capture: Not capturing error because errorCaptureDelegate is not set\")\n");
     fprintf(out, "            return nil\n");
@@ -4422,7 +4418,7 @@ void ReportTable(struct lemon *lemp){
         continue;
       }
       fprintf(out, "        case %d: /* %s */\n", i, sp->name);
-      fprintf(out, "            let delegateResponse = delegate.shouldCaptureErrorOn%c%s(error: error, resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken)\n", TOUPPER(sp->name[0]), sp->name + 1);
+      fprintf(out, "            let delegateResponse = delegate.shouldCaptureErrorOn%c%s(state: state, error: error)\n", TOUPPER(sp->name[0]), sp->name + 1);
       fprintf(out, "            switch (delegateResponse) {\n");
       fprintf(out, "            case .captureAs(let symbol):\n");
       fprintf(out, "                return .yy%d(symbol)\n", sp->dtnum);
@@ -4441,10 +4437,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = []\n\n");
     fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = []\n\n");
 
-    fprintf(out, "    func yyCaptureError(on: CitronSymbolCode, error: Error,\n");
-    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
-    fprintf(out, "        unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],\n");
-    fprintf(out, "        nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol? {\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
     fprintf(out, "    }\n\n");
   }
@@ -4466,11 +4459,10 @@ void ReportTable(struct lemon *lemp){
       continue;
     }
     fprintf(out, "\n    /* %s */\n", sp->name);
-    fprintf(out, "    func shouldCaptureErrorOn%c%s(error: Error,\n", TOUPPER(sp->name[0]), sp->name + 1);
-    fprintf(out, "        resolvedSymbols: [(name: String, value: Any)],\n");
-    fprintf(out, "        unclaimedTokens: [(token: %s.CitronToken, tokenCode: %s.CitronTokenCode)],\n", lemp->className, lemp->className);
-    fprintf(out, "        nextToken: (token: %s.CitronToken, tokenCode: %s.CitronTokenCode)?)\n", lemp->className, lemp->className);
-    fprintf(out, "        -> CitronErrorCaptureResponse<%s>\n", sp->datatype);
+    fprintf(out, "    func shouldCaptureErrorOn%c%s(", TOUPPER(sp->name[0]), sp->name + 1);
+    fprintf(out, "state: %s.CitronErrorCaptureState,\n", lemp->className);
+    fprintf(out, "    error: Error)");
+    fprintf(out, " -> CitronErrorCaptureResponse<%s>\n", sp->datatype);
   }
   fprintf(out, "}\n\n");
   fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);

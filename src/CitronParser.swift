@@ -136,10 +136,7 @@ protocol CitronParser: class {
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
-    func yyCaptureError(on: CitronSymbolCode, error: Error,
-            resolvedSymbols: [(name: String, value: Any)],
-            unclaimedTokens: [(token: CitronToken, tokenCode: CitronTokenCode)],
-            nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?) -> CitronSymbol?
+    func yyCaptureError(on: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
     // Error handling
@@ -153,6 +150,7 @@ protocol CitronParser: class {
     typealias CitronParsingAction = _CitronParsingAction<CitronStateNumber, CitronRuleNumber>
     typealias CitronStateOrRule = _CitronStateOrRule<CitronStateNumber, CitronRuleNumber>
     typealias CitronErrorCaptureResult = _CitronErrorCaptureResult<CitronSymbol>
+    typealias CitronErrorCaptureState = _CitronErrorCaptureState<CitronToken, CitronTokenCode>
 }
 
 // Error handling
@@ -201,6 +199,15 @@ enum _CitronErrorCaptureResult<Symbol> {
     case notCaptured
     case capturedOnIntermediateSymbol(symbol: String, didMatchEndBeforeClause: Bool)
     case capturedOnFinalResult(result: Symbol)
+}
+
+struct _CitronErrorCaptureState<Token, TokenCode> {
+    let resolvedSymbols: [(name: String, value: Any)]
+    let unclaimedTokens: [(token: Token, tokenCode: TokenCode)]
+    let nextToken: (token: Token, tokenCode: TokenCode)?
+
+    var lastResolvedSymbol: (name: String, value: Any)? { return resolvedSymbols.last }
+    var erroringToken: (token: Token, tokenCode: TokenCode)? { return (unclaimedTokens.first ?? nextToken) }
 }
 
 enum CitronErrorCaptureResponse<T> {
@@ -396,8 +403,13 @@ private extension CitronParser {
             return .notCaptured
         }
 
-        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError,
-            resolvedSymbols: resolvedSymbols, unclaimedTokens: unclaimedTokens, nextToken: nextToken) else {
+        let errorCaptureState = CitronErrorCaptureState(
+            resolvedSymbols: resolvedSymbols,
+            unclaimedTokens: unclaimedTokens,
+            nextToken: nextToken
+        )
+
+        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError, state: errorCaptureState) else {
             return .notCaptured
         }
 
