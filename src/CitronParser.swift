@@ -59,6 +59,12 @@ protocol CitronParser: class {
     // be equal to the symbol code representing the terminal.
     associatedtype CitronNonTerminalCode: RawRepresentable, Equatable where CitronNonTerminalCode.RawValue == CitronSymbolNumber
 
+    // Symbol code: An enum representing
+    //   - a terminal, or
+    //   - a non-terminal, or
+    //   - an end-of-input symbol
+    associatedtype CitronSymbolCode: RawRepresentable, Equatable where CitronSymbolCode.RawValue == CitronSymbolNumber
+
     // Token: The type representing a terminal, defined using %token_type in the grammar.
     // ParseTOKENTYPE in lemon.
     associatedtype CitronToken

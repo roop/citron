@@ -3860,6 +3860,33 @@ void ReportTable(struct lemon *lemp){
   }
   fprintf(out, "    }\n\n");
 
+  fprintf(out, "    enum CitronSymbolCode : RawRepresentable, Equatable {\n");
+  fprintf(out, "        case token(CitronTokenCode)\n");
+  fprintf(out, "        case nonterminal(CitronNonTerminalCode)\n");
+  fprintf(out, "        case endOfInput\n\n");
+  fprintf(out, "        init(_ token: CitronTokenCode) { self = .token(token) }\n");
+  fprintf(out, "        init(_ nonterminal: CitronNonTerminalCode) { self = .nonterminal(nonterminal) }\n");
+  fprintf(out, "        init(rawValue: CitronSymbolNumber) {\n");
+  fprintf(out, "            if (rawValue == 0) {\n");
+  fprintf(out, "                self = .endOfInput\n");
+  fprintf(out, "            } else if (rawValue < %d) {\n", lemp->nterminal);
+  fprintf(out, "                self = .token(CitronTokenCode(rawValue: rawValue)!)\n");
+  fprintf(out, "            } else if (rawValue < %d) {\n", lemp->nsymbol);
+  fprintf(out, "                self = .nonterminal(CitronNonTerminalCode(rawValue: rawValue)!)\n");
+  fprintf(out, "            } else {\n");
+  fprintf(out, "                fatalError()\n");
+  fprintf(out, "            }\n");
+  fprintf(out, "        }\n\n");
+  fprintf(out, "        typealias RawValue = CitronSymbolNumber\n");
+  fprintf(out, "        var rawValue: CitronSymbolNumber {\n");
+  fprintf(out, "            switch (self) {\n");
+  fprintf(out, "            case .token(let t): return t.rawValue\n");
+  fprintf(out, "            case .nonterminal(let nt): return nt.rawValue\n");
+  fprintf(out, "            case .endOfInput: return 0\n");
+  fprintf(out, "            }\n");
+  fprintf(out, "        }\n");
+  fprintf(out, "    }\n\n");
+
   assert(lemp->tokentype != 0);
   fprintf(out,"    typealias CitronToken = %s\n\n", lemp->tokentype); // %token_type
 
