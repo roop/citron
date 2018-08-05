@@ -44,20 +44,20 @@ protocol CitronParser: class {
 
     // Types
 
-    // Symbol code, state number and rule number are typically
+    // Symbol number, state number and rule number are typically
     // mapped to UInt8. However, if there are more than 256 symbols, states
     // or rules respectively, they will get mapped to bigger integer types.
-    associatedtype CitronSymbolCode: BinaryInteger // YYCODETYPE in lemon
+    associatedtype CitronSymbolNumber: BinaryInteger // YYCODETYPE in lemon
     associatedtype CitronStateNumber: BinaryInteger
     associatedtype CitronRuleNumber: BinaryInteger
 
     // Token code: An enum representing the terminals. The raw value shall
     // be equal to the symbol code representing the terminal.
-    associatedtype CitronTokenCode: RawRepresentable, Equatable where CitronTokenCode.RawValue == CitronSymbolCode
+    associatedtype CitronTokenCode: RawRepresentable, Equatable where CitronTokenCode.RawValue == CitronSymbolNumber
 
     // Non-terminal code: An enum representing the terminals. The raw value shall
     // be equal to the symbol code representing the terminal.
-    associatedtype CitronNonTerminalCode: RawRepresentable, Equatable where CitronNonTerminalCode.RawValue == CitronSymbolCode
+    associatedtype CitronNonTerminalCode: RawRepresentable, Equatable where CitronNonTerminalCode.RawValue == CitronSymbolNumber
 
     // Token: The type representing a terminal, defined using %token_type in the grammar.
     // ParseTOKENTYPE in lemon.
@@ -78,8 +78,8 @@ protocol CitronParser: class {
     // Action tables
 
     // The action (CitronParsingAction) is applicable only if
-    // the look ahead symbol (CitronSymbolCode) matches
-    var yyLookaheadAction: [(CitronSymbolCode, CitronParsingAction)] { get } // yy_action + yy_lookahead in lemon
+    // the look ahead symbol (CitronSymbolNumber) matches
+    var yyLookaheadAction: [(CitronSymbolNumber, CitronParsingAction)] { get } // yy_action + yy_lookahead in lemon
 
     var yyShiftUseDefault: Int { get } // YY_SHIFT_USE_DFLT in lemon
     var yyShiftOffsetMin: Int { get } // YY_SHIFT_MIN in lemon
@@ -96,19 +96,19 @@ protocol CitronParser: class {
     // Fallback
 
     var yyHasFallback: Bool { get } // YYFALLBACK in lemon
-    var yyFallback: [CitronSymbolCode] { get } // yyFallback in lemon
+    var yyFallback: [CitronSymbolNumber] { get } // yyFallback in lemon
 
     // Wildcard
 
-    var yyWildcard: CitronSymbolCode? { get }
+    var yyWildcard: CitronSymbolNumber? { get }
 
     // Rules
 
-    var yyRuleInfo: [(lhs: CitronSymbolCode, nrhs: UInt)] { get }
+    var yyRuleInfo: [(lhs: CitronSymbolNumber, nrhs: UInt)] { get }
 
     // Stack
 
-    var yyStack: [(stateOrRule: CitronStateOrRule, symbolCode: CitronSymbolCode,
+    var yyStack: [(stateOrRule: CitronStateOrRule, symbolCode: CitronSymbolNumber,
         symbol: CitronSymbol)] { get set }
     var maxStackSize: Int? { get set }
     var maxAttainedStackSize: Int { get set }
@@ -127,20 +127,20 @@ protocol CitronParser: class {
 
     // Error capturing
 
-    var yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] { get }
+    var yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] { get }
     var yyCanErrorCapture: Bool { get }
-    var yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] { get }
-    var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> { get }
-    var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> { get }
+    var yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] { get }
+    var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> { get }
+    var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> { get }
 
-    var yyStartSymbolCode: CitronSymbolCode { get }
+    var yyStartSymbolCode: CitronSymbolNumber { get }
 
     var yyErrorCaptureSavedError: Error? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
-    func yyCaptureError(on: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
+    func yyCaptureError(on: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
     // Error handling
@@ -429,11 +429,11 @@ private extension CitronParser {
     }
 
     func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?, excludeSymbols: Set<String>)
-        -> (stackIndex: Int, symbolCode: CitronSymbolCode, didMatchEndBeforeClause: Bool)? {
+        -> (stackIndex: Int, symbolCode: CitronSymbolNumber, didMatchEndBeforeClause: Bool)? {
 
         let isAtEndOfInput: Bool = (lookAhead == nil)
 
-        let lastSeenTokenSymbolCode: CitronSymbolCode? = yyErrorCaptureTokensSinceError.last?.tokenCode.rawValue
+        let lastSeenTokenSymbolCode: CitronSymbolNumber? = yyErrorCaptureTokensSinceError.last?.tokenCode.rawValue
         let isEndBeforeMatchPossible = ((lookAhead != nil) &&
             yyErrorCaptureEndBeforeTokens.contains(lookAhead!.rawValue))
         let isEndAfterMatchPossible = ((lastSeenTokenSymbolCode != nil) &&
@@ -442,7 +442,7 @@ private extension CitronParser {
         guard (isAtEndOfInput || isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
 
         for stackIndex in yyErrorCaptureStackIndices {
-            var symbolCodes: [CitronSymbolCode] = []
+            var symbolCodes: [CitronSymbolNumber] = []
             let stackEntry = yyStack[stackIndex]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
@@ -483,7 +483,7 @@ private extension CitronParser {
 
 private extension CitronParser {
 
-    func yyPush(stateOrRule: CitronStateOrRule, symbolCode: CitronSymbolCode, symbol: CitronSymbol) throws {
+    func yyPush(stateOrRule: CitronStateOrRule, symbolCode: CitronSymbolNumber, symbol: CitronSymbol) throws {
         if (maxStackSize != nil && yyStack.count >= maxStackSize!) {
             // Can't grow stack anymore
             throw StackOverflowError()
@@ -511,7 +511,7 @@ private extension CitronParser {
         for _ in 0 ..< n { yyPop() }
     }
 
-    func yyFindShiftAction(lookAhead la: CitronSymbolCode) -> CitronParsingAction {
+    func yyFindShiftAction(lookAhead la: CitronSymbolNumber) -> CitronParsingAction {
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
 
         let state: CitronStateNumber
@@ -563,7 +563,7 @@ private extension CitronParser {
         }
     }
 
-    func yyFindReduceAction(state: CitronStateNumber, lookAhead: CitronSymbolCode) -> CitronParsingAction {
+    func yyFindReduceAction(state: CitronStateNumber, lookAhead: CitronSymbolNumber) -> CitronParsingAction {
         assert(Int(state) < yyReduceOffset.count)
         var i = yyReduceOffset[Int(state)]
 
@@ -579,13 +579,13 @@ private extension CitronParser {
         return action
     }
 
-    func yyShift(state: CitronStateNumber, symbolCode: CitronSymbolCode, token: CitronToken) throws {
+    func yyShift(state: CitronStateNumber, symbolCode: CitronSymbolNumber, token: CitronToken) throws {
         tracePrint("Shift: Shift", symbolNameFor(code:symbolCode))
         tracePrint("       and go to state", "\(state)")
         try yyPush(stateOrRule: .state(state), symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
     }
 
-    func yyShiftReduce(rule: CitronRuleNumber, symbolCode: CitronSymbolCode, token: CitronToken) throws {
+    func yyShiftReduce(rule: CitronRuleNumber, symbolCode: CitronSymbolNumber, token: CitronToken) throws {
         tracePrint("ShiftReduce: Shift", symbolNameFor(code:symbolCode))
         tracePrint("       and reduce with rule: ", "\(rule)")
         try yyPush(stateOrRule: .rule(rule), symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
@@ -617,7 +617,7 @@ private extension CitronParser {
         }
     }
 
-    func yyPerformReduceAction(symbol resultSymbol: CitronSymbol, code lhsSymbolCode: CitronSymbolCode, isAccepted: inout Bool) throws {
+    func yyPerformReduceAction(symbol resultSymbol: CitronSymbol, code lhsSymbolCode: CitronSymbolNumber, isAccepted: inout Bool) throws {
 
         guard case .state(let stateInStack) = yyStack.last!.stateOrRule else {
             fatalError("Expecting state got rule") // FIXME: Is this correct?
@@ -676,7 +676,7 @@ private extension CitronParser {
         }
     }
 
-    func symbolNameFor(code i: CitronSymbolCode) -> String {
+    func symbolNameFor(code i: CitronSymbolNumber) -> String {
         if (i > 0 && i < yySymbolName.count) { return yySymbolName[Int(i)] }
         return "?"
     }

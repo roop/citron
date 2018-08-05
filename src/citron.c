@@ -3837,7 +3837,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Types\n\n");
 
-  fprintf(out, "    typealias CitronSymbolCode = %s\n",
+  fprintf(out, "    typealias CitronSymbolNumber = %s\n",
     minimum_size_type(0, lemp->nsymbol+1, &szCodeType));
 
   fprintf(out, "    typealias CitronStateNumber = %s\n",
@@ -3847,14 +3847,14 @@ void ReportTable(struct lemon *lemp){
     minimum_size_type(0, lemp->nrule, NULL));
 
   const char *tokenPrefix = lemp->tokenprefix ? lemp->tokenprefix : "";
-  fprintf(out, "    enum CitronTokenCode: CitronSymbolCode {\n");
+  fprintf(out, "    enum CitronTokenCode: CitronSymbolNumber {\n");
   for(i=1; i<lemp->nterminal; i++){
     fprintf(out, "      case %s%-30s = %3d\n", tokenPrefix, lemp->symbols[i]->name, i);
   }
   fprintf(out, "    }\n\n");
 
   const char *nonterminalPrefix = lemp->nonterminalprefix ? lemp->nonterminalprefix : "";
-  fprintf(out, "    enum CitronNonTerminalCode: CitronSymbolCode {\n");
+  fprintf(out, "    enum CitronNonTerminalCode: CitronSymbolNumber {\n");
   for(i=lemp->nterminal; i<lemp->nsymbol; i++){
     fprintf(out, "      case %s%-30s = %3d\n", nonterminalPrefix, lemp->symbols[i]->name, i);
   }
@@ -3962,7 +3962,7 @@ void ReportTable(struct lemon *lemp){
   int shiftMax = lemp->nstate;
   int shiftReduceMax = shiftMax + lemp->nrule;
   int reduceMax = shiftReduceMax + lemp->nrule;
-  fprintf(out,"    let yyLookaheadAction: [(CitronSymbolCode, CitronParsingAction)] = [\n");
+  fprintf(out,"    let yyLookaheadAction: [(CitronSymbolNumber, CitronParsingAction)] = [\n");
   for(i=j=0; i<n; i++){
     int action = acttab_yyaction(pActtab, i);
     if( action<0 ) action = lemp->nstate + lemp->nrule + 2;
@@ -4073,7 +4073,7 @@ void ReportTable(struct lemon *lemp){
 
   if( lemp->has_fallback ){
     fprintf(out, "    let yyHasFallback: Bool = true\n");
-    fprintf(out, "    let yyFallback: [CitronSymbolCode] = [\n");
+    fprintf(out, "    let yyFallback: [CitronSymbolNumber] = [\n");
     int mx = lemp->nterminal - 1;
     while( mx>0 && lemp->symbols[mx]->fallback==0 ){ mx--; }
     lemp->tablesize += (mx+1)*szCodeType;
@@ -4089,7 +4089,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    ]\n\n");
   } else {
     fprintf(out, "    let yyHasFallback: Bool = false\n");
-    fprintf(out, "    let yyFallback: [CitronSymbolCode] = []\n\n");
+    fprintf(out, "    let yyFallback: [CitronSymbolNumber] = []\n\n");
   }
 
   // Wildcard
@@ -4097,16 +4097,16 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    // Wildcard\n\n");
 
   if( lemp->wildcard ) {
-    fprintf(out, "    let yyWildcard: CitronSymbolCode? = %d\n\n", lemp->wildcard->index);
+    fprintf(out, "    let yyWildcard: CitronSymbolNumber? = %d\n\n", lemp->wildcard->index);
   } else {
-    fprintf(out, "    let yyWildcard: CitronSymbolCode? = nil\n\n");
+    fprintf(out, "    let yyWildcard: CitronSymbolNumber? = nil\n\n");
   }
 
   // Rules
 
   fprintf(out, "    // Rules\n\n");
 
-  fprintf(out, "    let yyRuleInfo: [(lhs: CitronSymbolCode, nrhs: UInt)] = [\n");
+  fprintf(out, "    let yyRuleInfo: [(lhs: CitronSymbolNumber, nrhs: UInt)] = [\n");
   for(rp=lemp->rule; rp; rp=rp->next){
     fprintf(out, "        (lhs: %d, nrhs: %d),\n",rp->lhs->index,rp->nrhs); lineno++;
   }
@@ -4116,7 +4116,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Stack\n\n");
 
-  fprintf(out, "    var yyStack: [(stateOrRule: CitronStateOrRule , symbolCode: CitronSymbolCode, symbol: CitronSymbol)]  = [\n");
+  fprintf(out, "    var yyStack: [(stateOrRule: CitronStateOrRule , symbolCode: CitronSymbolNumber, symbol: CitronSymbol)]  = [\n");
   fprintf(out, "        (stateOrRule: .state(0), symbolCode: 0, symbol: .yyBaseOfStack)\n");
   fprintf(out, "    ]\n");
   fprintf(out, "    var maxStackSize: Int? = nil\n");
@@ -4279,7 +4279,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    weak var errorCaptureDelegate: CitronErrorCaptureDelegate? = nil\n\n");
   int num_of_states_with_error_capturing = 0;
   if (lemp->has_error_capture) {
-    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [");
+    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] = [");
     for(i=0; i<lemp->nxstate; i++) {
       struct state *stp = lemp->sorted[i];
       int num_of_error_capturing_sequences = 0;
@@ -4337,7 +4337,7 @@ void ReportTable(struct lemon *lemp){
       is_error_capture_end_after_sequence_last_token[i] = 0;
     }
 
-    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [\n");
+    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [\n");
     int is_first_error_capture_symbol = 1;
     for(int i=0; i<lemp->nsymbol; i++){
       struct symbol *sp = lemp->symbols[i];
@@ -4393,7 +4393,7 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    ]\n");
 
-    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = [\n");
+    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> = [\n");
     fprintf(out, "        ");
     int is_first_error_capture_end_before_token = 1;
     for(int i=0; i<lemp->nsymbol; i++){
@@ -4404,7 +4404,7 @@ void ReportTable(struct lemon *lemp){
       }
     }
     fprintf(out, "\n    ]\n");
-    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = [\n");
+    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> = [\n");
     fprintf(out, "        ");
     int is_first_error_capture_end_after_sequence_last_token = 1;
     for(int i=0; i<lemp->nsymbol; i++){
@@ -4416,7 +4416,7 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    ]\n\n");
 
-    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
     fprintf(out, "            print(\"Error capture: Not capturing error because errorCaptureDelegate is not set\")\n");
     fprintf(out, "            return nil\n");
@@ -4442,19 +4442,19 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "        }\n");
     fprintf(out, "    }\n\n");
   } else {
-    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolCode]] = [:]\n");
+    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] = [:]\n");
     fprintf(out, "    let yyCanErrorCapture: Bool = false\n");
-    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolCode:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
-    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolCode> = []\n\n");
-    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolCode> = []\n\n");
+    fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
+    fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> = []\n\n");
+    fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> = []\n\n");
 
-    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
     fprintf(out, "    }\n\n");
   }
 
   fprintf(out, "    func yySymbolContent(_ symbol: CitronSymbol) -> Any { return symbol.typeErasedContent() }\n\n");
-  fprintf(out, "    let yyStartSymbolCode: CitronSymbolCode = %d\n\n", start_symbol->index);
+  fprintf(out, "    let yyStartSymbolCode: CitronSymbolNumber = %d\n\n", start_symbol->index);
   fprintf(out, "    var yyErrorCaptureSavedError: Error? = nil\n");
   fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
   fprintf(out, "    var yyErrorCaptureStackIndices: [Int] = []\n");
