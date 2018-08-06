@@ -160,7 +160,7 @@ protocol CitronParser: class {
     typealias CitronParsingAction = _CitronParsingAction<CitronStateNumber, CitronRuleNumber>
     typealias CitronStateOrRule = _CitronStateOrRule<CitronStateNumber, CitronRuleNumber>
     typealias CitronErrorCaptureResult = _CitronErrorCaptureResult<CitronSymbol>
-    typealias CitronErrorCaptureState = _CitronErrorCaptureState<CitronToken, CitronTokenCode>
+    typealias CitronErrorCaptureState = _CitronErrorCaptureState<CitronToken, CitronTokenCode, CitronSymbolCode>
 }
 
 // Error handling
@@ -211,12 +211,12 @@ enum _CitronErrorCaptureResult<Symbol> {
     case capturedOnFinalResult(result: Symbol)
 }
 
-struct _CitronErrorCaptureState<Token, TokenCode> {
-    let resolvedSymbols: [(name: String, value: Any)]
+struct _CitronErrorCaptureState<Token, TokenCode, SymbolCode> {
+    let resolvedSymbols: [(symbolCode: SymbolCode, value: Any)]
     let unclaimedTokens: [(token: Token, tokenCode: TokenCode)]
     let nextToken: (token: Token, tokenCode: TokenCode)?
 
-    var lastResolvedSymbol: (name: String, value: Any)? { return resolvedSymbols.last }
+    var lastResolvedSymbol: (symbolCode: SymbolCode, value: Any)? { return resolvedSymbols.last }
     var erroringToken: (token: Token, tokenCode: TokenCode)? { return (unclaimedTokens.first ?? nextToken) }
 }
 
@@ -403,8 +403,8 @@ private extension CitronParser {
         guard case .state(_) = stackEntry.stateOrRule else {
             fatalError("Expecting state got rule while attempting error capture")
         }
-        let resolvedSymbols: [(name: String, value: Any)] = yyStack[(info.stackIndex + 1) ..< yyStack.count].map {
-            (name: yySymbolName[Int($0.symbolCode)], value: yySymbolContent($0.symbol))
+        let resolvedSymbols: [(symbolCode: CitronSymbolCode, value: Any)] = yyStack[(info.stackIndex + 1) ..< yyStack.count].map {
+            (symbolCode: CitronSymbolCode(rawValue: $0.symbolCode)!, value: yySymbolContent($0.symbol))
         }
         let unclaimedTokens = yyErrorCaptureTokensSinceError
 
