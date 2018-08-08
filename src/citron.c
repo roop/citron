@@ -4440,19 +4440,21 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    ]\n\n");
 
-    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
     fprintf(out, "            print(\"Error capture: Not capturing error because errorCaptureDelegate is not set\")\n");
     fprintf(out, "            return nil\n");
     fprintf(out, "        }\n");
     fprintf(out, "\n");
     fprintf(out, "        switch (symbolCode) {\n");
+
     for(int i=0; i<lemp->nsymbol; i++){
       struct symbol *sp = lemp->symbols[i];
       if (sp->error_capture_line == 0) {
         continue;
       }
-      fprintf(out, "        case %d: /* %s */\n", i, sp->name);
+      assert(sp->type == NONTERMINAL);
+      fprintf(out, "        case .%s%s:\n", nonterminalPrefix, sp->name);
       fprintf(out, "            let delegateResponse = delegate.shouldCaptureErrorOn%c%s(state: state, error: error)\n", TOUPPER(sp->name[0]), sp->name + 1);
       fprintf(out, "            switch (delegateResponse) {\n");
       fprintf(out, "            case .captureAs(let symbol):\n");
@@ -4472,7 +4474,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> = []\n\n");
     fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> = []\n\n");
 
-    fprintf(out, "    func yyCaptureError(on symbolCode: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
+    fprintf(out, "    func yyCaptureError(on symbolCode: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
     fprintf(out, "    }\n\n");
   }

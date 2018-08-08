@@ -146,7 +146,7 @@ protocol CitronParser: class {
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
-    func yyCaptureError(on: CitronSymbolNumber, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
+    func yyCaptureError(on: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
     // Error handling
@@ -419,7 +419,7 @@ private extension CitronParser {
             nextToken: nextToken
         )
 
-        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode.rawValue, error: savedError, state: errorCaptureState) else {
+        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError, state: errorCaptureState) else {
             return .notCaptured
         }
 
