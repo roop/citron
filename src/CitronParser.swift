@@ -53,11 +53,11 @@ protocol CitronParser: class {
 
     // Token code: An enum representing the terminals. The raw value shall
     // be equal to the symbol code representing the terminal.
-    associatedtype CitronTokenCode: RawRepresentable, Equatable where CitronTokenCode.RawValue == CitronSymbolNumber
+    associatedtype CitronTokenCode: RawRepresentable, Hashable where CitronTokenCode.RawValue == CitronSymbolNumber
 
     // Non-terminal code: An enum representing the terminals. The raw value shall
     // be equal to the symbol code representing the terminal.
-    associatedtype CitronNonTerminalCode: RawRepresentable, Equatable where CitronNonTerminalCode.RawValue == CitronSymbolNumber
+    associatedtype CitronNonTerminalCode: RawRepresentable, Hashable where CitronNonTerminalCode.RawValue == CitronSymbolNumber
 
     // Symbol code: An enum representing
     //   - a terminal, or
@@ -159,7 +159,7 @@ protocol CitronParser: class {
 
     typealias CitronParsingAction = _CitronParsingAction<CitronStateNumber, CitronRuleNumber>
     typealias CitronStateOrRule = _CitronStateOrRule<CitronStateNumber, CitronRuleNumber>
-    typealias CitronErrorCaptureResult = _CitronErrorCaptureResult<CitronSymbol>
+    typealias CitronErrorCaptureResult = _CitronErrorCaptureResult<CitronNonTerminalCode, CitronSymbol>
     typealias CitronErrorCaptureState = _CitronErrorCaptureState<CitronToken, CitronTokenCode, CitronSymbolCode>
 }
 
@@ -205,9 +205,9 @@ enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
 
 // Error capturing
 
-enum _CitronErrorCaptureResult<Symbol> {
+enum _CitronErrorCaptureResult<NonTerminalCode, Symbol> {
     case notCaptured
-    case capturedOnIntermediateSymbol(symbol: String, didMatchEndBeforeClause: Bool)
+    case capturedOnIntermediateSymbol(symbolCode: NonTerminalCode, didMatchEndBeforeClause: Bool)
     case capturedOnFinalResult(result: Symbol)
 }
 
@@ -286,7 +286,7 @@ extension CitronParser {
     func endParsing() throws -> CitronResult {
         tracePrint("End of input")
 
-        var errorCaptureExcludeSymbols: Set<String> = []
+        var errorCaptureExcludeSymbols: Set<CitronNonTerminalCode> = []
 
         LOOP: while (!yyStack.isEmpty) {
 
@@ -299,14 +299,14 @@ extension CitronParser {
                     guard let savedError = yyErrorCaptureSavedError else { fatalError() }
                     tracePrint("Error capture: At end of input, throwing saved uncaptured error")
                     throw savedError
-                case .capturedOnIntermediateSymbol(let symbol, _):
+                case .capturedOnIntermediateSymbol(let symbolCode, _):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
                     yyErrorCaptureTokensSinceError = []
                     // Capturing again on the same symbol will
                     // cause an infinite loop, so we exclude it
                     // in further captures.
-                    errorCaptureExcludeSymbols.insert(symbol)
+                    errorCaptureExcludeSymbols.insert(symbolCode)
                 case .capturedOnFinalResult(let resultSymbol):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
@@ -386,7 +386,7 @@ private extension CitronParser {
         return (self.yyErrorCaptureSavedError != nil)
     }
 
-    func yyAttemptErrorCapture(nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?, excludeSymbols: Set<String> = []) throws -> CitronErrorCaptureResult {
+    func yyAttemptErrorCapture(nextToken: (token: CitronToken, tokenCode: CitronTokenCode)?, excludeSymbols: Set<CitronNonTerminalCode> = []) throws -> CitronErrorCaptureResult {
         guard let savedError = yyErrorCaptureSavedError else {
             fatalError("No error saved for capturing")
         }
@@ -397,7 +397,7 @@ private extension CitronParser {
         }
 
         assert(info.stackIndex < yyStack.count)
-        tracePrint("Error capture: Found match at stack index \(info.stackIndex) on symbol \"\(yySymbolName[Int(info.symbolCode)])\"")
+        tracePrint("Error capture: Found match at stack index \(info.stackIndex) on symbol \"\(yySymbolName[Int(info.symbolCode.rawValue)])\"")
 
         let stackEntry = yyStack[info.stackIndex]
         guard case .state(_) = stackEntry.stateOrRule else {
@@ -419,23 +419,23 @@ private extension CitronParser {
             nextToken: nextToken
         )
 
-        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError, state: errorCaptureState) else {
+        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode.rawValue, error: savedError, state: errorCaptureState) else {
             return .notCaptured
         }
 
         yyPop(times: yyStack.count - info.stackIndex - 1)
 
         var isAccepted: Bool = false
-        try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode, isAccepted: &isAccepted)
+        try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode.rawValue, isAccepted: &isAccepted)
         if (isAccepted) {
             return .capturedOnFinalResult(result: errorCapturedSymbol)
         } else {
-            return .capturedOnIntermediateSymbol(symbol: yySymbolName[Int(info.symbolCode)], didMatchEndBeforeClause: info.didMatchEndBeforeClause)
+            return .capturedOnIntermediateSymbol(symbolCode: info.symbolCode, didMatchEndBeforeClause: info.didMatchEndBeforeClause)
         }
     }
 
-    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?, excludeSymbols: Set<String>)
-        -> (stackIndex: Int, symbolCode: CitronSymbolNumber, didMatchEndBeforeClause: Bool)? {
+    func stackUnwindInfoForErrorCapture(lookAhead: CitronTokenCode?, excludeSymbols: Set<CitronNonTerminalCode>)
+        -> (stackIndex: Int, symbolCode: CitronNonTerminalCode, didMatchEndBeforeClause: Bool)? {
 
         let isAtEndOfInput: Bool = (lookAhead == nil)
 
@@ -448,35 +448,36 @@ private extension CitronParser {
         guard (isAtEndOfInput || isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
 
         for stackIndex in yyErrorCaptureStackIndices {
-            var symbolCodes: [CitronSymbolNumber] = []
+            var symbolNumbers: [CitronSymbolNumber] = []
             let stackEntry = yyStack[stackIndex]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
                 if let sc = yyErrorCaptureSymbolCodesForState[s] {
-                    symbolCodes = sc
+                    symbolNumbers = sc
                 }
             default:
                 break
             }
-            for s in symbolCodes {
-                if (excludeSymbols.contains(yySymbolName[Int(s)])) {
+            for s in symbolNumbers {
+                let symbolCode = CitronNonTerminalCode(rawValue: s)! // This symbol has to be a non-terminal
+                if (excludeSymbols.contains(symbolCode)) {
                     continue
                 }
                 if (isAtEndOfInput) {
-                    tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(s)])\"")
-                    return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: false)
+                    tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                    return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: false)
                 }
                 guard let directive = yyErrorCaptureDirectives[s] else {
                     continue
                 }
                 if (lookAhead != nil && directive.endBefore.contains(lookAhead!)) {
-                    tracePrint("Error capture: Match for endBefore clause for symbol \"\(yySymbolName[Int(s)])\"")
-                    return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: true)
+                    tracePrint("Error capture: Match for endBefore clause for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                    return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: true)
                 }
                 for endAfterTokenSequence in directive.endAfter {
                     if (yyErrorCaptureTokensSinceError.map({ $0.tokenCode }).hasSuffix(endAfterTokenSequence)) {
-                        tracePrint("Error capture: Match for endAfter clause for symbol \"\(yySymbolName[Int(s)])\"")
-                        return (stackIndex: stackIndex, symbolCode: s, didMatchEndBeforeClause: false)
+                        tracePrint("Error capture: Match for endAfter clause for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                        return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: false)
                     }
                 }
             }
