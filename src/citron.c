@@ -4506,6 +4506,36 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    }\n");
   fprintf(out, "}\n\n");
 
+  fprintf(out, "// Ability to use == to compare CitronSymbolCode with CitronTokenCode / CitronNonTerminalCode\n\n");
+  fprintf(out, "extension %s.CitronSymbolCode {\n", lemp->className);
+  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronTokenCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        guard case let .token(code) = a else { return false }\n");
+  fprintf(out, "        return (code == b)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "    static func == (a: %s.CitronTokenCode, b: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        guard case let .token(code) = b else { return false }\n");
+  fprintf(out, "        return (code == a)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronNonTerminalCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        guard case let .nonterminal(code) = a else { return false }\n");
+  fprintf(out, "        return (code == b)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "    static func == (a: %s.CitronNonTerminalCode, b: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        guard case let .nonterminal(code) = b else { return false }\n");
+  fprintf(out, "        return (code == a)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "}\n\n");
+
+  fprintf(out, "// Ability to use switch (symbolCode) { case .tokenCode: ...; case .nonterminalCode: ... }\n\n");
+  fprintf(out, "extension %s.CitronSymbolCode {\n", lemp->className);
+  fprintf(out, "    static func ~= (pattern: %s.CitronTokenCode, value: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        return (pattern == value)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "    static func ~= (pattern: %s.CitronNonTerminalCode, value: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "        return (pattern == value)\n");
+  fprintf(out, "    }\n");
+  fprintf(out, "}\n");
+
   // Epilogue
 
   if (lemp->epilogue) {
