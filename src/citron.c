@@ -3075,6 +3075,11 @@ void CheckErrorCaptureDirectives(struct lemon *lemp) {
   for (int i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
     struct symbol *sp = lemp->symbols[i];
     if (sp->error_capture_line == 0) { continue; }
+    if (sp->type != NONTERMINAL) {
+        ErrorMsg(lemp->filename, sp->error_capture_line,
+"%%capture_errors can be defined only on non-terminals - '%s' is not a non-terminal.", sp->name);
+        lemp->errorcnt++;
+    }
     // The start symbol should have no end_before or end_after clauses.
     // Non-start-symbols can have either an end_before or an end_after clause, or both, or neither.
     if (sp == start_symbol) {
