@@ -133,7 +133,7 @@ protocol CitronParser: class {
 
     // Error capturing
 
-    var yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] { get }
+    var yyErrorCaptureSymbolNumbersForState: [CitronStateNumber:[CitronSymbolNumber]] { get }
     var yyCanErrorCapture: Bool { get }
     var yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] { get }
     var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> { get }
@@ -350,7 +350,7 @@ private extension CitronParser {
             let stackEntry = yyStack[i]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
-                if (yyErrorCaptureSymbolCodesForState[s] != nil) {
+                if (yyErrorCaptureSymbolNumbersForState[s] != nil) {
                     canCapture = true
                     stackIndices.append(i)
                 }
@@ -443,7 +443,7 @@ private extension CitronParser {
             let stackEntry = yyStack[stackIndex]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
-                if let sc = yyErrorCaptureSymbolCodesForState[s] {
+                if let sc = yyErrorCaptureSymbolNumbersForState[s] {
                     symbolNumbers = sc
                 }
             default:

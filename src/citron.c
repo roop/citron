@@ -4303,7 +4303,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    weak var errorCaptureDelegate: CitronErrorCaptureDelegate? = nil\n\n");
   int num_of_states_with_error_capturing = 0;
   if (lemp->has_error_capture) {
-    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] = [");
+    fprintf(out, "    let yyErrorCaptureSymbolNumbersForState: [CitronStateNumber:[CitronSymbolNumber]] = [");
     for(i=0; i<lemp->nxstate; i++) {
       struct state *stp = lemp->sorted[i];
       int num_of_error_capturing_sequences = 0;
@@ -4468,7 +4468,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "        }\n");
     fprintf(out, "    }\n\n");
   } else {
-    fprintf(out, "    let yyErrorCaptureSymbolCodesForState: [CitronStateNumber:[CitronSymbolNumber]] = [:]\n");
+    fprintf(out, "    let yyErrorCaptureSymbolNumbersForState: [CitronStateNumber:[CitronSymbolNumber]] = [:]\n");
     fprintf(out, "    let yyCanErrorCapture: Bool = false\n");
     fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
     fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> = []\n\n");
