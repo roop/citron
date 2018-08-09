@@ -23,6 +23,8 @@
 
 import Foundation
 
+typealias CitronLexerPosition = (tokenPosition: String.Index, linePosition: String.Index, lineNumber: Int)
+
 class CitronLexer<TokenData> {
     typealias Action = (TokenData) throws -> Void
     typealias ErrorAction = (CitronLexerError) -> Void
@@ -33,9 +35,7 @@ class CitronLexer<TokenData> {
     }
     let rules: [LexingRule]
 
-    typealias LexingPosition = (tokenPosition: String.Index, linePosition: String.Index, lineNumber: Int)
-
-    var currentPosition: LexingPosition
+    var currentPosition: CitronLexerPosition
 
     init(rules: [LexingRule]) {
         self.rules = rules.map { rule in
@@ -69,7 +69,7 @@ class CitronLexer<TokenData> {
                         if let tokenData = tokenData {
                             try onFound(tokenData)
                         }
-                        currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: ruleString.count)
+                        currentPosition = lexerPosition(in: string, advancedFrom: currentPosition, by: ruleString.count)
                         errorStartPosition = nil
                         matched = true
                     }
@@ -89,7 +89,7 @@ class CitronLexer<TokenData> {
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
                             }
-                            currentPosition = lexingPosition(in: string, advancedFrom: currentPosition, by: matchingString.count)
+                            currentPosition = lexerPosition(in: string, advancedFrom: currentPosition, by: matchingString.count)
                             errorStartPosition = nil
                             matched = true
 
@@ -122,7 +122,7 @@ enum CitronLexerError: Error {
 }
 
 private extension CitronLexer {
-    func lexingPosition(in str: String, advancedFrom from: LexingPosition, by offset: Int) -> LexingPosition {
+    func lexerPosition(in str: String, advancedFrom from: CitronLexerPosition, by offset: Int) -> CitronLexerPosition {
          let tokenPosition = str.index(from.tokenPosition, offsetBy: offset)
          var linePosition = from.linePosition
          var lineNumber = from.lineNumber
