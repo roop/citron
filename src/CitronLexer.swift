@@ -27,7 +27,7 @@ typealias CitronLexerPosition = (tokenPosition: String.Index, linePosition: Stri
 
 class CitronLexer<TokenData> {
     typealias Action = (TokenData) throws -> Void
-    typealias ErrorAction = (CitronLexerError) -> Void
+    typealias ErrorAction = (CitronLexerError) throws -> Void
     enum LexingRule {
         case string(String, TokenData?)
         case regex(NSRegularExpression, (String) -> TokenData?)
@@ -64,7 +64,7 @@ class CitronLexer<TokenData> {
                 case .string(let ruleString, let tokenData):
                     if (string.suffix(from: currentPosition.tokenPosition).hasPrefix(ruleString)) {
                         if let errorStartPosition = errorStartPosition {
-                            onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                            try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
                         }
                         if let tokenData = tokenData {
                             try onFound(tokenData)
@@ -84,7 +84,7 @@ class CitronLexer<TokenData> {
                         let end = string.utf16.index(string.utf16.startIndex, offsetBy: matchingRange.upperBound)
                         if let matchingString = String(string.utf16[start..<end]) {
                             if let errorStartPosition = errorStartPosition {
-                                onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                                try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
                             }
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
@@ -112,7 +112,7 @@ class CitronLexer<TokenData> {
             }
         }
         if let errorStartPosition = errorStartPosition {
-            onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+            try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
         }
     }
 }
