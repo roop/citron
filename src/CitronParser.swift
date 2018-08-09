@@ -484,6 +484,25 @@ private extension CitronParser {
                 if (excludeSymbols.contains(symbolCode)) {
                     continue
                 }
+                if (stackIndex + 1 < yyStack.count && yyStack[stackIndex + 1].symbolCode == s) {
+                    // If the next symbol on the stack is the same as this one,
+                    // it probably means that the error did not happen "inside"
+                    // this symbol.
+                    // i.e. if the stack has:
+                    //     state(0), symbol($)
+                    //     ...
+                    //     state(2), symbol(B)
+                    //     state(3), symbol(C)
+                    //     ...
+                    // And state(2) looks like:
+                    //     base config:    X -> B . C D
+                    //     derived config: C -> . P
+                    // That derived config might suggest we capture on
+                    // state(2) on symbol C, but that would be wrong
+                    // because C is already resolved and present on the
+                    // stack.
+                    continue
+                }
                 if (isAtEndOfInput) {
                     tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
                     return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: false)
