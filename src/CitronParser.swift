@@ -139,9 +139,12 @@ protocol CitronParser: class {
     var yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> { get }
     var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> { get }
 
+    var yyStartSymbolNumber: CitronSymbolNumber { get }
+
     var yyErrorCaptureSavedError: Error? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
     var yyErrorCaptureStackIndices: [Int] { get set }
+    var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
     func yyCaptureError(on: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
@@ -375,13 +378,17 @@ private extension CitronParser {
         // Returns true if saved, false if not saved
         var canCapture: Bool = false
         var stackIndices: [Int] = []
+        var startSymbolStackIndex: Int? = nil
         for i in stride(from: yyStack.count - 1, through: 0, by: -1) {
             let stackEntry = yyStack[i]
             switch(stackEntry.stateOrRule) {
             case .state(let s):
-                if (yyErrorCaptureSymbolNumbersForState[s] != nil) {
+                if let symbolCodes = yyErrorCaptureSymbolNumbersForState[s] {
                     canCapture = true
                     stackIndices.append(i)
+                    if (startSymbolStackIndex == nil && symbolCodes.contains(yyStartSymbolNumber)) {
+                        startSymbolStackIndex = i
+                    }
                 }
             default:
                 break
@@ -394,11 +401,13 @@ private extension CitronParser {
             self.yyErrorCaptureTokensSinceError = []
             // Save some info for determining when to capture the error
             self.yyErrorCaptureStackIndices = stackIndices
+            self.yyErrorCaptureStartSymbolStackIndex = startSymbolStackIndex
             return true
         } else {
             self.yyErrorCaptureSavedError = nil
             self.yyErrorCaptureTokensSinceError = []
             self.yyErrorCaptureStackIndices = []
+            self.yyErrorCaptureStartSymbolStackIndex = nil
             return false
         }
     }

@@ -4478,7 +4478,7 @@ void ReportTable(struct lemon *lemp){
   }
 
   fprintf(out, "    func yySymbolContent(_ symbol: CitronSymbol) -> Any { return symbol.typeErasedContent() }\n\n");
-  fprintf(out, "    let yyStartSymbolCode: CitronSymbolNumber = %d\n\n", start_symbol->index);
+  fprintf(out, "    let yyStartSymbolNumber: CitronSymbolNumber = %d\n", start_symbol->index);
   fprintf(out, "    var yyErrorCaptureSavedError: Error? = nil\n");
   fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
   fprintf(out, "    var yyErrorCaptureStackIndices: [Int] = []\n");
