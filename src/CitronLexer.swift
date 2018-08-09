@@ -56,7 +56,7 @@ class CitronLexer<TokenData> {
 
     func tokenize(_ string: String, onFound: Action, onError: ErrorAction?) throws {
         currentPosition = (tokenPosition: string.startIndex, linePosition: string.startIndex, lineNumber: 1)
-        var errorStartPosition: String.Index? = nil
+        var errorStartPosition: CitronLexerPosition? = nil
         while (currentPosition.tokenPosition < string.endIndex) {
             var matched = false
             for rule in rules {
@@ -64,7 +64,7 @@ class CitronLexer<TokenData> {
                 case .string(let ruleString, let tokenData):
                     if (string.suffix(from: currentPosition.tokenPosition).hasPrefix(ruleString)) {
                         if let errorStartPosition = errorStartPosition {
-                            try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                            try onError?(CitronLexerError.noMatchingRuleAt(errorPosition: errorStartPosition))
                         }
                         if let tokenData = tokenData {
                             try onFound(tokenData)
@@ -84,7 +84,7 @@ class CitronLexer<TokenData> {
                         let end = string.utf16.index(string.utf16.startIndex, offsetBy: matchingRange.upperBound)
                         if let matchingString = String(string.utf16[start..<end]) {
                             if let errorStartPosition = errorStartPosition {
-                                try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+                                try onError?(CitronLexerError.noMatchingRuleAt(errorPosition: errorStartPosition))
                             }
                             if let tokenData = handler(matchingString) {
                                 try onFound(tokenData)
@@ -104,21 +104,23 @@ class CitronLexer<TokenData> {
             }
             if (!matched) {
                 if (onError == nil) {
-                    throw CitronLexerError.noMatchingRuleAt(index: currentPosition.tokenPosition, in: string)
+                    throw CitronLexerError.noMatchingRuleAt(errorPosition: currentPosition)
                 } else {
-                    errorStartPosition = currentPosition.tokenPosition
-                    currentPosition.tokenPosition = string.index(after: currentPosition.tokenPosition)
+                    if (errorStartPosition == nil) {
+                        errorStartPosition = currentPosition
+                    }
+                    currentPosition = lexerPosition(in: string, advancedFrom: currentPosition, by: 1)
                 }
             }
         }
         if let errorStartPosition = errorStartPosition {
-            try onError?(CitronLexerError.noMatchingRuleAt(index: errorStartPosition, in: string))
+            try onError?(CitronLexerError.noMatchingRuleAt(errorPosition: errorStartPosition))
         }
     }
 }
 
 enum CitronLexerError: Error {
-    case noMatchingRuleAt(index: String.Index, in: String)
+    case noMatchingRuleAt(errorPosition: CitronLexerPosition)
 }
 
 private extension CitronLexer {
