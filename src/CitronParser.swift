@@ -337,6 +337,29 @@ extension CitronParser {
             yyPop()
         }
     }
+
+    func consume(lexerError: Error) throws {
+        tracePrint("Input: Lexer error")
+        if (yyErrorCaptureSavedError != nil) {
+            tracePrint("Ignoring this lexer error as there is already a saved error")
+            // We'll ignore this lexer error, assuming that this is part of
+            // the saved error that we're trying to capture.
+            return
+        }
+
+        while (!yyStack.isEmpty) {
+            // In case the top of the stack contains a rule,
+            // we should first resolve the rule
+            if case .rule(let r) = yyStack.last!.stateOrRule {
+                let resultSymbol = try yyReduce(rule: r)
+                precondition(resultSymbol == nil)
+            } else {
+                break
+            }
+        }
+
+        try throwOrSave(lexerError)
+    }
 }
 
 // Private methods for error capturing
