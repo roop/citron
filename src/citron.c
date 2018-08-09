@@ -4490,7 +4490,8 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    var yyErrorCaptureSavedError: Error? = nil\n");
   fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
   fprintf(out, "    var yyErrorCaptureStackIndices: [Int] = []\n");
-  fprintf(out, "    var yyErrorCaptureStartSymbolStackIndex: Int? = nil\n");
+  fprintf(out, "    var yyErrorCaptureStartSymbolStackIndex: Int? = nil\n\n");
+  fprintf(out, "    var numberOfCapturedErrors: Int = 0\n");
 
   fprintf(out, "}\n\n"); // Closing class Parser
 

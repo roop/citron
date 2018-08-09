@@ -147,6 +147,8 @@ protocol CitronParser: class {
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
 
+    var numberOfCapturedErrors: Int { get set }
+
     func yyCaptureError(on: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
@@ -458,6 +460,7 @@ private extension CitronParser {
 
         var isAccepted: Bool = false
         try yyPerformReduceAction(symbol: errorCapturedSymbol, code: info.symbolCode.rawValue, isAccepted: &isAccepted)
+        self.numberOfCapturedErrors = self.numberOfCapturedErrors + 1
         if (isAccepted) {
             return .capturedOnFinalResult(result: errorCapturedSymbol)
         } else {
