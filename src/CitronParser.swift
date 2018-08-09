@@ -140,6 +140,7 @@ protocol CitronParser: class {
     var yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> { get }
 
     var yyStartSymbolNumber: CitronSymbolNumber { get }
+    var yyEndStateNumber: CitronStateNumber { get }
 
     var yyErrorCaptureSavedError: Error? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
@@ -477,7 +478,19 @@ private extension CitronParser {
 
         guard (isAtEndOfInput || isEndBeforeMatchPossible || isEndAfterMatchPossible) else { return nil }
 
-        for stackIndex in yyErrorCaptureStackIndices {
+        var stackIndices: [Int]
+        if case .state(let s) = yyStack.last!.stateOrRule, s == yyEndStateNumber {
+            // If we're at the end state, capture only on the start symbol
+            if let startSymbolStackIndex = yyErrorCaptureStartSymbolStackIndex {
+                stackIndices = [startSymbolStackIndex]
+            } else {
+                stackIndices = []
+            }
+        } else {
+            stackIndices = yyErrorCaptureStackIndices
+        }
+
+        for stackIndex in stackIndices {
             var symbolNumbers: [CitronSymbolNumber] = []
             let stackEntry = yyStack[stackIndex]
             switch(stackEntry.stateOrRule) {

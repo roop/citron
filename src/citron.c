@@ -4300,6 +4300,7 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    typealias CitronErrorCaptureDelegate = _%sCitronErrorCaptureDelegate\n\n", lemp->className);
   fprintf(out, "    weak var errorCaptureDelegate: CitronErrorCaptureDelegate? = nil\n\n");
   int num_of_states_with_error_capturing = 0;
+  int end_state_index = -1;
   if (lemp->has_error_capture) {
     fprintf(out, "    let yyErrorCaptureSymbolNumbersForState: [CitronStateNumber:[CitronSymbolNumber]] = [");
     for(i=0; i<lemp->nxstate; i++) {
@@ -4307,6 +4308,12 @@ void ReportTable(struct lemon *lemp){
       int num_of_error_capturing_sequences = 0;
       struct symbol *last_seen_symbol = 0;
       for (struct config *cfg = stp->cfp; cfg != 0; cfg = cfg->next) {
+        // Note down the end state
+        if (cfg->rp->lhs == start_symbol) {
+            if (cfg->dot == cfg->rp->nrhs) {
+                end_state_index = i;
+            }
+        }
         // We need only configs that begin with the dot
         if (cfg->dot > 0) { continue; }
         struct symbol *lhs_symbol = cfg->rp->lhs;
@@ -4479,6 +4486,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    func yySymbolContent(_ symbol: CitronSymbol) -> Any { return symbol.typeErasedContent() }\n\n");
   fprintf(out, "    let yyStartSymbolNumber: CitronSymbolNumber = %d\n", start_symbol->index);
+  fprintf(out, "    let yyEndStateNumber: CitronStateNumber = %d\n\n", end_state_index);
   fprintf(out, "    var yyErrorCaptureSavedError: Error? = nil\n");
   fprintf(out, "    var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] = []\n");
   fprintf(out, "    var yyErrorCaptureStackIndices: [Int] = []\n");
