@@ -344,6 +344,12 @@ extension CitronParser {
 private extension CitronParser {
     func throwOrSave(_ error: Error) throws {
         guard (self.yyCanErrorCapture) else { throw error }
+        let saved = saveErrorForCapturingLater(error: error)
+        if (!saved) { throw error }
+    }
+
+    func saveErrorForCapturingLater(error: Error) -> Bool {
+        // Returns true if saved, false if not saved
         var canCapture: Bool = false
         var stackIndices: [Int] = []
         for i in stride(from: yyStack.count - 1, through: 0, by: -1) {
@@ -365,11 +371,12 @@ private extension CitronParser {
             self.yyErrorCaptureTokensSinceError = []
             // Save some info for determining when to capture the error
             self.yyErrorCaptureStackIndices = stackIndices
+            return true
         } else {
             self.yyErrorCaptureSavedError = nil
             self.yyErrorCaptureTokensSinceError = []
             self.yyErrorCaptureStackIndices = []
-            throw error
+            return false
         }
     }
 
