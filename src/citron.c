@@ -4438,11 +4438,13 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "\n");
     fprintf(out, "        switch (symbolCode) {\n");
 
-    for(int i=0; i<lemp->nsymbol; i++){
+    int numberOfSymbolsInyyCaptureError = 0;
+    for(int i=lemp->nterminal; i<lemp->nsymbol; i++){
       struct symbol *sp = lemp->symbols[i];
       if (sp->error_capture_line == 0) {
         continue;
       }
+      numberOfSymbolsInyyCaptureError++;
       assert(sp->type == NONTERMINAL);
       fprintf(out, "        case .%s%s:\n", nonterminalPrefix, sp->name);
       fprintf(out, "            let delegateResponse = delegate.shouldCaptureErrorOn%c%s(state: state, error: error)\n", TOUPPER(sp->name[0]), sp->name + 1);
@@ -4453,8 +4455,10 @@ void ReportTable(struct lemon *lemp){
       fprintf(out, "                return nil\n");
       fprintf(out, "            }\n");
     }
-    fprintf(out, "        default:\n");
-    fprintf(out, "            fatalError(\"yyCaptureError: Symbol code \\(symbolCode) is not an error capturing symbol code\")\n");
+    if (numberOfSymbolsInyyCaptureError < (lemp->nsymbol - lemp->nterminal)) {
+      fprintf(out, "        default:\n");
+      fprintf(out, "            fatalError(\"yyCaptureError: Symbol code \\(symbolCode) is not an error capturing symbol code\")\n");
+    }
     fprintf(out, "        }\n");
     fprintf(out, "    }\n\n");
   } else {
