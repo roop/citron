@@ -142,7 +142,7 @@ protocol CitronParser: class {
     var yyStartSymbolNumber: CitronSymbolNumber { get }
     var yyEndStateNumber: CitronStateNumber { get }
 
-    var yyErrorCaptureSavedError: Error? { get set }
+    var yyErrorCaptureSavedError: (error: Error, isLexerError: Bool)? { get set }
     var yyErrorCaptureTokensSinceError: [(token: CitronToken, tokenCode: CitronTokenCode)] { get set }
     var yyErrorCaptureStackIndices: [Int] { get set }
     var yyErrorCaptureStartSymbolStackIndex: Int? { get set }
@@ -302,7 +302,7 @@ extension CitronParser {
                     tracePrint("Error capture: Failed")
                     guard let savedError = yyErrorCaptureSavedError else { fatalError() }
                     tracePrint("Error capture: At end of input, throwing saved uncaptured error")
-                    throw savedError
+                    throw savedError.error
                 case .capturedOnIntermediateSymbol(let symbolCode, _):
                     tracePrint("Error capture: Succeeded")
                     yyErrorCaptureSavedError = nil
@@ -365,20 +365,20 @@ extension CitronParser {
             }
         }
 
-        try throwOrSave(lexerError)
+        try throwOrSave(lexerError, isLexerError: true)
     }
 }
 
 // Private methods for error capturing
 
 private extension CitronParser {
-    func throwOrSave(_ error: Error) throws {
+    func throwOrSave(_ error: Error, isLexerError: Bool = false) throws {
         guard (self.yyCanErrorCapture) else { throw error }
-        let saved = saveErrorForCapturingLater(error: error)
+        let saved = saveErrorForCapturingLater(error: error, isLexerError: isLexerError)
         if (!saved) { throw error }
     }
 
-    func saveErrorForCapturingLater(error: Error) -> Bool {
+    func saveErrorForCapturingLater(error: Error, isLexerError: Bool) -> Bool {
         // Returns true if saved, false if not saved
         var canCapture: Bool = false
         var stackIndices: [Int] = []
@@ -401,7 +401,7 @@ private extension CitronParser {
         if (canCapture && yyShouldSaveErrorForCapturing(error: error)) {
             tracePrint("Error capture: Saved error for later capturing: \(error)")
             // Save this error for either capturing or throwing later
-            self.yyErrorCaptureSavedError = error
+            self.yyErrorCaptureSavedError = (error: error, isLexerError: isLexerError)
             self.yyErrorCaptureTokensSinceError = []
             // Save some info for determining when to capture the error
             self.yyErrorCaptureStackIndices = stackIndices
@@ -442,7 +442,7 @@ private extension CitronParser {
         }
         let unclaimedTokens = yyErrorCaptureTokensSinceError
 
-        if (resolvedSymbols.isEmpty && unclaimedTokens.isEmpty) {
+        if (resolvedSymbols.isEmpty && unclaimedTokens.isEmpty && savedError.isLexerError == false) {
             tracePrint("Error capture: Cannot capture error on an empty symbol")
             return .notCaptured
         }
@@ -453,7 +453,7 @@ private extension CitronParser {
             nextToken: nextToken
         )
 
-        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError, state: errorCaptureState) else {
+        guard let errorCapturedSymbol = yyCaptureError(on: info.symbolCode, error: savedError.error, state: errorCaptureState) else {
             return .notCaptured
         }
 
@@ -495,10 +495,12 @@ private extension CitronParser {
         }
 
         for stackIndex in stackIndices {
-            if (yyErrorCaptureTokensSinceError.isEmpty && stackIndex == yyStack.count - 1) {
-                // If there are no unclaimed tokens, skip the top of the
-                // stack, because yyAttemptErrorCapture() would reject
-                // it as a capture on an empty symbol.
+            let hasUnclaimedTokensOrLexerError = (!yyErrorCaptureTokensSinceError.isEmpty) || (yyErrorCaptureSavedError?.isLexerError ?? false)
+            if (isAtEndOfInput && yyErrorCaptureTokensSinceError.isEmpty && (!hasUnclaimedTokensOrLexerError) && stackIndex == yyStack.count - 1) {
+                // Skip matching with the top of the stack, because
+                // yyAttemptErrorCapture() would reject it as a
+                // capture on an empty symbol and there aren't going to
+                // be any more tokens anyway to look for a better match.
                 continue
             }
             var symbolNumbers: [CitronSymbolNumber] = []
