@@ -495,6 +495,12 @@ private extension CitronParser {
         }
 
         for stackIndex in stackIndices {
+            if (yyErrorCaptureTokensSinceError.isEmpty && stackIndex == yyStack.count - 1) {
+                // If there are no unclaimed tokens, skip the top of the
+                // stack, because yyAttemptErrorCapture() would reject
+                // it as a capture on an empty symbol.
+                continue
+            }
             var symbolNumbers: [CitronSymbolNumber] = []
             let stackEntry = yyStack[stackIndex]
             switch(stackEntry.stateOrRule) {
