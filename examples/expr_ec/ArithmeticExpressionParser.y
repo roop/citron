@@ -54,3 +54,7 @@ expr ::= OPEN_BR expr(a) CLOSE_BR. {
 expr ::= INTEGER(a). {
     return .number(a)
 }
+
+%capture_errors root.
+%capture_errors expr
+    end_before(CLOSE_BR | ADD | SUBTRACT | MULTIPLY | DIVIDE).
