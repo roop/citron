@@ -47,6 +47,10 @@ expr ::= expr(a) DIVIDE expr(b). {
     return .division(a, b)
 }
 
+expr ::= OPEN_BR expr(a) CLOSE_BR. {
+    return a
+}
+
 expr ::= INTEGER(a). {
     return .number(a)
 }

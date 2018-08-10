@@ -53,6 +53,11 @@ let lexer = Lexer(rules: [
         .string("*", (0, .MULTIPLY)),
         .string("/", (0, .DIVIDE)),
 
+        // Brackets
+
+        .string("(", (0, .OPEN_BR)),
+        .string(")", (0, .CLOSE_BR)),
+
         // Whitespace
 
         .regexPattern("\\s", { _ in nil })
