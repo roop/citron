@@ -450,15 +450,6 @@ struct lemon {
   int has_fallback;        /* True if any %fallback is seen in the grammar */
   int has_error_capture;   /* True if any %capture_errors is seen in the grammar */
   char *argv0;             /* Name of the program */
-  // FIXME: Members to be removed
-  char *name;
-  char *error;             /* Code to execute when an error is seen */
-  char *overflow;          /* Code to execute on a stack overflow */
-  char *failure;           /* Code to execute on parser failure */
-  char *accept;            /* Code to execute when the parser excepts */
-  char *tokendest;         /* Code to execute to destroy token data */
-  char *vardest;           /* Code for the default non-terminal destructor */
-  char *stacksize;         /* Size of the parser stack */
 };
 
 #define MemoryCheck(X) if((X)==0){ \
