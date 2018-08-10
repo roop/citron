@@ -69,8 +69,8 @@ func parseFunctionHeader(input: String) -> FunctionHeader? {
             try parser.consume(token: t, code: c)
         }
         funcHeader = try parser.endParsing()
-    } catch CitronLexerError.noMatchingRuleAt(let index, let string) {
-        print("Error during tokenization after '\(string.prefix(upTo: index))'.")
+    } catch CitronLexerError.noMatchingRuleAt(let pos) {
+        print("Error during tokenization after '\(input.prefix(upTo: pos.tokenPosition))'.")
     } catch let error {
         print("Error during parsing: \(error)")
     }
