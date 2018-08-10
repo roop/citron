@@ -23,23 +23,23 @@ struct FunctionHeader {
         case rethrowing
         case nonthrowing
     }
-    let name: String
-    let parameters: [FunctionParameter?]
+    let name: String?
+    let parameters: [FunctionParameter?]?
     let returnType: String
     let throwability: Throwability
 
     func typeString() -> String {
         return "("
-                + parameters.map { p in
+                + (parameters ?? []).map { p in
                     p == nil ? "ERROR" :
                       (p!.isInout ? "inout \(p!.type)" : p!.type)
-                }.joined(separator: ", ")
+                    }.joined(separator: ", ")
                 + (throwability == .nonthrowing ? ") -> " : ") throws -> ")
                 + returnType
     }
 }
 
-typealias Lexer = CitronLexer<(Token, FunctionHeaderParser.CitronTokenCode)>
+typealias Lexer = CitronLexer<(token: Token, code: FunctionHeaderParser.CitronTokenCode)>
 
 func parseFunctionHeader(input: String) -> FunctionHeader? {
 
@@ -82,18 +82,26 @@ func parseFunctionHeader(input: String) -> FunctionHeader? {
     // Tokenize and parse
     var funcHeader: FunctionHeader? = nil
     do {
-        try lexer.tokenize(input) { (t, c) in
-            try parser.consume(token: (token: t, position: lexer.currentPosition), code: c)
-        }
+        try lexer.tokenize(input,
+            onFound: { t in
+                try parser.consume(token: (token: t.token, position: lexer.currentPosition), code: t.code)
+            },
+            onError: { (e) in
+                try parser.consume(lexerError: e)
+            })
+        errorReporter.endOfInputPosition = lexer.currentPosition
         funcHeader = try parser.endParsing()
-    } catch CitronLexerError.noMatchingRuleAt(let index, let string) {
-        print("Error during tokenization after '\(string.prefix(upTo: index))'.")
+    } catch CitronLexerError.noMatchingRuleAt(let pos) {
+        print("Error during tokenization after '\(input.prefix(upTo: pos.tokenPosition))'.")
     } catch (let e as FunctionHeaderParser.UnexpectedTokenError) {
        print("Error during parsing: Unexpected token: \(e.tokenCode) (\(e.token))")
     } catch (is FunctionHeaderParser.UnexpectedEndOfInputError) {
         print("Error during parsing: Unexpected end of input")
     } catch (let error) {
         print("Error during parsing: \(error)")
+    }
+    if (parser.numberOfCapturedErrors > 0) {
+        return nil
     }
     return funcHeader
 }

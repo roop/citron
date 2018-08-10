@@ -22,4 +22,4 @@ ${GRAMMAR}.swift: ${CITRON} ${GRAMMAR}.y
 	${CITRON} ${GRAMMAR}.y -o $@
 
 ${NAME}: ${SRC}/CitronParser.swift ${SRC}/CitronLexer.swift ${GRAMMAR}.swift ErrorReporter.swift main.swift
-	${SWIFTC} $^ -o $@
+	${SWIFTC} -g $^ -o $@

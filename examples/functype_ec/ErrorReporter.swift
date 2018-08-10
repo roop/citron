@@ -1,60 +1,129 @@
 
 class ErrorReporter {
     let inputString: String
+    var endOfInputPosition: CitronLexerPosition?
+    var isErrorReportedAtEnd: Bool = false
     init(input: String) {
         inputString = input
     }
 }
 
 extension ErrorReporter : FunctionHeaderParser.CitronErrorCaptureDelegate {
-    func shouldCaptureErrorOnParam(error: Error,
-        resolvedSymbols: [(name: String, value: Any)],
-        unclaimedTokens: [(token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)],
-        nextToken: (token: FunctionHeaderParser.CitronToken, tokenCode: FunctionHeaderParser.CitronTokenCode)?) -> CitronErrorCaptureResponse<FunctionParameter?> {
-        let lastResolvedSymbolName = resolvedSymbols.last?.name
-        let errorPosition = ((unclaimedTokens.first ?? nextToken)?.token)?.position
-        reportErrorOnParam(lastResolvedSymbolName: lastResolvedSymbolName, errorPosition: errorPosition)
+    typealias ECState = FunctionHeaderParser.CitronErrorCaptureState
+    typealias ECResponse = CitronErrorCaptureResponse
+
+    /* func_header */
+    func shouldCaptureErrorOnFunc_header(state: ECState, error: Error) -> ECResponse<FunctionHeader?> {
+        reportError(error: error, on: .func_header, state: state)
+        return .captureAs(nil)
+    }
+    /* func_signature */
+    func shouldCaptureErrorOnFunc_signature(state: ECState, error: Error) -> ECResponse<([FunctionParameter?]?, FunctionHeader.Throwability, TypeIdentifier)?> {
+        reportError(error: error, on: .func_signature, state: state)
+        return .captureAs(nil)
+    }
+
+    /* func_keyword_name */
+    func shouldCaptureErrorOnFunc_keyword_name(state: ECState, error: Error) -> ECResponse<TypeIdentifier?> {
+        reportError(error: error, on: .func_keyword_name, state: state)
+        return .captureAs(nil)
+    }
+
+    /* param_clause */
+    func shouldCaptureErrorOnParam_clause(state: ECState, error: Error) -> ECResponse<[FunctionParameter?]?> {
+        reportError(error: error, on: .param_clause, state: state)
+        return .captureAs(nil)
+    }
+
+    /* param */
+    func shouldCaptureErrorOnParam(state: ECState, error: Error) -> ECResponse<FunctionParameter?> {
+        reportError(error: error, on: .param, state: state)
         return .captureAs(nil)
     }
 
 }
 
 extension ErrorReporter {
-    func reportErrorOnParam(lastResolvedSymbolName: String?, errorPosition: Lexer.LexingPosition?) {
-
-        if let lastResolvedSymbolName = lastResolvedSymbolName {
-            switch (lastResolvedSymbolName) {
-            case "local_param_name": fallthrough
-            case "external_param_name":
-                croak(expected: "':' after parameter name", pointAt: errorPosition)
-            case "Colon":
-                croak(expected: "type identifier or 'inout' after ':'", pointAt: errorPosition)
-            case "KeywordInout":
-                croak(expected: "type identifier after 'inout'", pointAt: errorPosition)
-            default:
-                croak(expected: "',' or ')' after parameter specification", pointAt: errorPosition)
+    func reportError(error: Error, on errorCapturingSymbol: FunctionHeaderParser.CitronNonTerminalCode, state: ECState) {
+        if (state.nextToken == nil) {
+            // Report only one error while at the end of input
+            if (isErrorReportedAtEnd) {
+                return
+            } else {
+                isErrorReportedAtEnd = true
             }
-        } else {
-            croak(expected: "parameter specification", pointAt: errorPosition)
         }
 
+        let lastResolvedSymbolCode = state.lastResolvedSymbol?.symbolCode
+        let errorPosition: CitronLexerPosition
+        if case CitronLexerError.noMatchingRuleAt(let pos) = error {
+            errorPosition = pos
+        } else {
+            errorPosition = state.erroringToken?.token.position ?? endOfInputPosition!
+        }
+
+        switch (errorCapturingSymbol) {
+        case .func_header:
+            switch (lastResolvedSymbolCode) {
+            case .some(.func_signature):
+              croak("extra characters after function header", at: errorPosition)
+            default:
+                // Can't really happen?
+                croak("error in specifying function header", at: errorPosition)
+            }
+        case .func_keyword_name:
+            switch (lastResolvedSymbolCode) {
+            case .some(.funcHeaderKeywordFunc):
+                croak("expected function name after 'func'", at: errorPosition)
+            default:
+                croak("expected 'func' keyword", at: errorPosition)
+            }
+        case .param_clause:
+            switch (lastResolvedSymbolCode) {
+            case .some(.funcHeaderOpenBracket):
+                croak("expected parameter", at: errorPosition)
+            default:
+                croak("expected parameters list enclosed in (parantheses), or just '()' for an empty list", at: errorPosition)
+            }
+        case .func_signature:
+            switch (lastResolvedSymbolCode) {
+            case .some(.param_clause):
+                croak("expected '->' or 'throws' or 'rethrows' or end of function header", at: errorPosition)
+            case .some(.funcHeaderKeywordThrows): fallthrough
+            case .some(.funcHeaderKeywordRethrows):
+                croak("expected '->'", at: errorPosition)
+            case .some(.funcHeaderArrow):
+                croak("expected result type", at: errorPosition)
+            default:
+                // Can't really happen?
+                croak("error in specifying return type", at: errorPosition)
+            }
+        case .param:
+            switch (lastResolvedSymbolCode) {
+            case .some(.local_param_name): fallthrough
+            case .some(.external_param_name): fallthrough
+            case .some(.funcHeaderIdentifier):
+                croak("expected ':' after parameter name", at: errorPosition)
+            case .some(.funcHeaderColon):
+                croak("expected type identifier or 'inout' after ':'", at: errorPosition)
+            case .some(.funcHeaderKeywordInout):
+                croak("expected type identifier after 'inout'", at: errorPosition)
+            case .some(.param_list):
+                croak("expected ',' or ')' after parameter specification", at: errorPosition)
+            default:
+                croak("expected parameter specification", at: errorPosition)
+            }
+        default:
+            fatalError()
+        }
     }
 
-    func croak(expected message: String, pointAt position: Lexer.LexingPosition?) {
-        let line: Substring
-        let padding: String
-        if let position = position {
-            print("\(position.lineNumber): error: expected \(message).")
-            let endOfLine = inputString.endOfLine(from: position.linePosition)
-            let column = inputString.distance(from: position.linePosition, to: position.tokenPosition)
-            line = inputString[position.linePosition ..< endOfLine]
-            padding = String(repeating: " ", count: column)
-        } else {
-            print("error: expected \(message).")
-            let startOfLastLine = inputString.startOfLastLine()
-            line = inputString[startOfLastLine ..< inputString.endIndex]
-            padding = String(repeating: " ", count: line.count)
-        }
+    func croak(_ message: String, at position: CitronLexerPosition) {
+        print("\(position.lineNumber): error: \(message).")
+        let endOfLine = inputString.endOfLine(from: position.linePosition)
+        let column = inputString.distance(from: position.linePosition, to: position.tokenPosition)
+        let line = inputString[position.linePosition ..< endOfLine]
+        let padding = String(repeating: " ", count: column)
         print(line)
         print("\(padding)^")
     }
