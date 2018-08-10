@@ -149,6 +149,7 @@ protocol CitronParser: class {
 
     var numberOfCapturedErrors: Int { get set }
 
+    func yyShouldSaveErrorForCapturing(error: Error) -> Bool
     func yyCaptureError(on: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol?
     func yySymbolContent(_ symbol: CitronSymbol) -> Any
 
@@ -397,7 +398,7 @@ private extension CitronParser {
                 break
             }
         }
-        if (canCapture) {
+        if (canCapture && yyShouldSaveErrorForCapturing(error: error)) {
             tracePrint("Error capture: Saved error for later capturing: \(error)")
             // Save this error for either capturing or throwing later
             self.yyErrorCaptureSavedError = error

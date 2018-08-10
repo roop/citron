@@ -4430,6 +4430,14 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    ]\n\n");
 
+    fprintf(out, "    func yyShouldSaveErrorForCapturing(error: Error) -> Bool {\n");
+    fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
+    fprintf(out, "            print(\"Error capture: Not saving error for capturing because errorCaptureDelegate is not set\")\n");
+    fprintf(out, "            return false\n");
+    fprintf(out, "        }\n");
+    fprintf(out, "        return delegate.shouldSaveErrorForCapturing(error: error)\n");
+    fprintf(out, "    }\n\n");
+
     fprintf(out, "    func yyCaptureError(on symbolCode: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        guard let delegate = errorCaptureDelegate else {\n");
     fprintf(out, "            print(\"Error capture: Not capturing error because errorCaptureDelegate is not set\")\n");
@@ -4467,6 +4475,10 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    let yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] = [:]\n");
     fprintf(out, "    let yyErrorCaptureEndBeforeTokens: Set<CitronSymbolNumber> = []\n\n");
     fprintf(out, "    let yyErrorCaptureEndAfterSequenceEndingTokens: Set<CitronSymbolNumber> = []\n\n");
+
+    fprintf(out, "    func yyShouldSaveErrorForCapturing(error: Error) -> Bool {\n");
+    fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
+    fprintf(out, "    }\n\n");
 
     fprintf(out, "    func yyCaptureError(on symbolCode: CitronNonTerminalCode, error: Error, state: CitronErrorCaptureState) -> CitronSymbol? {\n");
     fprintf(out, "        fatalError(\"This parser was not generated with error capturing information\")\n");
@@ -4517,7 +4529,7 @@ void ReportTable(struct lemon *lemp){
   }
   fprintf(out, "}\n\n");
   fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);
-  fprintf(out, "    func shouldSaveErrorForCapturing(error _: Error) -> Bool {\n");
+  fprintf(out, "    func shouldSaveErrorForCapturing(error: Error) -> Bool {\n");
   fprintf(out, "        return true\n");
   fprintf(out, "    }\n");
   fprintf(out, "}\n\n");
