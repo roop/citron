@@ -304,6 +304,7 @@ struct symbol {
   /* The following fields are used by MULTITERMINALs only */
   int nsubsym;             /* Number of constituent symbols in the MULTI */
   struct symbol **subsym;  /* Array of constituent symbols */
+  /* The following fields are used for error capturing */
   int error_capture_line;  /* Line number of error capture directive */
   struct token_sequence *error_capture_end_before_sequences;
   int num_error_capture_end_before_sequences;
@@ -313,7 +314,7 @@ struct symbol {
 
 /* A token sequence that triggers error capturing */
 union token_sequence_tokens {
-  struct symbol *single_token; // In most cases, we'll have just one token in the sequence (count == 1)
+  struct symbol *single_token; // In most cases, we'll have just one token in the sequence (token_sequence.count == 1)
   struct symbol **multiple_tokens; // In some cases, we can have multiple tokens in the sequence (count > 1)
 };
 struct token_sequence {
