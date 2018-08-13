@@ -3082,6 +3082,18 @@ void CheckErrorCaptureDirectives(struct lemon *lemp) {
       }
     }
   }
+  // Make sure %capture_errors is not defined on any multiterminals
+  for(struct rule *rp = lemp->rule; rp; rp = rp->next) {
+    for(int i = 0; i < rp->nrhs; i++) {
+        struct symbol *sp = rp->rhs[i];
+        if (sp->error_capture_line == 0) { continue; }
+        if (sp->type != NONTERMINAL) {
+            ErrorMsg(lemp->filename, sp->error_capture_line,
+    "%%capture_errors can be defined only on non-terminals - '%s' is not a non-terminal.", sp->name);
+            lemp->errorcnt++;
+        }
+    }
+  }
 }
 
 /*************************** From the file "plink.c" *********************/
