@@ -17,7 +17,7 @@ This should be called multiple times to pass a sequence of tokens to the
 parser. Typically, a separate tokenization stage would generate this
 sequence of tokens.
 
-Parameters:
+**Parameters:**
 
   - `token`
 
@@ -36,11 +36,11 @@ Parameters:
     [`CitronTokenCode`] that lists all the terminals in the grammar.
     This argument should be a value of that enum.
 
-Return value:
+**Return value:**
 
   - Does not return a value.
 
-Throws:
+**Throws:**
 
   - Throws
 
@@ -49,11 +49,11 @@ Throws:
 Signifies the end of input. This should be called when there are no more
 tokens to consume.
 
-Parameters:
+**Parameters:**
 
   - This method takes no arguments
   
-Return value:
+**Return value:**
 
   - Returns the parse result.
   
