@@ -32,6 +32,7 @@ The grammar file should be in ASCII encoding.
     - [Naming](#naming)
       - [%class_name](#class_name)
       - [%tokencode_prefix](#tokencode_prefix)
+      - [%nonterminalcode_prefix](#nonterminalcode_prefix)
     - [Code insertion](#code-insertion)
       - [%preface](#preface)
       - [%epilogue](#epilogue)
@@ -444,6 +445,18 @@ For example, to make the enum values Swiftier, we can say:
 
 This will cause the enum to be generated with values `.tokenFunc` and
 `.tokenIdentifier`.
+
+#### nonterminalcode_prefix
+
+Specifying a non-terminal code prefix directive will cause the enum
+values for non-terminals to be generated with the specified prefix.
+
+This is not normally used, and exists only as a counterpart to
+[%tokencode_prefix](#tokencode_prefix).
+
+~~~ Text
+%nonterminalcode_prefix nt_
+~~~
 
 ### Code insertion
 
