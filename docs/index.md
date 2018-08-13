@@ -33,6 +33,16 @@ grammar, Citron creates a reentrant type-safe parser in Swift.
     outputs of every code block in the grammar file, ensuring that bugs
     are caught at build time rather than at runtime.
 
+  - **Human-grade** _(New in v2.0)_
+
+    [Human-grade parsers][hgp] that are meant to be used directly by
+    humans (rather than by another software) should be able to recover
+    from errors intelligently so that multiple meaningful errors can be
+    generated at one pass. Citron assists you in generating such
+    parsers.
+
+[hgp]: http://duriansoftware.com/joe/Constructing-human-grade-parsers.html
+
 ## Origins
 
 Citron is adapted from the [Lemon] parser generator by [Richard Hipp],
