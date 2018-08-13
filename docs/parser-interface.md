@@ -67,7 +67,7 @@ building a parser using Citron:
     the input and pass that on the the parser using the
     `consume(token:, code:)` and `endParsing()` methods.
 
-[`CitronParser`]: api/CitronParser/#citronparser-protocol
+[`CitronParser`]: api/CitronParser/#citronparser
 [`consume(token:, code:)`]: api/CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
 [`endParsing()`]: api/CitronParser/#endparsing
 

@@ -3,7 +3,9 @@ title: "CitronParser"
 permalink: /parser-interface/api/CitronParser/
 ---
 
-# CitronParser (Protocol)
+# CitronParser
+
+_Protocol_
 
 Defines the Citron parser interface.
 
