@@ -38,7 +38,7 @@ Citron: Modifications to Lemon to generate a parser in Swift
 // grammar.
 //
 // The CitronParser protocol defined below is compatible with Swift code
-// generated using Citron version 1.x.
+// generated using Citron version 2.x.
 
 protocol CitronParser: class {
 
