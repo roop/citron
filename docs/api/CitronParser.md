@@ -77,19 +77,14 @@ tokens to consume.
 
 ## Errors
 
----
 ### `UnexpectedTokenError`
 
 An token was encountered at a point that is not supported by the
 specified grammar.
 
----
-
 ### `UnexpectedEndOfInputError`
 
 End of input was encountered before the grammar could be satisfied.
-
----
 
 ### `StackOverflowError`
 
@@ -101,8 +96,6 @@ and the parser stack is allowed to grow without overflowing.
 
 ## Stack size
 
----
-
 ### `maxStackSize: Int?`
 
 If this is set to a non-nil integer, the stack is not allowed to grow
@@ -110,8 +103,6 @@ beyond that size. If an input requires the stack to grow above that, it
 would cause a [`StackOverflowError`] to be thrown.
 
 This is `nil` by default.
-
----
 
 ### `maxAttainedStackSize: Int`
 
@@ -121,14 +112,12 @@ the stack has grown during the parse.
 We can, for example, observe the effect of left-recursive vs
 right-recursive rules on how the stack grows.
 
----
-
 [`StackOverflowError`]: #stackoverflowerror
 [`maxStackSize`]: #maxstacksize
 
-## Tracing
-
 ---
+
+## Tracing
 
 ### `isTracingEnabled: Bool`
 
@@ -142,15 +131,11 @@ printed out. This can be used to debug the parser.
 These associated types are bound to types defined by the
 Citron-generated parser code.
 
----
-
 ### `CitronToken`
 
 The semantic type of each token, as seen by the code blocks in the grammar.
 This is the type defined by [%token_type](/citron/grammar-file/#token_type) type in
 the grammar file.
-
----
 
 ### `CitronTokenCode`
 
@@ -159,8 +144,6 @@ This is an enum of all tokens (or terminals) used in the grammar file.
 If a [%tokencode_prefix](/citron/grammar-file/#tokencode_prefix) is
 specified, the enum values will use that prefix.
 
----
-
 ### `CitronNonTerminalCode`
 
 This is an enum of all non-terminals used in the grammar file.
@@ -168,24 +151,10 @@ This is an enum of all non-terminals used in the grammar file.
 If a [%nonterminalcode_prefix](/citron/grammar-file/#nonterminalcode_prefix) is
 specified, the enum values will use that prefix.
 
----
-
 ### `CitronSymbolCode`
 
 This is an enum that represents all symbols (both terminals and
 non-terminals) used in the grammar file.
-
-It is defined as:
-
-~~~ Swift
-    enum CitronSymbolCode : RawRepresentable, Equatable {
-        case token(CitronTokenCode)
-        case nonterminal(CitronNonTerminalCode)
-        case endOfInput
-    }
-~~~
-
----
 
 ### `CitronResult`
 
