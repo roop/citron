@@ -11,7 +11,7 @@ _This documentation page is not fully baked yet._
 
 The Citron-generated code contains a parser class that implements the
 `CitronParser` protocol. The name of the parser class is `Parser` by
-default, but [can be changed](/citron/grammar-file/#class_name).
+default, but [can be changed](../grammar-file/#class_name).
 
 The `CitronParser` protocol, defined in `CitronParser.swift`, implements
 these two parsing methods:

@@ -21,6 +21,8 @@ The grammar file should be in ASCII encoding.
     - [Rules](#rules)
     - [An example](#an-example)
   - [Types](#types)
+    - [Types for terminals](#types-for-terminals)
+    - [Types for non-terminals](#types-for-non-terminals)
   - [Code blocks](#code-blocks)
   - [Directives](#directives)
     - [Type specification](#type-specification)
@@ -113,38 +115,40 @@ function declaration grammar][func_decl] from the [Swift Language Reference]:
 [func_decl]: https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/Declarations.html#//apple_ref/swift/grammar/function-declaration
 [Swift Language Reference]: https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/AboutTheLanguageReference.html
 
-The literal words and punctuation in the grammar are tokens that should
-get recognized in the previous tokenization stage. We should also
-recognize identifiers during tokenization. The other symbols should be
-treated as non-terminals.
+The literal words (like <code><b>func</b></code> and
+<code><b>inout</b></code>, etc.) and punctuation (like
+<code><b>(</b></code> and <code><b>)</b></code>) in the grammar are
+tokens that should get recognized in the previous tokenization stage. We
+should also recognize identifiers during tokenization. The other symbols
+should be treated as non-terminals.
 
 We can rewrite the above grammar as an input for Citron as follows:
 
 ~~~ Text
-func_header ::= FUNC func_name func_signature.
-func_name ::= IDENTIFIER.
+func_header ::= Func func_name func_signature.
+func_name ::= Identifier.
 
 func_signature ::= param_clause.
 func_signature ::= param_clause func_result.
 func_signature ::= param_clause throws_clause func_result.
 func_signature ::= param_clause throws_clause.
-throws_clause ::= THROWS.
-throws_clause ::= RETHROWS.
-func_result ::= FUNC_ARROW type.
+throws_clause ::= Throws.
+throws_clause ::= Rethrows.
+func_result ::= Arrow type.
 
-param_clause ::= L_BR R_BR.
-param_clause ::= L_BR param_list R_BR.
+param_clause ::= OpenParen CloseParen.
+param_clause ::= OpenParen param_list CloseParen.
 param_list ::= param.
-param_list ::= param COMMA param_list.
+param_list ::= param Comma param_list.
 param ::= local_param_name type_annotation.
 param ::= external_param_name local_param_name type_annotation.
 
-external_param_name ::= IDENTIFIER.
-local_param_name ::= IDENTIFIER.
+external_param_name ::= Identifier.
+local_param_name ::= Identifier.
 
-type_annotation ::= COLON type.
-type_annotation ::= COLON INOUT type.
-type ::= IDENTIFIER.
+type_annotation ::= Colon type.
+type_annotation ::= Colon Inout type.
+type ::= Identifier.
 ~~~
 
 Alternatives are handled by creating a separate rule for each
@@ -156,14 +160,23 @@ rules, one excluding the symbol and one including it (see rules for `param` and
 create rules for each combination of possible symbols (see rules for
 `func_signature`).
 
-Now we have a complete grammar that Citron can understand. But a grammar
-is not sufficient to generate a parser. For that, we also need to
-declare the types for the grammar's symbols and provide code blocks for
-our grammar's rules.
+Now we have a complete grammar that Citron can understand.
+We can save this grammar into a grammar file, say
+`grammar.y` and [run citron][run] on the grammar file.
 
-However, if required, you can still run Citron on just the grammar to
-check for any grammar-related errors like conflicts and unreachable
-rules.
+~~~
+$ clang citron.c -o ./citron
+$ ./citron grammar.y
+~~~
+
+At this point, running citron on the grammar file will only check for
+any grammar-related errors like conflicts and unreachable rules, but
+will not generate a parser.
+
+[run]: ../generating-the-parser/#running-citron
+
+To be able to generate a parser, we also need to declare the types for
+the grammar's symbols and provide code blocks for our grammar's rules.
 
 ## Types
 
@@ -171,17 +184,18 @@ Citron requires that we specify the semantic type of each symbol
 used in the grammar. That's the type we use to represent that symbol in
 our code.
 
-All terminal symbols are assumed to have the same semantic type.
-Different non-terminal symbols can have different semantic types.
+### Types for terminals
 
-For example, we could represent the terminals in the above grammar with
-an enum like this:
+All terminal symbols are assumed to have the same semantic type.
+
+For example, we could represent the terminals in the [above
+grammar](#an-example) with an enum like this:
 
 ~~~ Swift
 enum Token {
-    case keyword // for FUNC, THROWS, INOUT, etc.
+    case keyword // for Func, Throws, Inout, etc.
     case punctuation // for (, ), ->, etc.
-    case identifier(String) // for IDENTIFIER
+    case identifier(String) // for Identifier
 }
 ~~~
 
@@ -193,9 +207,25 @@ grammar file, like this:
 %token_type FunctionToken
 ~~~
 
-The non-terminal `param` in the above grammar represents a function
-paramater. We could represent that in our code with a struct defined
-like this:
+### Types for non-terminals
+
+Different non-terminal symbols can have different semantic types.
+
+We can specify the type of each non-terminal using the
+[%nonterminal_type](#nonterminal_type) directive.
+
+It can be hard to come up with the semantic types for all the
+non-terminals in the grammar at one go, so Citron also lets us specify a
+semantic type to be used for all non-terminals in the grammar using the
+[%default_nonterminal_type](#default_nonterminal_type) directive.
+
+~~~ Text
+%default_nonterminal_type Void
+~~~
+
+Consider the non-terminal `param` in the [above grammar](#an-example) --
+it represents a function paramater. We could represent that in our code
+with a struct defined like this:
 
 ~~~ Swift
 struct FunctionParameter {
@@ -308,6 +338,21 @@ Once we have the grammar rules, type specifications and code blocks, we
 can ask Citron to [generate a parser](/citron/generating-the-parser/)
 for us.
 
+It can be hard to come up with the correct code block for all the rules
+at one go, so Citron lets us define a default code block to be used for
+a given LHS symbol. While defining the semantic type of a non-terminal
+with the [%nonterminal_type](#nonterminal_type) directive, we can also
+specify a default code block. If a rule's LHS is this non-terminal and
+the rule doesn't have a code block specified, the default code block
+will be used.
+
+We can also specify a default code block in the
+[%default_nonterminal_type](#default_nonterminal_type) directive, which
+would make Citron pick up that code block whenever a rule's LHS symbol's
+semantic type was inferred using the
+[%default_nonterminal_type](#default_nonterminal_type) directive, and
+the rule doesn't have a code block specified.
+
 ## Directives
 
 ### Type specification
@@ -339,6 +384,15 @@ Example:
 %nonterminal_type type_annotation "(type: String, isInout: Bool)"
 ~~~
 
+Optionally, we can specify a default code block to be used for all rules
+with this non-terminal as the LHS.
+
+~~~ Text
+%nonterminal_type type_annotation "(type: String, isInout: Bool)" {
+    return (type: "", isInout: false)
+}
+~~~
+
 #### default_nonterminal_type
 
 Specifies the [semantic type](#types) for all non-terminals that don't
@@ -350,6 +404,13 @@ Example:
 
 ~~~ Text
 %default_nonterminal_type String
+~~~
+
+Optionally, we can specify a default code block to be used for all rules
+whose LHS symbol's semantic type was inferred using this directive.
+
+~~~ Text
+%default_nonterminal_type String { return "" }
 ~~~
 
 ### Naming
@@ -369,24 +430,20 @@ Example:
 
 By default, the token code enum values are the same as the token names
 used in the grammar. For example, the above grammar uses the token names
-`FUNC` and `INDENTIFIER`, so the token code enum will include the values
-`.FUNC` and `.IDENTIFIER`.
+`Func` and `Identifier`, so the token code enum will include the values
+`.Func` and `.Identifier`.
 
 Specifying a token code prefix directive will cause the enum values to be
 generated with the specified prefix.
 
-For example:
+For example, to make the enum values Swiftier, we can say:
 
 ~~~ Text
-%tokencode_prefix t_
+%tokencode_prefix token
 ~~~
 
-will cause the enum to be generated with values `.t_FUNC` and
-`.t_IDENTIFIER`.
-
-In case you want to have Swifty-looking enum values for the token codes,
-you can name the tokens with CamelCase and use an all-lowercase token
-code prefix, so the enum values can look something like `.tokenFunc`.
+This will cause the enum to be generated with values `.tokenFunc` and
+`.tokenIdentifier`.
 
 ### Code insertion
 
@@ -507,6 +564,9 @@ For example:
 %start_symbol func_header
 ~~~
 
+There can be only one rule in the grammar with the start symbol as the
+LHS.
+
 #### token
 
 The order of tokens in the `CitronTokenCode` enumeration is determined
@@ -525,18 +585,18 @@ For example:
 Specifies that a token can, if required, be treated as another token.
 
 For example, in the above grammar, the keywords `throws` and `rethrows`
-would be identified as the tokens `THROWS` and `RETHROWS`. So an input
+would be identified as the tokens `Throws` and `Rethrows`. So an input
 like `func fn(throws: Bool)` would result in a syntax error, because the
-`THROWS` token is not allowed inside the parameters clause. If you'd
+`Throws` token is not allowed inside the parameters clause. If you'd
 like to allow the use of `throws` and `rethrows` as identifiers, you can
 say:
 
 ~~~ Text
-%fallback IDENTIFIER THROWS RETHROWS.
+%fallback Identifier Throws Rethrows.
 ~~~
 
-This specifies that the tokens `THROWS` and `RETHROWS` can be treated
-as `IDENTIFIER` if that would help avoid a syntax error.
+This specifies that the tokens `Throws` and `Rethrows` can be treated
+as `Identifier` if that would help avoid a syntax error.
 
 #### wildcard
 
@@ -545,10 +605,10 @@ Specifies a catch-all [fallback](#fallback) token.
 For example:
 
 ~~~ Text
-%wildcard IDENTIFIER.
+%wildcard Identifier.
 ~~~
 
-specifies that `IDENTIFIER` is a fallback for _every other_ token in the
+specifies that `Identifier` is a fallback for _every other_ token in the
 grammar.
 
 #### token_set
@@ -562,14 +622,14 @@ blocks:
 ~~~ Text
 %nonterminal_type throws_clause FunctionToken // same as %token_type
 
-throws_clause ::= THROWS(t). { return t }
-throws_clause ::= RETHROWS(t). { return t }
+throws_clause ::= Throws(t). { return t }
+throws_clause ::= Rethrows(t). { return t }
 ~~~
 
 You can replace all those lines with a token set specification like
 this:
 
 ~~~ Text
-%token_set throws_clause THROWS | RETHROWS.
+%token_set throws_clause Throws | Rethrows.
 ~~~
 
