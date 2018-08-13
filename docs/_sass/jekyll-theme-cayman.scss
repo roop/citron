@@ -193,6 +193,12 @@ a {
     border-radius: 0.3rem;
   }
 
+  a {
+    code {
+      color: $body-link-color;
+    }
+  }
+
   pre {
     padding: 0.8rem;
     margin-top: 0;
