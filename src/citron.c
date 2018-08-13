@@ -4525,7 +4525,7 @@ void ReportTable(struct lemon *lemp){
     fprintf(out, "    func shouldCaptureErrorOn%c%s(", TOUPPER(sp->name[0]), sp->name + 1);
     fprintf(out, "state: %s.CitronErrorCaptureState,\n", lemp->className);
     fprintf(out, "        error: Error)");
-    fprintf(out, " -> CitronErrorCaptureResponse<%s>\n", sp->datatype);
+    fprintf(out, " -> CitronErrorCaptureResponse<%s>\n", type_string_of_symbol(sp, lemp));
   }
   fprintf(out, "}\n\n");
   fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);
