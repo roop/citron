@@ -202,7 +202,7 @@ let result = try parser.endParsing()
 [`LexingRule`]: #lexingrule
 [`TokenData`]: #tokendata
 [`CitronLexerError`]: #nomatchingruleaterrorposition-citronlexerposition
-[`noMatchingRuleAt(errorPosition:)`]: #nomatchingruleaterrorposition-citronlexerposition
+[`.noMatchingRuleAt(errorPosition:)`]: #nomatchingruleaterrorposition-citronlexerposition
 [`CitronLexerPosition`]: #citronlexerposition
 [`CitronParser`]: ../CitronParser/#citronparser
 [`CitronToken`]: ../CitronParser/#citrontoken
