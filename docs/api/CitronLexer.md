@@ -10,6 +10,21 @@ _Generic Class_
 A simple rule-based lexer. The type of the token data to be returned is
 used as the generic parameter.
 
+  - [Types](#types)
+     - [`TokenData`](#tokendata)
+     - [`LexingRule`](#lexingrule)
+     - [`CitronLexerPosition`](#citronlexerposition)
+  - [Initializing](#initializing)
+     - [`init(rules: LexingRule)`](#initrules-lexingrule)
+  - [Tokenizing](#tokenizing)
+     - [`tokenize(_ string: String, onFound: Action)`](#tokenize_-string-string-onfound-action)
+     - [`tokenize(_ string: String, onFound: Action, onError: ErrorAction?)`](#tokenize_-string-string-onfound-action-onerror-erroraction)
+  - [Errors](#errors)
+     - [`noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`](#nomatchingruleaterrorposition-citronlexerposition)
+  - [Usage with `CitronParser`](#usage-with-citronparser)
+
+---
+
 ## Types
 
 ### `TokenData`
@@ -97,7 +112,7 @@ an error is thrown and tokenization is aborted.
 **Throws:**
 
   - If there is no matching rule at a particular position in the input,
-    a [`noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is thrown.
+    a [`.noMatchingRuleAt(errorPosition:)`] error is thrown.
 
 ---
 
@@ -129,7 +144,7 @@ the `onError` block is called and tokenization continues.
     This is an action block of type `(`[`CitronLexerError`]`) throws -> Void`.
 
     If there is no matching rule at a particular position in the input,
-    a [`noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is
+    a [`.noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is
     passed to this action block.
 
     This action block can throw errors if required, and they will be
@@ -139,11 +154,9 @@ the `onError` block is called and tokenization continues.
 
 ## Errors
 
-### `CitronLexerError`
+### `.noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`
 
-An enum with a single error value: `noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`.
-
-This error is caused when at some position in the input, none of the
+This error is caused when at position [`CitronLexerPosition`] of the input, none of the
 specified rules could be applied.
 
 ---
@@ -188,7 +201,8 @@ let result = try parser.endParsing()
 
 [`LexingRule`]: #lexingrule
 [`TokenData`]: #tokendata
-[`CitronLexerError`]: #citronlexererror
+[`CitronLexerError`]: #nomatchingruleaterrorposition-citronlexerposition
+[`noMatchingRuleAt(errorPosition:)`]: #nomatchingruleaterrorposition-citronlexerposition
 [`CitronLexerPosition`]: #citronlexerposition
 [`CitronParser`]: ../CitronParser/#citronparser
 [`CitronToken`]: ../CitronParser/#citrontoken
