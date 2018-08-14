@@ -70,7 +70,9 @@ sequence of tokens.
 
 **Throws:**
 
-  - Throws
+  - May throw one of these errors:
+      - [`UnexpectedTokenError`](#unexpectedtokenerror)
+      - [`StackOverflowError`](#stackoverflowerror)
 
 ---
 
@@ -96,6 +98,12 @@ tokens to consume.
     [%nonterminal_type](/citron/grammar-file/#nonterminal_type) of the
     start symbol (a.k.a. root symbol) of the grammar, available to the
     parser class as the associated type [`CitronResult`].
+
+**Throws:**
+
+  - May throw one of these errors:
+      - [`UnexpectedEndOfInputError`](#unexpectedendofinputerror)
+      - [`StackOverflowError`](#stackoverflowerror)
 
 ---
 
