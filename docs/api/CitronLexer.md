@@ -106,13 +106,13 @@ an error is thrown and tokenization is aborted.
     When a match is found as per the lexing rules, the [`TokenData`]
     obtained from the matching rule is passed on to this action block.
 
-    This action block can throw errors if required, and they will be
-    thrown up to the caller of this method.
-
 **Throws:**
 
   - If there is no matching rule at a particular position in the input,
     a [`.noMatchingRuleAt(errorPosition:)`] error is thrown.
+
+  - The `onFound` action block can throw errors if required, and they
+    will be thrown up to the caller of this method.
 
 ---
 
@@ -136,19 +136,20 @@ the `onError` block is called and tokenization continues.
     When a match is found as per the lexing rules, the [`TokenData`]
     obtained from the matching rule is passed on to this action block.
 
-    This action block can throw errors if required, and they will be
-    thrown up to the caller of this method.
-
   - onError:
 
     This is an action block of type `(`[`CitronLexerError`]`) throws -> Void`.
 
     If there is no matching rule at a particular position in the input,
     a [`.noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is
-    passed to this action block.
+    passed to this action block. The lexer then moves ahead to the next
+    position in the input at which a rule can be applied and
+    tokenization continues from there.
 
-    This action block can throw errors if required, and they will be
-    thrown up to the caller of this method.
+**Throws:**
+
+  - The `onFound` and `onError` action blocks can throw errors if
+    required, and they will be thrown up to the caller of this method.
 
 ---
 
@@ -156,7 +157,7 @@ the `onError` block is called and tokenization continues.
 
 ### `.noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`
 
-This error is caused when at position [`CitronLexerPosition`] of the input, none of the
+Signifies that at position [`CitronLexerPosition`] of the input, none of the
 specified rules could be applied.
 
 ---
