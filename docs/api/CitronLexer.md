@@ -106,6 +106,10 @@ an error is thrown and tokenization is aborted.
     When a match is found as per the lexing rules, the [`TokenData`]
     obtained from the matching rule is passed on to this action block.
 
+**Return value:**
+
+  - None
+
 **Throws:**
 
   - If there is no matching rule at a particular position in the input,
@@ -145,6 +149,10 @@ the `onError` block is called and tokenization continues.
     passed to this action block. The lexer then moves ahead to the next
     position in the input at which a rule can be applied and
     tokenization continues from there.
+
+**Return value:**
+
+  - None
 
 **Throws:**
 
