@@ -4301,7 +4301,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "    // Error capturing\n\n");
 
-  fprintf(out, "    typealias CitronErrorCaptureDelegate = _%sCitronErrorCaptureDelegate\n\n", lemp->className);
+  fprintf(out, "    typealias CitronErrorCaptureDelegate = _%sCitronErrorCaptureDelegate\n\n", className);
   fprintf(out, "    weak var errorCaptureDelegate: CitronErrorCaptureDelegate? = nil\n\n");
   int num_of_states_with_error_capturing = 0;
   if (lemp->has_error_capture) {
@@ -4526,7 +4526,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "}\n\n"); // Closing class Parser
 
-  fprintf(out, "protocol _%sCitronErrorCaptureDelegate : class {\n", lemp->className);
+  fprintf(out, "protocol _%sCitronErrorCaptureDelegate : class {\n", className);
   fprintf(out, "    func shouldSaveErrorForCapturing(error: Error) -> Bool\n");
   for(int i=0; i<lemp->nsymbol; i++){
     struct symbol *sp = lemp->symbols[i];
@@ -4535,43 +4535,43 @@ void ReportTable(struct lemon *lemp){
     }
     fprintf(out, "\n    /* %s */\n", sp->name);
     fprintf(out, "    func shouldCaptureErrorOn%c%s(", TOUPPER(sp->name[0]), sp->name + 1);
-    fprintf(out, "state: %s.CitronErrorCaptureState,\n", lemp->className);
+    fprintf(out, "state: %s.CitronErrorCaptureState,\n", className);
     fprintf(out, "        error: Error)");
     fprintf(out, " -> CitronErrorCaptureResponse<%s>\n", type_string_of_symbol(sp, lemp));
   }
   fprintf(out, "}\n\n");
-  fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", lemp->className);
+  fprintf(out, "extension _%sCitronErrorCaptureDelegate {\n", className);
   fprintf(out, "    func shouldSaveErrorForCapturing(error: Error) -> Bool {\n");
   fprintf(out, "        return true\n");
   fprintf(out, "    }\n");
   fprintf(out, "}\n\n");
 
   fprintf(out, "// Ability to use == to compare CitronSymbolCode with CitronTokenCode / CitronNonTerminalCode\n\n");
-  fprintf(out, "extension %s.CitronSymbolCode {\n", lemp->className);
-  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronTokenCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "extension %s.CitronSymbolCode {\n", className);
+  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronTokenCode) -> Bool {\n", className, className);
   fprintf(out, "        guard case let .token(code) = a else { return false }\n");
   fprintf(out, "        return (code == b)\n");
   fprintf(out, "    }\n");
-  fprintf(out, "    static func == (a: %s.CitronTokenCode, b: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "    static func == (a: %s.CitronTokenCode, b: %s.CitronSymbolCode) -> Bool {\n", className, className);
   fprintf(out, "        guard case let .token(code) = b else { return false }\n");
   fprintf(out, "        return (code == a)\n");
   fprintf(out, "    }\n");
-  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronNonTerminalCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "    static func == (a: %s.CitronSymbolCode, b: %s.CitronNonTerminalCode) -> Bool {\n", className, className);
   fprintf(out, "        guard case let .nonterminal(code) = a else { return false }\n");
   fprintf(out, "        return (code == b)\n");
   fprintf(out, "    }\n");
-  fprintf(out, "    static func == (a: %s.CitronNonTerminalCode, b: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "    static func == (a: %s.CitronNonTerminalCode, b: %s.CitronSymbolCode) -> Bool {\n", className, className);
   fprintf(out, "        guard case let .nonterminal(code) = b else { return false }\n");
   fprintf(out, "        return (code == a)\n");
   fprintf(out, "    }\n");
   fprintf(out, "}\n\n");
 
   fprintf(out, "// Ability to use switch (symbolCode) { case .tokenCode: ...; case .nonterminalCode: ... }\n\n");
-  fprintf(out, "extension %s.CitronSymbolCode {\n", lemp->className);
-  fprintf(out, "    static func ~= (pattern: %s.CitronTokenCode, value: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "extension %s.CitronSymbolCode {\n", className);
+  fprintf(out, "    static func ~= (pattern: %s.CitronTokenCode, value: %s.CitronSymbolCode) -> Bool {\n", className, className);
   fprintf(out, "        return (pattern == value)\n");
   fprintf(out, "    }\n");
-  fprintf(out, "    static func ~= (pattern: %s.CitronNonTerminalCode, value: %s.CitronSymbolCode) -> Bool {\n", lemp->className, lemp->className);
+  fprintf(out, "    static func ~= (pattern: %s.CitronNonTerminalCode, value: %s.CitronSymbolCode) -> Bool {\n", className, className);
   fprintf(out, "        return (pattern == value)\n");
   fprintf(out, "    }\n");
   fprintf(out, "}\n");
