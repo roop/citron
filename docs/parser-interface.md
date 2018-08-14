@@ -49,27 +49,31 @@ building a parser using Citron:
  3. `CitronLexer.swift` from the Citron code base, if we're using
     Citron's lexer
 
-    This defines the `CitronLexer` class, which is a simple lexer.
+    This defines the [`CitronLexer`] class, which is a simple lexer.
     It provides the following methods:
 
-      - `init(rules:)`
+      - [`init(rules:)`]
 
         Create the lexer with a bunch of lexing rules.
 
-      - `tokenize(string:, onFound:)`
+      - [`tokenize(string:, onFound:)`]
 
         Tokenize the `string`, and call the `onFound` block when tokens
         matching the rules are found.
 
  4. The code that drives the parsing
 
-    This code should use a tokenizer (like `CitronLexer`) to create tokens from
+    This code should use a tokenizer (like [`CitronLexer`]) to create tokens from
     the input and pass that on the the parser using the
-    `consume(token:, code:)` and `endParsing()` methods.
+    [`consume(token:, code:)`] and [`endParsing()`] methods.
 
 [`CitronParser`]: api/CitronParser/#citronparser
 [`consume(token:, code:)`]: api/CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
 [`endParsing()`]: api/CitronParser/#endparsing
+
+[`CitronLexer`]: api/CitronLexer/#citronlexer
+[`init(rules:)`]: api/CitronLexer/#initrules-lexingrule
+[`tokenize(string:, onFound:)`]: api/CitronLexer/#tokenize_-string-string-onfound-action
 
 ### Error handling
 
