@@ -23,7 +23,7 @@ That would create a Swift file containing the parser class.
 The Citron source code is just three files:
 
  1. **`citron.c`**: The Citron parser generator in C. This contains the
-    code to generates a parser class in Swift that implements the
+    code to generate a parser class in Swift that implements the
     `CitronParser` protocol.
  
  2. **`CitronParser.swift`**: This file defines the `CitronParser`
