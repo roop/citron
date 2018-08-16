@@ -585,7 +585,8 @@ For example:
 ~~~
 
 There can be only one rule in the grammar with the start symbol as the
-LHS.
+LHS -- <span id="start-rule">that rule is called the **start
+rule**</span> of the grammar.
 
 #### token
 

@@ -66,7 +66,7 @@ sequence of tokens.
 
 **Return value:**
 
-  - Does not return a value.
+  - None
 
 **Throws:**
 
@@ -86,21 +86,23 @@ tokens to consume.
 
 **Parameters:**
 
-  - This method takes no arguments
+  - None
   
 **Return value:**
 
   - Returns the parse result.
   
-    The parse result is the value returned by the code block of a start
-    rule (a.k.a. root rule) of the grammar.  If we're building a parse
-    tree from the input as illustrated above, the parse result would
-    typically be the completely built parse tree.
+    The parse result is the value returned by the code block of the
+    [start rule] of the grammar.
 
-    The return type of this method is the
-    [%nonterminal_type](/citron/grammar-file/#nonterminal_type) of the
-    start symbol (a.k.a. root symbol) of the grammar, available to the
-    parser class as the associated type [`CitronResult`].
+    The return type of this method is the [semantic type] of the [start
+    symbol], available to the parser class as the associated type
+    [`CitronResult`].
+
+
+[start rule]: /citron/grammar-file/#start-rule
+[start symbol]: /citron/grammar-file/#start_symbol
+[semantic type]: /citron/grammar-file/#types-for-non-terminals
 
 **Throws:**
 
