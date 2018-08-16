@@ -130,8 +130,10 @@ End of input was encountered before the grammar could be satisfied.
 
 ### `StackOverflowError`
 
-The parser stack size exceeded the [`maxStackSize`] set. If
-[`maxStackSize`] is `nil` (the default), this error is not thrown,
+Signifies that parsing was aborted because to continue parsing the
+number of entries in the stack needs to exceed the [`maxStackSize`] set.
+
+If [`maxStackSize`] is `nil` (the default), this error is never thrown,
 and the parser stack is allowed to grow without overflowing.
 
 ---
@@ -140,16 +142,18 @@ and the parser stack is allowed to grow without overflowing.
 
 ### `maxStackSize: Int?`
 
-If this is set to a non-nil integer, the stack is not allowed to grow
-beyond that size. If an input requires the stack to grow above that, it
-would cause a [`StackOverflowError`] to be thrown.
+If this is `nil` (the default), there is no restriction on how many
+entries the parser stack can have.
 
-This is `nil` by default.
+If this is `non-nil`, this specifies the maximum number of entries that
+the parser's stack can be allowed to hold. If an input requires the
+stack to grow above that, it would cause a [`StackOverflowError`] to be
+thrown, and parsing shall be aborted.
 
 ### `maxAttainedStackSize: Int`
 
-This can be queried at the end of the parse to see the maximum size that
-the stack has grown during the parse.
+This can be queried at the end of the parse to see the maximum number of
+entries that the stack ever held during the parse.
 
 We can, for example, observe the effect of left-recursive vs
 right-recursive rules on how the stack grows.
