@@ -3,6 +3,11 @@ title: "The Parser Interface"
 permalink: /parser-interface/
 ---
 
+[Citron] > [Parser interface]
+
+[Citron]: /citron
+[Parser interface]: .
+
 ## Parser interface
 
 The parser interface consists of these two methods which can be called

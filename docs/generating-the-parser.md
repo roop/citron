@@ -3,6 +3,11 @@ title: "Generating the Parser"
 permalink: /generating-the-parser/
 ---
 
+[Citron] > [Generating the parser]
+
+[Citron]: /citron
+[Generating the parser]: .
+
 # Generating the parser
 
 To generate the Swift parser code from the input [grammar

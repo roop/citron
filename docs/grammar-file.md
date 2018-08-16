@@ -3,6 +3,11 @@ title: "The Citron Grammar File"
 permalink: /grammar-file/
 ---
 
+[Citron] > [Grammar file]
+
+[Citron]: /citron
+[Grammar file]: .
+
 # The Citron Grammar File
 
 The Citron Grammar File contains:
