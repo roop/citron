@@ -74,6 +74,9 @@ sequence of tokens.
       - [`UnexpectedTokenError`](#unexpectedtokenerror)
       - [`StackOverflowError`](#stackoverflowerror)
 
+  - Any errors thrown in the [code blocks] of rules may propagate up
+    to the caller of this method.
+
 ---
 
 ### `endParsing()`
@@ -104,6 +107,11 @@ tokens to consume.
   - May throw one of these errors:
       - [`UnexpectedEndOfInputError`](#unexpectedendofinputerror)
       - [`StackOverflowError`](#stackoverflowerror)
+
+  - Any errors thrown in the [code blocks] of rules may propagate up
+    to the caller of this method.
+
+[code blocks]: ../grammar-file/#code-blocks
 
 ---
 

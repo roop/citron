@@ -325,6 +325,13 @@ Since the code block is placed in a function with stricty typed
 parameters, any type mismatches would be caught when the generated
 parser is compiled.
 
+The code block may throw errors and these errors will be propagated up
+to one of the parsing methods: `consume(token:, code:)`, or
+`endParsing()`. This can be used to handle semantic errors from within
+code blocks. For example, if we have an arithmetic expression evaluator
+that evaluates an expression as it parses it, we might want to throw on
+a division-by-zero error.
+
 The code blocks are a great way to build a data structure (usually a
 parse tree) representing the parsed data. Typically, the code block for
 a rule builds the data structure representing the LHS symbol of the

@@ -115,8 +115,8 @@ an error is thrown and tokenization is aborted.
   - If there is no matching rule at a particular position in the input,
     a [`.noMatchingRuleAt(errorPosition:)`] error is thrown.
 
-  - The `onFound` action block can throw errors if required, and they
-    will be thrown up to the caller of this method.
+  - Any errors thrown in the `onFound` action block
+    will be prapagated up to the caller of this method.
 
 ---
 
@@ -156,8 +156,8 @@ the `onError` block is called and tokenization continues.
 
 **Throws:**
 
-  - The `onFound` and `onError` action blocks can throw errors if
-    required, and they will be thrown up to the caller of this method.
+  - Any errors thrown in the `onFound` and `onError` action blocks
+    will be prapagated up to the caller of this method.
 
 ---
 

@@ -77,9 +77,9 @@ building a parser using Citron:
 
 ### Error handling
 
-Both `consume(token:code:)` and `endParsing()` are throwing methods.
-They throw when an input token at a certain position is inconsistent
-with the grammar, or when the input ends prematurely.
+Both [`consume(token: ,code:)`] and [`endParsing()`] are throwing
+methods.  They throw when an input token at a certain position is
+inconsistent with the grammar, or when the input ends prematurely.
 
 Moreover, we can throw errors from within a rule's code block and those
 throws would propagate up to one of the two parsing methods.
