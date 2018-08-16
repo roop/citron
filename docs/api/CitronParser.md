@@ -167,8 +167,10 @@ right-recursive rules on how the stack grows.
 
 ### `isTracingEnabled: Bool`
 
-If this is set to true, information on how the parsing happens is
+If this is set to `true`, information on how the parsing happens is
 printed out. This can be used to debug the parser.
+
+The default value is `false`.
 
 ---
 
