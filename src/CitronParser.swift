@@ -133,6 +133,10 @@ protocol CitronParser: class {
 
     // Error capturing
 
+    associatedtype CitronErrorCaptureDelegate
+
+    var errorCaptureDelegate: CitronErrorCaptureDelegate? { get set }
+
     var yyErrorCaptureSymbolNumbersForState: [CitronStateNumber:[CitronSymbolNumber]] { get }
     var yyCanErrorCapture: Bool { get }
     var yyErrorCaptureDirectives: [CitronSymbolNumber:(endAfter:[[CitronTokenCode]],endBefore:[CitronTokenCode])] { get }
