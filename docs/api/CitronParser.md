@@ -30,12 +30,16 @@ protocol.
       - [`maxAttainedStackSize: Int`](#maxattainedstacksize-int)
   - [Tracing](#tracing)
       - [`isTracingEnabled: Bool`](#istracingenabled-bool)
+  - [Error capturing](#errorcapturing)
+      - [`errorCaptureDelegate: CitronErrorCaptureDelegate?`](#errorcapturedelegate-citronerrorcapturedelegate)
+      - [`consume(lexerError: Error)`](#consumelexererror-error)
   - [Associated Types](#associated-types)
       - [`CitronToken`](#citrontoken)
       - [`CitronTokenCode`](#citrontokencode)
       - [`CitronNonTerminalCode`](#citronnonterminalcode)
       - [`CitronSymbolCode`](#citronsymbolcode)
       - [`CitronResult`](#citronresult)
+      - [`CitronErrorCaptureDelegate`](#citronerrorcapturedelegate)
 
 ---
 
@@ -180,6 +184,53 @@ The default value is `false`.
 
 ---
 
+## Error capturing
+
+### `errorCaptureDelegate: `[`CitronErrorCaptureDelegate`]`?`
+
+To activate error capturing, this should be set to a class conforming to
+the protocol referred to by the [`CitronErrorCaptureDelegate`]
+associated type.
+
+If this is `nil`, error capturing is not activated even if the [grammar
+file] contains [%capture_errors] directives.
+
+The default value is `nil`.
+
+[`errorCaptureDelegate`]: #errorcapturedelegate-citronerrorcapturedelegate
+[%capture_errors]: /citron/grammar-file/#capture_errors
+[grammar file]: /citron/grammar-file
+
+### `consume(lexerError: Error)`
+
+To enable error capturing of lexer errors, the lexer errors can be
+passed to the parser using this method. Each lexer error should be
+passed to this method, one at a time, as and when it is found during
+tokenization.
+
+**Parameters:**
+
+  - `lexerError`
+
+    The lexer error that needs to be error-captured.
+
+**Return value:**
+
+  - None
+
+**Throws:**
+
+In any of the following scenarios, error capturing does not apply:
+
+ 1. If there are no [error capturing nonterminals][%capture_errors]
+    currently being parsed, _or_
+ 2. If the [`errorCaptureDelegate`]'s `shouldSaveErrorForCapturing`
+    method returns `false`
+
+and therefore, the passed `lexerError` is thrown as is.
+
+---
+
 ## Associated Types
 
 These associated types are bound to types defined by the
@@ -216,9 +267,18 @@ The semantic type of the [start
 symbol](/citron/grammar-file/#start_symbol) as specified in the grammar
 file.
 
+### `CitronErrorCaptureDelegate`
+
+This is typealiased to a protocol that the [`errorCaptureDelegate`]
+should conform to. The name and contents of the protocol are
+automatically generated from the [grammar file].
+
+See the [`CitronErrorCaptureDelegate`](../CitronErrorCaptureDelegate)
+page for more information.
+
 ---
 
 [`CitronToken`]: #citrontoken
 [`CitronTokenCode`]: #citrontokencode
 [`CitronResult`]: #citronresult
-
+[`CitronErrorCaptureDelegate`]: #citronerrorcapturedelegate
