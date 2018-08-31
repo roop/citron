@@ -46,7 +46,7 @@ The grammar file should be in ASCII encoding.
       - [%left_associative](#left_associative)
       - [%right_associative](#right_associative)
       - [%nonassociative](#nonassociative)
-    - [Grammar-controls](#grammar-controls)
+    - [Grammar controls](#grammar-controls)
       - [%start_symbol](#start_symbol)
       - [%token](#token)
       - [%fallback](#fallback)
