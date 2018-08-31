@@ -52,6 +52,8 @@ The grammar file should be in ASCII encoding.
       - [%fallback](#fallback)
       - [%wildcard](#wildcard)
       - [%token_set](#token_set)
+    - [Error capturing](#error-capturing)
+      - [%capture_errors](#capture_errors)
 
 
 ## Grammar
@@ -659,3 +661,59 @@ this:
 %token_set throws_clause Throws | Rethrows.
 ~~~
 
+### Error capturing
+
+#### capture_errors
+
+Used to enable error capturing for a particular nonterminal.
+
+Also used to specify the synchronization tokens for that nonterminal. In
+case a parse error occurred while this particular nonterminal was
+getting parsed, the synchronization tokens given here will be used to
+figure out where this nonterminal ends.
+
+Synchronization tokens are specified using _end\_before_ and
+_end\_after_ clauses.
+
+An _end\_before clause_ is the keyword `end_before` followed by a list
+of tokens, separated by either `,` or `|`, enclosed in parantheses. For
+example, the clause `end_before(Comma | CloseBracket)` specifies that
+the nonterminal should be considered to end just before the next `Comma`
+or `CloseBracket` token.
+
+An _end\_after clause_ is similar, but with the `end_after` keyword.
+For example, the clause `end_after(Throws | Rethrows)` specifies that
+the nonterminal should be considered to end just after the next `Throws`
+or `Rethrows` token.
+
+In an _end\_after clause_, we can also have a sequence of tokens,
+enclosed in square brackets. For example, the clause
+`end_after([CloseBracket Throws] | [CloseBracket Rethrows])` specifies
+that the nonterminal should be considered to end just after the next
+`Throws` or `Rethrows` token, only if that token is preceded by a
+`CloseBracket` token.
+
+Both the `end_before` and `end_after` clauses are optional. If any of
+the tokens (or token sequences) in any of the clauses matches, the
+nonterminal would be considered to end. Additionally, and even if neither
+clause is specified, the nonterminal would be considered to end when the
+end of input is reached (i.e. when [`endParsing()`] is called).
+
+[`endParsing()`]: /citron/parser-interface/api/CitronParser/#endparsing
+
+Here's an example of a complete `%capture_errors` directive:
+
+~~~ Text
+%capture_errors param
+    end_before(Comma | CloseBracket)
+    end_after([Colon, Identifier] | [KeywordInout, Identifier]).
+~~~
+
+Typically, a `%capture_errors` directive on the [start
+symbol](#start_symbol) shall avoid specifying any `end_before` and
+`end_after` clauses, so that all the input tokens are always taken into
+account while capturing any errors on the start symbol.
+
+~~~ Text
+%capture_errors func_header.
+~~~
