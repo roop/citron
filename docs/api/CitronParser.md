@@ -5,8 +5,8 @@ permalink: /parser-interface/api/CitronParser/
 
 [Citron] > [Parser interface] > [`CitronParser`]
 
-[Citron]: /citron
-[Parser interface]: /citron/parser-interface
+[Citron]: /citron/
+[Parser interface]: /citron/parser-interface/
 [`CitronParser`]: .
 
 # CitronParser

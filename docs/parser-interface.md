@@ -5,7 +5,7 @@ permalink: /parser-interface/
 
 [Citron] > [Parser interface]
 
-[Citron]: /citron
+[Citron]: /citron/
 [Parser interface]: .
 
 ## Parser interface

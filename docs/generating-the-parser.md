@@ -5,7 +5,7 @@ permalink: /generating-the-parser/
 
 [Citron] > [Generating the parser]
 
-[Citron]: /citron
+[Citron]: /citron/
 [Generating the parser]: .
 
 # Generating the parser

@@ -5,7 +5,7 @@ permalink: /grammar-file/
 
 [Citron] > [Grammar file]
 
-[Citron]: /citron
+[Citron]: /citron/
 [Grammar file]: .
 
 # The Citron Grammar File
