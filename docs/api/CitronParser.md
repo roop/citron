@@ -1,6 +1,8 @@
 ---
 title: "CitronParser"
 permalink: /parser-interface/api/CitronParser/
+layout: default
+
 ---
 
 [Citron] > [Parser interface] > [`CitronParser`]

@@ -1,6 +1,8 @@
 ---
 title: "The Parser Interface"
 permalink: /parser-interface/
+layout: default
+
 ---
 
 [Citron] > [Parser interface]

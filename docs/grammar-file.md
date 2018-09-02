@@ -1,6 +1,8 @@
 ---
 title: "The Citron Grammar File"
 permalink: /grammar-file/
+layout: default
+
 ---
 
 [Citron] > [Grammar file]

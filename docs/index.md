@@ -1,3 +1,9 @@
+---
+title: "Citron: An LALR Parser Generator for Swift"
+permalink: /
+layout: default
+
+---
 
 # Citron Parser Generator
 

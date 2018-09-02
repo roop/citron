@@ -1,6 +1,8 @@
 ---
 title: "Generating the Parser"
 permalink: /generating-the-parser/
+layout: default
+
 ---
 
 [Citron] > [Generating the parser]
