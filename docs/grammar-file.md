@@ -579,6 +579,8 @@ For example:
 %left_associative Plus Minus.
 ~~~
 
+The `%left_associative` directive should end with a `.` character.
+
 #### right_associative
 
 Gives a list of tokens, specifying that these tokens should be
@@ -590,6 +592,8 @@ For example:
 %right_associative Pow.
 ~~~
 
+The `%right_associative` directive should end with a `.` character.
+
 #### nonassociative
 
 Gives a list of tokens, specifying that these tokens should be
@@ -600,6 +604,8 @@ For example:
 ~~~ Text
 %nonassociative EqualTo LessThan GreaterThan.
 ~~~
+
+The `%nonassociative` directive should end with a `.` character.
 
 ### Grammar controls
 
@@ -651,6 +657,8 @@ say:
 This specifies that the tokens `Throws` and `Rethrows` can be treated
 as `Identifier` if that would help avoid a syntax error.
 
+The `%fallback` directive should end with a `.` character.
+
 #### wildcard
 
 Specifies a catch-all [fallback](#fallback) token.
@@ -663,6 +671,8 @@ For example:
 
 specifies that `Identifier` is a fallback for _every other_ token in the
 grammar.
+
+The `%wildcard` directive should end with a `.` character.
 
 #### token_set
 
@@ -685,6 +695,8 @@ this:
 ~~~ Text
 %token_set throws_clause Throws | Rethrows.
 ~~~
+
+The `%token_set` directive should end with a `.` character.
 
 ### Error capturing
 
@@ -742,3 +754,5 @@ account while capturing any errors on the start symbol.
 ~~~ Text
 %capture_errors func_header.
 ~~~
+
+The `%capture_errors` directive should end with a `.` character.
