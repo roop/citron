@@ -15,13 +15,13 @@ grammar, Citron creates a reentrant type-safe parser in Swift.
 
 ## Features
 
-Parsers generated with Citron are:
+Parsers made with Citron are:
 
   - **Swifty**
 
     Citron encapsulates parsing-related data and functions into a parser
-    class, and uses protocols and generics to provide a Swifty interface
-    for parsing and lexing.
+    class, and uses protocols and generics to provide a Swift-friendly
+    interface for parsing and lexing.
 
   - **Reentrant**
 
@@ -51,7 +51,7 @@ Parsers generated with Citron are:
     errors intelligently, almost as good as parsers written by hand.
     Using Citron's error handling capabilities, the generated parser can
     give out clear error messages, recover from errors to continue
-    parsing, and is able to produce partial parse trees.
+    parsing, and produce partial parse trees.
 
 ## Origins
 
@@ -65,8 +65,9 @@ SQL statements in SQLite.
 ## Requirements
 
 Using Citron requires Swift 4. The parser has no dependancies other than
-the [Swift Standard Library][stdlib]. The lexer is dependant on
-[Foundation][foundation] for the use of regular expressions.
+the [Swift Standard Library][stdlib]. The lexer is additionally
+dependant on [Foundation][foundation] for the use of regular
+expressions.
 
 [stdlib]: https://developer.apple.com/documentation/swift
 [foundation]: https://developer.apple.com/documentation/foundation

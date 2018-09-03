@@ -67,8 +67,8 @@ rules make use of [terminal and non-terminal symbols][term-non-term].
 In a Citron grammar, both terminals and non-terminals should be named
 using alphabets, digits and underscores only. Terminals should start
 with an uppercase letter and non-terminals should start with a lowercase
-letter. Typically, terminal names are all-uppercase and non-terminal
-names are all-lowercase.
+letter. Typically, terminal names are CamelCased and non-terminal
+names are lowercased.
 
 Some parser generators ([Bison][bison_literal_token] for example) allow
 literal characters and strings to be directly used in a grammar rule,
@@ -95,9 +95,9 @@ the rule. The rule can be completely in one line, or can be broken up
 into multiple lines, but either way, it has to end with a period.
 
 The RHS of a rule should contain only terminal or non-terminal symbols,
-so you can't specify alternativity (either this sequence of symbols or
+so we cannot specify alternativity (either this sequence of symbols or
 this other sequence of symbols) or optionality (this symbol may or may
-not come here) directly in a rule. Rather, you have to break that out
+not come here) directly in a rule. Rather, we should break that out
 into separate rules.
 
 ### An example
@@ -199,7 +199,7 @@ our code.
 All terminal symbols are assumed to have the same semantic type.
 
 For example, we could represent the terminals in the [above
-grammar](#an-example) with an enum like this:
+grammar](#an-example) with an enumeration like this:
 
 ~~~ Swift
 enum Token {
@@ -209,12 +209,12 @@ enum Token {
 }
 ~~~
 
-We can specify that the semantic type for all terminals is
-`FunctionToken` by using the [%token_type](#token_type) directive in the
+We can specify that the semantic type for all terminals is the `Token`
+enumeration by using the [%token_type](#token_type) directive in the
 grammar file, like this:
 
 ~~~ Text
-%token_type FunctionToken
+%token_type Token
 ~~~
 
 ### Types for non-terminals
@@ -348,7 +348,7 @@ rule. This data structure will eventually get passed as input to a code
 block of a rule that uses this rule's LHS symbol in the RHS, and thereby
 get incorporated into a higher level data structure (in case of a
 parse-tree, a higher level node i.e. a node closer to the root of the
-tree). Finally, a start symbol rule's code block shall return the
+tree). Finally, the [start rule](#start-rule)'s code block shall return the
 complete data structure representing the whole input data.
 
 Once we have the grammar rules, type specifications and code blocks, we
@@ -515,7 +515,7 @@ class. Since code blocks are also member functions, any extra members we
 add become accessible from inside the code blocks. This is a great way
 to make the parser configurable.
 
-For example, if you specify %extra_class_members like this:
+For example, if we specify %extra_class_members like this:
 
 ~~~ Text
 %extra_class_members {
@@ -543,20 +543,22 @@ them.
 For example:
 
 ~~~ Text
-%left_associative PLUS MINUS.
-%left_associative MULT DIV.
-%right_associative POW.
+%left_associative Plus Minus.
+%left_associative Mult Div.
+%right_associative Pow.
 ~~~
 
 specifies that:
 
-  - `PLUS` and `MINUS` are left associative and equal in precedence
-    compared to each other
-  - `MULT` and `DIV` are left associative and equal in precedence
-    compared to each other
-  - `POW` is right associative
-  - `POW` has higher precedence than `MULT` and `DIV`
-  - `MULT` and `DIV` have higher precedence than `PLUS` and `MINUS`
+  - The tokens `Plus` and `Minus` are left associative and equal in
+    precedence compared to each other
+  - The tokens `Mult` and `Div` are left associative and equal in
+    precedence compared to each other
+  - The token `Pow` is right associative
+  - The token `Pow` has higher precedence than the tokens `Mult` and
+    `Div`
+  - The tokens `Mult` and `Div` have higher precedence than the tokens
+    `Plus` and `Minus`
 
 Citron handles precedence and associativity in the same way as Lemon, so
 the "Precedence Rules" section in the [Lemon documentation][lemon_doc]
@@ -568,15 +570,36 @@ correspond to Citron's %left_associative, %right_associative and
 
 #### left_associative
 
-Specifies that a token is left asscociative.
+Gives a list of tokens, specifying that these tokens should be
+considered left associative.
+
+For example:
+
+~~~ Text
+%left_associative Plus Minus.
+~~~
 
 #### right_associative
 
-Specifies that a token is right asscociative.
+Gives a list of tokens, specifying that these tokens should be
+considered right associative.
+
+For example:
+
+~~~ Text
+%right_associative Pow.
+~~~
 
 #### nonassociative
 
-Specifies that a token is non-asscociative.
+Gives a list of tokens, specifying that these tokens should be
+considered non associative.
+
+For example:
+
+~~~ Text
+%nonassociative EqualTo LessThan GreaterThan.
+~~~
 
 ### Grammar controls
 
@@ -600,9 +623,9 @@ rule**</span> of the grammar.
 #### token
 
 The order of tokens in the `CitronTokenCode` enumeration is determined
-by the order in which the tokens appear in the grammar. In case you'd
-like a token to appear earlier in the enumeration, you can tell Citron
-about the token before it appears in the grammar with this directive.
+by the order in which the tokens appear in the grammar. In case we want
+a token to appear earlier in the enumeration, we can tell Citron about
+the token before it appears in the grammar with this directive.
 
 For example:
 
@@ -617,8 +640,8 @@ Specifies that a token can, if required, be treated as another token.
 For example, in the above grammar, the keywords `throws` and `rethrows`
 would be identified as the tokens `Throws` and `Rethrows`. So an input
 like `func fn(throws: Bool)` would result in a syntax error, because the
-`Throws` token is not allowed inside the parameters clause. If you'd
-like to allow the use of `throws` and `rethrows` as identifiers, you can
+`Throws` token is not allowed inside the parameters clause. In case we
+want to allow the use of `throws` and `rethrows` as identifiers, we can
 say:
 
 ~~~ Text
@@ -656,7 +679,7 @@ throws_clause ::= Throws(t). { return t }
 throws_clause ::= Rethrows(t). { return t }
 ~~~
 
-You can replace all those lines with a token set specification like
+We can replace all those lines with a token set specification like
 this:
 
 ~~~ Text
