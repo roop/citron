@@ -191,7 +191,7 @@ method.
 
 [`consume(token:, code:)`]: ../CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
 
-Assuming that the Citron-generated parser is called `Parser`, you can
+Assuming that the Citron-generated parser is called `Parser`, we can
 write:
 
 ~~~ Swift
