@@ -340,15 +340,17 @@ func codeBlockForRule13(lpn: String, ta: (type: String, isInout: Bool)) throws -
 ~~~
 
 Since the code block is placed in a function with stricty typed
-parameters, any type mismatches would be caught when the generated
-parser is compiled.
+parameters, any type mismatches would show up as compile-time errors.
 
-The code block may throw errors and these errors will be propagated up
-to one of the parsing methods: `consume(token:, code:)`, or
-`endParsing()`. This can be used to handle semantic errors from within
-code blocks. For example, if we have an arithmetic expression evaluator
-that evaluates an expression as it parses it, we might want to throw on
-a division-by-zero error.
+The code block may throw run-time errors and these errors will be
+propagated up to one of the parsing methods: [`consume(token:, code:)`],
+or [`endParsing()`]. This can be used to handle semantic errors from
+within code blocks. For example, if we have an arithmetic expression
+evaluator that evaluates an expression as it parses it, we might want to
+throw on a division-by-zero error.
+
+[`consume(token:, code:)`]: /citron/parser-interface/api/CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
+[`endParsing()`]: /citron/parser-interface/api/CitronParser/#endparsing
 
 The code blocks are a great way to build a data structure (usually a
 parse tree) representing the parsed data. Typically, the code block for
