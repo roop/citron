@@ -633,9 +633,9 @@ For example:
 %start_symbol func_header
 ~~~
 
-There can be only one rule in the grammar with the start symbol as the
-LHS -- <span id="start-rule">that rule is called the **start
-rule**</span> of the grammar.
+<span id="start-rule">There can be only one rule in the grammar with the
+start symbol as the LHS -- that rule is called the **start rule** of the
+grammar.</span>
 
 #### token
 
