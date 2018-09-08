@@ -236,9 +236,10 @@ semantic type to be used for all non-terminals in the grammar using the
 %default_nonterminal_type Void
 ~~~
 
-Consider the non-terminal `param` in the [above grammar](#an-example) --
-it represents a function paramater. We could represent that in our code
-with a struct defined like this:
+<span id="struct-functionparameter">Consider the non-terminal `param` in the
+[above grammar](#an-example) -- it represents a function
+paramater.</span> We could represent that in our code with a struct
+defined like this:
 
 ~~~ Swift
 struct FunctionParameter {
