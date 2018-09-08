@@ -190,9 +190,12 @@ the grammar's symbols and provide code blocks for our grammar's rules.
 
 ## Types
 
-Citron requires that we specify the semantic type of each symbol
+Citron requires that we specify the **semantic type** of each symbol
 used in the grammar. That's the type we use to represent that symbol in
 our code.
+
+A **semantic value** of a symbol is a value of the semantic type of the
+symbol. That's the value of that symbol in our code.
 
 ### Types for terminals
 
@@ -279,8 +282,14 @@ Citron requires that each grammar rule be followed by a code block
 associated with that rule. The code block is invoked every time that
 rule is used during parsing.
 
-Conceptually, the code block for a rule takes its RHS symbols as input
-and returns its LHS symbol as output.
+Conceptually, the code block for a rule takes [semantic values] of its
+RHS symbols as input and returns a [semantic value] of its LHS symbol
+as output.
+
+[semantic value]: #types
+[semantic values]: #types
+[semantic type]: #types
+[semantic types]: #types
 
 Consider the following rule:
 
@@ -301,11 +310,11 @@ param ::= local_param_name(lpn) type_annotation(ta).
 ~~~
 
 Then we'd be able to access `lpn` and `ta` inside the code block for
-this rule. The type of `lpn` would be the semantic type specified for
+this rule. The type of `lpn` would be the [semantic type] specified for
 `local_param_name` (let's assume that's `String`). The type of `ta`
-would be `(type: String, isInout: Bool)`, which is the semantic type we
-declared for `type_annotation`.  The code block should return a value of
-type `FunctionParameter`, which is the semantic type we declared for
+would be `(type: String, isInout: Bool)`, which is the [semantic type] we
+declared for `type_annotation`. The code block should return a value of
+type `FunctionParameter`, which is the [semantic type] we declared for
 `param`.
 
 We can write a code block for this rule as follows:
