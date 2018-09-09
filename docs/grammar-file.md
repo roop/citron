@@ -744,9 +744,9 @@ that the nonterminal should be considered to end just after the next
 
 Both the `end_before` and `end_after` clauses are optional. If any of
 the tokens (or token sequences) in any of the clauses matches, the
-nonterminal would be considered to end. Additionally, and even if neither
-clause is specified, the nonterminal would be considered to end when the
-end of input is reached (i.e. when [`endParsing()`] is called).
+nonterminal would be considered to end. Additionally, the nonterminal
+would be considered to end when the end of input is reached (i.e. when
+[`endParsing()`] is called).
 
 [`endParsing()`]: /citron/parser-interface/api/CitronParser/#endparsing
 
@@ -758,13 +758,23 @@ Here's an example of a complete `%capture_errors` directive:
     end_after([Colon, Identifier] | [KeywordInout, Identifier]).
 ~~~
 
-Typically, a `%capture_errors` directive on the [start
-symbol](#start_symbol) shall avoid specifying any `end_before` and
-`end_after` clauses, so that all the input tokens are always taken into
-account while capturing any errors on the start symbol.
+<span id="grammar-ending-non-terminal">In case of **grammar-ending
+non-terminals**, where the end of the non-terminal signifies the end of
+the grammar (for example, the [start symbol]), we should specify neither
+an `end_before` nor an `end_after` clause.
+
+[start symbol]: #start_symbol
+
+For example, to capture errors on the start symbol, `func_header`, we
+say:
 
 ~~~ Text
 %capture_errors func_header.
 ~~~
+
+This means that if an error occurred while the non-terminal
+`func_header` was being parsed, the non-terminal should be considered to
+end only when the end of input is reached (i.e. when
+[`endParsing()`] is called).
 
 The `%capture_errors` directive should end with a `.` character.
