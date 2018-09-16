@@ -760,8 +760,8 @@ Here's an example of a complete `%capture_errors` directive:
 
 <span id="grammar-ending-non-terminal">In case of **grammar-ending
 non-terminals**, where the end of the non-terminal signifies the end of
-the grammar (for example, the [start symbol]), we should specify neither
-an `end_before` nor an `end_after` clause.
+the grammar (for example, the [start symbol]), the typical usage is to
+specify neither an `end_before` nor an `end_after` clause.
 
 [start symbol]: #start_symbol
 
