@@ -23,6 +23,7 @@ protocol.
   - [Parsing](#parsing)
       - [`consume(token: CitronToken, tokenCode: CitronTokenCode)`](#consumetoken-citrontoken-tokencode-citrontokencode)
       - [`endParsing()`](#endparsing)
+      - [`consume(lexerError: Error)`](#consumelexererror-error)
   - [Errors](#errors)
       - [`UnexpectedTokenError`](#unexpectedtokenerror)
       - [`UnexpectedEndOfInputError`](#unexpectedendofinputerror)
@@ -126,6 +127,40 @@ tokens to consume.
     to the caller of this method.
 
 [code blocks]: ../grammar-file/#code-blocks
+
+---
+
+### `consume(lexerError: Error)`
+
+Consumes a lexer error for error capturing.
+
+If we want to include lexer errors in the [error capturing] process, we
+should call this method when a lexer error occurs.
+
+**Parameters:**
+
+  - `lexerError`
+
+    The lexer error that we want to include in error capturing.
+
+**Return value:**
+
+  - None
+
+**Throws:**
+
+If the error cannot be saved for capturing, this method throws the error
+passed in as `lexerError`.
+
+This can happen in one of these scenarios:
+
+ - There's no error-capturing non-terminal being parsed, _or_
+ - The [`errorCaptureDelegate`]'s
+   [`shouldSaveErrorForCapturing(error:)`] method returned `false`
+
+[error capturing]: /citron/error-capturing/
+[`errorCaptureDelegate`]: #errorcapturedelegate
+[`shouldSaveErrorForCapturing(error:)`]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
 
 ---
 
