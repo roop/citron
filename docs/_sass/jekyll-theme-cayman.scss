@@ -184,6 +184,26 @@ a {
     margin-bottom: 1em;
   }
 
+  h2 {
+    border-top: 0.1rem solid $section-headings-color;
+    padding-top: 1rem;
+  }
+
+  h3 + blockquote {
+    padding: 0;
+    margin-left: 3em;
+    color: $body-text-color;
+    border-left: none;
+
+    > :first-child {
+      margin-top: inherit;
+    }
+
+    > :last-child {
+      margin-bottom: inherit;
+    }
+  }
+
   code {
     padding: 2px 4px;
     font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
