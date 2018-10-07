@@ -31,152 +31,140 @@ used as the generic parameter.
      - [`noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`](#nomatchingruleaterrorposition-citronlexerposition)
   - [Usage with `CitronParser`](#usage-with-citronparser)
 
----
-
 ## Types
 
 ### `TokenData`
 
-The generic parameter for the `CitronLexer`. This is the type of the
-token data to be obtained as a result of tokenization.
+> The generic parameter for the `CitronLexer`. This is the type of the
+> token data to be obtained as a result of tokenization.
 
 ### `LexingRule`
 
-A lexing rule can be either:
-  - string-based, like `.string("func", funcTokenData)`, or
-  - NSRegularExpression-based, like `.regexPattern("[0-9]+", { str in integerTokenData(str) }`
-
-It is defined as:
-
-~~~ Swift
-    enum LexingRule {
-        case string(String, TokenData?)
-        case regex(NSRegularExpression, (String) -> TokenData?)
-        case regexPattern(String, (String) -> TokenData?)
-    }
-~~~
+> A lexing rule can be either:
+>   - string-based, like `.string("func", funcTokenData)`, or
+>   - NSRegularExpression-based, like `.regexPattern("[0-9]+", { str in integerTokenData(str) }`
+>
+> It is defined as:
+>
+> ~~~ Swift
+>     enum LexingRule {
+>         case string(String, TokenData?)
+>         case regex(NSRegularExpression, (String) -> TokenData?)
+>         case regexPattern(String, (String) -> TokenData?)
+>     }
+> ~~~
 
 ### `CitronLexerPosition`
 
-Specifies a position in the input string that marks a token or an error.
-
-This is a tuple containing three fields:
-
-  - `tokenPosition: String.Index`
-
-    The start of a token or error in the input string.
-
-  - `linePosition: String.Index`
-
-    The start of the line containing the `tokenPosition`.
-
-  - `lineNumber: Int`
-
-    The line number of the line containing the `tokenPosition`.
-
-This type is defined outside the scope of CitronLexer.
-
----
+> Specifies a position in the input string that marks a token or an error.
+>
+> This is a tuple containing three fields:
+>
+>   - `tokenPosition: String.Index`
+>
+>     The start of a token or error in the input string.
+>
+>   - `linePosition: String.Index`
+>
+>     The start of the line containing the `tokenPosition`.
+>
+>   - `lineNumber: Int`
+>
+>     The line number of the line containing the `tokenPosition`.
+>
+> This type is defined outside the scope of CitronLexer.
 
 ## Initializing
 
 ### `init(rules: `[`LexingRule`]`)`
 
-Initialize the lexer with lexing rules.
-
-**Parameters:**
-
-  - `rules`
-
-    The lexing rules to use for tokenizing.
-
----
+> Initialize the lexer with lexing rules.
+>
+> **Parameters:**
+>
+>   - `rules`
+>
+>     The lexing rules to use for tokenizing.
 
 ## Tokenizing
 
 ### `tokenize(_ string: String, onFound: Action)`
 
-Tokenize `string`. When a token is found, the `onFound` block is called.
-
-In case there's no lexing rule applicable at some position in the `string`,
-an error is thrown and tokenization is aborted.
-
-**Parameters:**
-
-  - string:
-
-    The input string to tokenize
-
-  - onFound:
-
-    This is an action block of type `(`[`TokenData`]`) throws -> Void`.
-
-    When a match is found as per the lexing rules, the [`TokenData`]
-    obtained from the matching rule is passed on to this action block.
-
-**Return value:**
-
-  - None
-
-**Throws:**
-
-  - If there is no matching rule at a particular position in the input,
-    a [`.noMatchingRuleAt(errorPosition:)`] error is thrown.
-
-  - Any errors thrown in the `onFound` action block
-    will be prapagated up to the caller of this method.
-
----
+> Tokenize `string`. When a token is found, the `onFound` block is called.
+>
+> In case there's no lexing rule applicable at some position in the `string`,
+> an error is thrown and tokenization is aborted.
+>
+> **Parameters:**
+>
+>   - string:
+>
+>     The input string to tokenize
+>
+>   - onFound:
+>
+>     This is an action block of type `(`[`TokenData`]`) throws -> Void`.
+>
+>     When a match is found as per the lexing rules, the [`TokenData`]
+>     obtained from the matching rule is passed on to this action block.
+>
+> **Return value:**
+>
+>   - None
+>
+> **Throws:**
+>
+>   - If there is no matching rule at a particular position in the input,
+>     a [`.noMatchingRuleAt(errorPosition:)`] error is thrown.
+>
+>   - Any errors thrown in the `onFound` action block
+>     will be prapagated up to the caller of this method.
 
 ### `tokenize(_ string: String, onFound: Action, onError: ErrorAction?)`
 
-Tokenize `string`. When a token is found, the `onFound` block is called.
-
-In case there's no rule applicable at some position in the `string`,
-the `onError` block is called and tokenization continues.
-
-**Parameters:**
-
-  - string:
-
-    The input string to tokenize
-
-  - onFound:
-
-    This is an action block of type `(`[`TokenData`]`) throws -> Void`.
-
-    When a match is found as per the lexing rules, the [`TokenData`]
-    obtained from the matching rule is passed on to this action block.
-
-  - onError:
-
-    This is an action block of type `(`[`CitronLexerError`]`) throws -> Void`.
-
-    If there is no matching rule at a particular position in the input,
-    a [`.noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is
-    passed to this action block. The lexer then moves ahead to the next
-    position in the input at which a rule can be applied and
-    tokenization continues from there.
-
-**Return value:**
-
-  - None
-
-**Throws:**
-
-  - Any errors thrown in the `onFound` and `onError` action blocks
-    will be prapagated up to the caller of this method.
-
----
+> Tokenize `string`. When a token is found, the `onFound` block is called.
+>
+> In case there's no rule applicable at some position in the `string`,
+> the `onError` block is called and tokenization continues.
+>
+> **Parameters:**
+>
+>   - string:
+>
+>     The input string to tokenize
+>
+>   - onFound:
+>
+>     This is an action block of type `(`[`TokenData`]`) throws -> Void`.
+>
+>     When a match is found as per the lexing rules, the [`TokenData`]
+>     obtained from the matching rule is passed on to this action block.
+>
+>   - onError:
+>
+>     This is an action block of type `(`[`CitronLexerError`]`) throws -> Void`.
+>
+>     If there is no matching rule at a particular position in the input,
+>     a [`.noMatchingRuleAt(errorPosition:)`][`CitronLexerError`] error is
+>     passed to this action block. The lexer then moves ahead to the next
+>     position in the input at which a rule can be applied and
+>     tokenization continues from there.
+>
+> **Return value:**
+>
+>   - None
+>
+> **Throws:**
+>
+>   - Any errors thrown in the `onFound` and `onError` action blocks
+>     will be prapagated up to the caller of this method.
 
 ## Errors
 
 ### `.noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`
 
-Signifies that at position [`CitronLexerPosition`] of the input, none of the
-specified rules could be applied.
-
----
+> Signifies that at position [`CitronLexerPosition`] of the input, none of the
+> specified rules could be applied.
 
 ## Usage with [`CitronParser`]
 

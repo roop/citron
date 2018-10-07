@@ -56,51 +56,52 @@ associated type] on [`CitronParser`].
 [`unclaimedTokens`]: #unclaimedtokens-token-citrontoken-tokencode-citrontokencode
 [`nextToken`]: (#nexttoken-token-citrontoken-tokencode-citrontokencode)
 
----
-
 ## Stored properties
 
 ### `resolvedSymbols: [(symbolCode: `[`CitronSymbolCode`]`, value: Any)]`
 
-An array of the constitient symbols of the error-capturing non-terminal
-that have been resolved so far. The `symbolCode` fields indicate which
-symbol it is, and the `value` field stores the semantic value of that
-symbol.
+> An array of the constitient symbols of the error-capturing
+> non-terminal that have been resolved so far. The `symbolCode` fields
+> indicate which symbol it is, and the `value` field stores the semantic
+> value of that symbol.
 
 ### `unclaimedTokens: [(token: `[`CitronToken`]`, tokenCode: `[`CitronTokenCode`]`)]`
 
-The tokens that were passed in since the error occurred and till the
-synchronization point was found.
-
-If there was no error, these tokens would have been resolved, and along
-with the `resolvedSymbols`, would have formed the complete
-error-capturing non-terminal.
-
-In case the [synchronization point] was matched using an `end_after`
-clause, the `unclaimedTokens` sequence would end with the matching entry
-(either a token or a sequence of tokens) in the `end_after` clause.
+> The tokens that were passed in since the error occurred and till the
+> synchronization point was found.
+>
+> If there was no error, these tokens would have been resolved, and
+> along with the `resolvedSymbols`, would have formed the complete
+> error-capturing non-terminal.
+>
+> In case the [synchronization point] was matched using an `end_after`
+> clause, the `unclaimedTokens` sequence would end with the matching
+> entry (either a token or a sequence of tokens) in the `end_after`
+> clause.
 
 ### `nextToken: (token: `[`CitronToken`]`, tokenCode: `[`CitronTokenCode`]`)?`
 
-The current look-ahead token, at the time of attempting error capturing.
-
-In case the [synchronization point] was matched using an `end_before`
-clause, the `nextToken` would be the matching token in the `end_before`
-clause.
-
-In case the error is being captured at the end of input, `nextToken`
-would be `nil`.
+> The current look-ahead token, at the time of attempting error
+> capturing.
+>
+> In case the [synchronization point] was matched using an `end_before`
+> clause, the `nextToken` would be the matching token in the
+> `end_before` clause.
+>
+> In case the error is being captured at the end of input, `nextToken`
+> would be `nil`.
 
 ## Computed properties
 
 ### `lastResolvedSymbol: (symbolCode: `[`CitronSymbolCode`]`, value: Any)?`
 
-The last entry in the [`resolvedSymbols`] array. In case [`resolvedSymbols`] is empty, this is `nil`.
+> The last entry in the [`resolvedSymbols`] array. In case
+> [`resolvedSymbols`] is empty, this is `nil`.
 
 ### `erroringToken: (token: `[`CitronToken`]`, tokenCode: `[`CitronTokenCode`]`)?`
 
-The first entry in the [`unclaimedTokens`] array. In case
-[`unclaimedTokens`] is empty, this is the same as `nextToken`.
+> The first entry in the [`unclaimedTokens`] array. In case
+> [`unclaimedTokens`] is empty, this is the same as `nextToken`.
 
 ## Example
 
@@ -133,7 +134,7 @@ the **)** in the input, or a `CloseBracket` token, it has a match in the
 
 At this point, Citron will call the [`shouldCaptureErrorOnParam`] method
 of the [`errorCaptureDelegate`] object with the `state` argument set to
-a `CitronErrorCaptureState` object with the following conceptual values:
+a `CitronErrorCaptureState` object with the following values:
 
   - [`resolvedSymbols`]:
 

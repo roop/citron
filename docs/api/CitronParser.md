@@ -48,225 +48,179 @@ protocol.
 
 ## Parsing
 
----
-
 ### `consume(token: `[`CitronToken`]`, tokenCode: `[`CitronTokenCode`]`)`
 
-Consumes one token.
-
-This should be called multiple times to pass a sequence of tokens to the
-parser. Typically, a separate tokenization stage would generate this
-sequence of tokens.
-
-**Parameters:**
-
-  - `token`
-
-    The semantic value of the token, as seen by the code blocks in the grammar.
-    
-    The type of this argument is the
-    [%token_type](/citron/grammar-file/#token_type) type specified in
-    the grammar file, available to the parser class as the associated
-    type [`CitronToken`].
-
-  - `code`
-  
-    The token code that Citron knows this token by.
-    
-    The Citron-generated parser class contains an enum called
-    [`CitronTokenCode`] that lists all the terminals in the grammar.
-    This argument should be a value of that enum.
-
-**Return value:**
-
-  - None
-
-**Throws:**
-
-  - May throw one of these errors:
-      - [`UnexpectedTokenError`](#unexpectedtokenerror)
-      - [`StackOverflowError`](#stackoverflowerror)
-
-  - Any errors thrown in the [code blocks] of rules may propagate up
-    to the caller of this method.
-
----
+> Consumes one token.
+>
+> This should be called multiple times to pass a sequence of tokens to
+> the parser. Typically, a separate tokenization stage would generate
+> this sequence of tokens.
+>
+> **Parameters:**
+>
+>   - `token`
+>
+>     The semantic value of the token, as seen by the code blocks in the
+>     grammar.
+>
+>     The type of this argument is the
+>     [%token_type](/citron/grammar-file/#token_type) type specified in
+>     the grammar file, available to the parser class as the associated
+>     type [`CitronToken`].
+>
+>   - `code`
+>
+>     The token code that Citron knows this token by.
+>
+>     The Citron-generated parser class contains an enum called
+>     [`CitronTokenCode`] that lists all the terminals in the grammar.
+>     This argument should be a value of that enum.
+>
+> **Return value:**
+>
+>   - None
+>
+> **Throws:**
+>
+>   - May throw one of these errors:
+>       - [`UnexpectedTokenError`](#unexpectedtokenerror)
+>       - [`StackOverflowError`](#stackoverflowerror)
+>
+>   - Any errors thrown in the [code blocks] of rules may propagate up
+>     to the caller of this method.
 
 ### `endParsing()`
 
-Signifies the end of input. This should be called when there are no more
-tokens to consume.
-
-**Parameters:**
-
-  - None
-  
-**Return value:**
-
-  - Returns the parse result.
-  
-    The parse result is the value returned by the code block of the
-    [start rule] of the grammar.
-
-    The return type of this method is the [semantic type] of the [start
-    symbol], available to the parser class as the associated type
-    [`CitronResult`].
-
+> Signifies the end of input. This should be called when there are no
+> more tokens to consume.
+>
+> **Parameters:**
+>
+>   - None
+>
+> **Return value:**
+>
+>   - Returns the parse result.
+>
+>     The parse result is the value returned by the code block of the
+>     [start rule] of the grammar.
+>
+>     The return type of this method is the [semantic type] of the
+>     [start symbol], available to the parser class as the associated
+>     type [`CitronResult`].
+>
+> **Throws:**
+>
+>   - May throw one of these errors:
+>       - [`UnexpectedEndOfInputError`](#unexpectedendofinputerror)
+>       - [`StackOverflowError`](#stackoverflowerror)
+>
+>   - Any errors thrown in the [code blocks] of rules may propagate up
+>     to the caller of this method.
 
 [start rule]: /citron/grammar-file/#start-rule
 [start symbol]: /citron/grammar-file/#start_symbol
 [semantic type]: /citron/grammar-file/#types-for-non-terminals
-
-**Throws:**
-
-  - May throw one of these errors:
-      - [`UnexpectedEndOfInputError`](#unexpectedendofinputerror)
-      - [`StackOverflowError`](#stackoverflowerror)
-
-  - Any errors thrown in the [code blocks] of rules may propagate up
-    to the caller of this method.
-
 [code blocks]: ../grammar-file/#code-blocks
-
----
-
-### `consume(lexerError: Error)`
-
-Consumes a lexer error for error capturing.
-
-If we want to include lexer errors in the [error capturing] process, we
-should call this method when a lexer error occurs.
-
-**Parameters:**
-
-  - `lexerError`
-
-    The lexer error that we want to include in error capturing.
-
-**Return value:**
-
-  - None
-
-**Throws:**
-
-If the error cannot be saved for capturing, this method throws the error
-passed in as `lexerError`.
-
-This can happen in one of these scenarios:
-
- - There's no error-capturing non-terminal being parsed, _or_
- - The [`errorCaptureDelegate`]'s
-   [`shouldSaveErrorForCapturing(error:)`] method returned `false`
-
-[error capturing]: /citron/error-capturing/
-[`errorCaptureDelegate`]: #errorcapturedelegate
-[`shouldSaveErrorForCapturing(error:)`]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
-
----
 
 ## Errors
 
 ### `UnexpectedTokenError`
 
-An token was encountered at a point that is not supported by the
-specified grammar.
+> A token was encountered at a point that is not supported by the
+> specified grammar.
 
 ### `UnexpectedEndOfInputError`
 
-End of input was encountered before the grammar could be satisfied.
+> End of input was encountered before the grammar could be satisfied.
 
 ### `StackOverflowError`
 
-Signifies that parsing was aborted because to continue parsing the
-number of entries in the stack needs to exceed the [`maxStackSize`] set.
-
-If [`maxStackSize`] is `nil` (the default), this error is never thrown,
-and the parser stack is allowed to grow without overflowing.
-
----
+> Signifies that parsing was aborted because to continue parsing the
+> number of entries in the stack needs to exceed the [`maxStackSize`] set.
+>
+> If [`maxStackSize`] is `nil` (the default), this error is never thrown,
+> and the parser stack is allowed to grow without overflowing.
 
 ## Stack size
 
 ### `maxStackSize: Int?`
 
-If this is `nil` (the default), there is no restriction on how many
-entries the parser stack can have.
-
-If this is `non-nil`, this specifies the maximum number of entries that
-the parser's stack can be allowed to hold. If an input requires the
-stack to grow above that, it would cause a [`StackOverflowError`] to be
-thrown, and parsing shall be aborted.
+> If this is `nil` (the default), there is no restriction on how many
+> entries the parser stack can have.
+>
+> If this is `non-nil`, this specifies the maximum number of entries
+> that the parser's stack can be allowed to hold. If an input requires
+> the stack to grow above that, it would cause a [`StackOverflowError`]
+> to be thrown, and parsing shall be aborted.
 
 ### `maxAttainedStackSize: Int`
 
-This can be queried at the end of the parse to see the maximum number of
-entries that the stack ever held during the parse.
-
-We can, for example, observe the effect of left-recursive vs
-right-recursive rules on how the stack grows.
+> This can be queried at the end of the parse to see the maximum number of
+> entries that the stack ever held during the parse.
+>
+> We can, for example, observe the effect of left-recursive vs
+> right-recursive rules on how the stack grows.
 
 [`StackOverflowError`]: #stackoverflowerror
 [`maxStackSize`]: #maxstacksize-int
-
----
 
 ## Tracing
 
 ### `isTracingEnabled: Bool`
 
-If this is set to `true`, information on how the parsing happens is
-printed out. This can be used to debug the parser.
-
-The default value is `false`.
-
----
+> If this is set to `true`, information on how the parsing happens is
+> printed out. This can be used to debug the parser.
+>
+> The default value is `false`.
 
 ## Error capturing
 
 ### `errorCaptureDelegate: `[`CitronErrorCaptureDelegate`]`?`
 
-To activate error capturing, this should be set to a class conforming to
-the protocol referred to by the [`CitronErrorCaptureDelegate`]
-associated type.
+> To activate error capturing, this should be set to a class conforming
+> to the protocol referred to by the [`CitronErrorCaptureDelegate`]
+> associated type.
+>
+> If this is `nil`, error capturing is not activated even if the
+> [grammar file] contains [%capture_errors] directives.
+>
+> The default value is `nil`.
 
-If this is `nil`, error capturing is not activated even if the [grammar
-file] contains [%capture_errors] directives.
+### `consume(lexerError: Error)`
 
-The default value is `nil`.
+> To enable error capturing of lexer errors, the lexer errors can be
+> passed to the parser using this method. Each lexer error should be
+> passed to this method, one at a time, as and when it is found during
+> tokenization.
+>
+> **Parameters:**
+>
+>   - `lexerError`
+>
+>     The lexer error that needs to be error-captured.
+>
+> **Return value:**
+>
+>   - None
+>
+> **Throws:**
+>
+> If the error cannot be saved for capturing, this method throws the
+> error passed in as `lexerError`.
+>
+> This can happen in one of these scenarios:
+>
+>  1. If there are no [error capturing nonterminals][%capture_errors]
+>     currently being parsed, _or_
+>  2. The [`errorCaptureDelegate`]'s
+>     [`shouldSaveErrorForCapturing(error:)`] method returns `false`
 
 [`errorCaptureDelegate`]: #errorcapturedelegate-citronerrorcapturedelegate
 [%capture_errors]: /citron/grammar-file/#capture_errors
 [grammar file]: /citron/grammar-file
-
-### `consume(lexerError: Error)`
-
-To enable error capturing of lexer errors, the lexer errors can be
-passed to the parser using this method. Each lexer error should be
-passed to this method, one at a time, as and when it is found during
-tokenization.
-
-**Parameters:**
-
-  - `lexerError`
-
-    The lexer error that needs to be error-captured.
-
-**Return value:**
-
-  - None
-
-**Throws:**
-
-In any of the following scenarios, error capturing does not apply:
-
- 1. If there are no [error capturing nonterminals][%capture_errors]
-    currently being parsed, _or_
- 2. If the [`errorCaptureDelegate`]'s `shouldSaveErrorForCapturing`
-    method returns `false`
-
-and therefore, the passed `lexerError` is thrown as is.
-
----
+[error capturing]: /citron/error-capturing/
+[`shouldSaveErrorForCapturing(error:)`]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
 
 ## Associated Types
 
@@ -275,45 +229,44 @@ Citron-generated parser code.
 
 ### `CitronToken`
 
-The semantic type of each token, as seen by the code blocks in the grammar.
-This is the type defined by [%token_type](/citron/grammar-file/#token_type) type in
-the grammar file.
+> The semantic type of each token, as seen by the code blocks in the
+> grammar.  This is the type defined by
+> [%token_type](/citron/grammar-file/#token_type) type in the grammar
+> file.
 
 ### `CitronTokenCode`
 
-This is an enum of all tokens (or terminals) used in the grammar file.
-
-If a [%tokencode_prefix](/citron/grammar-file/#tokencode_prefix) is
-specified, the enum values will use that prefix.
+> This is an enum of all tokens (or terminals) used in the grammar file.
+>
+> If a [%tokencode_prefix](/citron/grammar-file/#tokencode_prefix) is
+> specified, the enum values will use that prefix.
 
 ### `CitronNonTerminalCode`
 
-This is an enum of all non-terminals used in the grammar file.
-
-If a [%nonterminalcode_prefix](/citron/grammar-file/#nonterminalcode_prefix) is
-specified, the enum values will use that prefix.
+> This is an enum of all non-terminals used in the grammar file.
+>
+> If a [%nonterminalcode_prefix](/citron/grammar-file/#nonterminalcode_prefix) is
+> specified, the enum values will use that prefix.
 
 ### `CitronSymbolCode`
 
-This is an enum that represents all symbols (both terminals and
-non-terminals) used in the grammar file.
+> This is an enum that represents all symbols (both terminals and
+> non-terminals) used in the grammar file.
 
 ### `CitronResult`
 
-The semantic type of the [start
-symbol](/citron/grammar-file/#start_symbol) as specified in the grammar
-file.
+> The semantic type of the [start
+> symbol](/citron/grammar-file/#start_symbol) as specified in the
+> grammar file.
 
 ### `CitronErrorCaptureDelegate`
 
-This is typealiased to a protocol that the [`errorCaptureDelegate`]
-should conform to. The name and contents of the protocol are
-automatically generated from the [grammar file].
-
-See the [`CitronErrorCaptureDelegate`](../CitronErrorCaptureDelegate)
-page for more information.
-
----
+> This is typealiased to a protocol that the [`errorCaptureDelegate`]
+> should conform to. The name and contents of the protocol are
+> automatically generated from the [grammar file].
+>
+> See the [`CitronErrorCaptureDelegate`](../CitronErrorCaptureDelegate)
+> page for more information.
 
 [`CitronToken`]: #citrontoken
 [`CitronTokenCode`]: #citrontokencode
