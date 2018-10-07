@@ -1,14 +1,14 @@
 ---
 title: "CitronErrorCaptureState"
-permalink: /parser-interface/api/CitronErrorCaptureState/
+permalink: /parsing-interface/api/CitronErrorCaptureState/
 layout: default
 
 ---
 
-[Citron] > [Parser interface] > [`CitronErrorCaptureState`]
+[Citron] > [Parsing interface] > [`CitronErrorCaptureState`]
 
 [Citron]: /citron/
-[Parser interface]: /citron/parser-interface/
+[Parsing interface]: /citron/parsing-interface/
 [`CitronErrorCaptureState`]: .
 
 # CitronErrorCaptureState
@@ -26,9 +26,9 @@ partially resolved state of that non-terminal.
 The type of this struct should be accessed through the [`CitronErrorCaptureState`
 associated type] on [`CitronParser`].
 
-[`CitronErrorCaptureDelegate`]: /citron/parser-interface/api/CitronErrorCaptureDelegate/
-[`CitronErrorCaptureDelegate` methods]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#shouldcaptureerroronnameofnonterminalstate-citronerrorcapturestate-error-error
-[saved]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
+[`CitronErrorCaptureDelegate`]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/
+[`CitronErrorCaptureDelegate` methods]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#shouldcaptureerroronnameofnonterminalstate-citronerrorcapturestate-error-error
+[saved]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
 [synchronization point]: /citron/error-capturing/#2-specify-synchronization-points
 [error-capturing non-terminal]: /citron/error-capturing/#1-enable-error-capturing
 

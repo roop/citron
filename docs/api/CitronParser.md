@@ -1,14 +1,14 @@
 ---
 title: "CitronParser"
-permalink: /parser-interface/api/CitronParser/
+permalink: /parsing-interface/api/CitronParser/
 layout: default
 
 ---
 
-[Citron] > [Parser interface] > [`CitronParser`]
+[Citron] > [Parsing interface] > [`CitronParser`]
 
 [Citron]: /citron/
-[Parser interface]: /citron/parser-interface/
+[Parsing interface]: /citron/parsing-interface/
 [`CitronParser`]: .
 
 # CitronParser
@@ -160,7 +160,7 @@ This can happen in one of these scenarios:
 
 [error capturing]: /citron/error-capturing/
 [`errorCaptureDelegate`]: #errorcapturedelegate
-[`shouldSaveErrorForCapturing(error:)`]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
+[`shouldSaveErrorForCapturing(error:)`]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#shouldsaveerrorforcapturingerror-error
 
 ---
 

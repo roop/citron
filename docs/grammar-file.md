@@ -350,8 +350,8 @@ within code blocks. For example, if we have an arithmetic expression
 evaluator that evaluates an expression as it parses it, we might want to
 throw on a division-by-zero error.
 
-[`consume(token:, code:)`]: /citron/parser-interface/api/CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
-[`endParsing()`]: /citron/parser-interface/api/CitronParser/#endparsing
+[`consume(token:, code:)`]: /citron/parsing-interface/api/CitronParser/#consumetoken-citrontoken-tokencode-citrontokencode
+[`endParsing()`]: /citron/parsing-interface/api/CitronParser/#endparsing
 
 The code blocks are a great way to build a data structure (usually a
 parse tree) representing the parsed data. Typically, the code block for
@@ -748,7 +748,7 @@ nonterminal would be considered to end. Additionally, the nonterminal
 would be considered to end when the end of input is reached (i.e. when
 [`endParsing()`] is called).
 
-[`endParsing()`]: /citron/parser-interface/api/CitronParser/#endparsing
+[`endParsing()`]: /citron/parsing-interface/api/CitronParser/#endparsing
 
 Here's an example of a complete `%capture_errors` directive:
 

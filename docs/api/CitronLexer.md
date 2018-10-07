@@ -1,14 +1,14 @@
 ---
 title: "CitronLexer"
-permalink: /parser-interface/api/CitronLexer/
+permalink: /parsing-interface/api/CitronLexer/
 layout: default
 
 ---
 
-[Citron] > [Parser interface] > [`CitronLexer`]
+[Citron] > [Parsing interface] > [`CitronLexer`]
 
 [Citron]: /citron/
-[Parser interface]: /citron/parser-interface/
+[Parsing interface]: /citron/parsing-interface/
 [`CitronLexer`]: .
 
 # CitronLexer

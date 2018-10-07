@@ -1,16 +1,30 @@
 ---
-title: "The Parser Interface"
-permalink: /parser-interface/
+title: "The Parsing Interface"
+permalink: /parsing-interface/
 layout: default
 
 ---
 
-[Citron] > [Parser interface]
+[Citron] > [Parsing interface]
 
 [Citron]: /citron/
-[Parser interface]: .
+[Parsing interface]: .
 
-## Parser interface
+# The Parsing Interface
+
+- [Summary of the interface](#summary-of-the-interface)
+   - [Parser interface](#parser-interface)
+   - [Lexer interface](#lexer-interface)
+   - [Error handling interface](#error-handling-interface)
+      - [Parsing](#parsing)
+      - [Tokenization](#tokenization)
+      - [Error capturing](#error-capturing)
+- [Detailed API documentation](#detailed-api-documentation)
+- [Examples](#examples)
+
+## Summary of the interface
+
+### Parser interface
 
 The parser interface consists of these two methods which can be called
 on the parser class [generated] by Citron:
@@ -41,7 +55,7 @@ which the Citron-generated parser class conforms to.
 [generated]: /citron/generating-the-parser/
 [start rule]: /citron/grammar-file/#start-rule
 
-## Lexer interface
+### Lexer interface
 
 Tokenization is a separate step that needs to drive the parsing. As the
 tokens are generated from the input string or data, the tokens should be
@@ -68,25 +82,30 @@ offers are:
 [`init(rules:)`]: api/CitronLexer/#initrules-lexingrule
 [`tokenize(string:, onFound:)`]: api/CitronLexer/#tokenize_-string-string-onfound-action
 
-## Error handling
+### Error handling interface
 
-### Parsing
+#### Parsing
 
 Both [`consume(token:, code:)`] and [`endParsing()`] are throwing
 methods.  They throw when an input token at a certain position is
 inconsistent with the grammar, or when the input ends prematurely.
 
-### Tokenization
+#### Tokenization
 
 [`tokenize(string:, onFound:)`] throws on errors encountered during
 tokenization.
 
-## API documentation
+#### Error capturing
 
-Here's the API documentation for:
+For more advanced error handling capabilities, see [Error
+capturing](/citron/error-capturing/).
 
-  - The parser: [`CitronParser`]
-  - The lexer: [`CitronLexer`]
+## Detailed API documentation
+
+  - [`CitronParser`](api/CitronParser/)
+  - [`CitronLexer`](api/CitronLexer/)
+  - [`CitronErrorCaptureDelegate`](api/CitronErrorCaptureDelegate/)
+  - [`CitronErrorCaptureState`](api/CitronErrorCaptureState/)
 
 ## Examples
 

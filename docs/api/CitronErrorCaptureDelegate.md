@@ -1,14 +1,14 @@
 ---
 title: "CitronErrorCaptureDelegate"
-permalink: /parser-interface/api/CitronErrorCaptureDelegate/
+permalink: /parsing-interface/api/CitronErrorCaptureDelegate/
 layout: default
 
 ---
 
-[Citron] > [Parser interface] > [`CitronErrorCaptureDelegate`]
+[Citron] > [Parsing interface] > [`CitronErrorCaptureDelegate`]
 
 [Citron]: /citron/
-[Parser interface]: /citron/parser-interface/
+[Parsing interface]: /citron/parsing-interface/
 [`CitronErrorCaptureDelegate`]: .
 
 # CitronErrorCaptureDelegate

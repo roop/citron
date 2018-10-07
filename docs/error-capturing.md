@@ -314,8 +314,8 @@ enumeration that can have one of these values:
     synchronization point, and will try again at a subsequent
     synchronization point.
 
-[`state` parameter]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#state-parameter
-[`CitronErrorCaptureResponse`]: /citron/parser-interface/api/CitronErrorCaptureDelegate/#citronerrorcaptureresponse
+[`state` parameter]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#state-parameter
+[`CitronErrorCaptureResponse`]: /citron/parsing-interface/api/CitronErrorCaptureDelegate/#citronerrorcaptureresponse
 
 ## Strategy
 
@@ -362,8 +362,8 @@ A few examples of how Citron is used for parsing can be found in the
 
 [eg]: https://github.com/roop/citron/tree/master/examples/
 
-[`errorCaptureDelegate`]: /citron/parser-interface/api/CitronParser/#errorcapturedelegate-citronerrorcapturedelegate
-[`CitronErrorCaptureDelegate`]: ../parser-interface/api/CitronErrorCaptureDelegate/
+[`errorCaptureDelegate`]: /citron/parsing-interface/api/CitronParser/#errorcapturedelegate-citronerrorcapturedelegate
+[`CitronErrorCaptureDelegate`]: ../parsing-interface/api/CitronErrorCaptureDelegate/
 [%class_name]: ../grammar-file/#class_name
 [Joe Groff's example]: #synchronization-points
 [%capture_errors]: /citron/grammar-file/#capture_errors
