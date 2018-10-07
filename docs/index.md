@@ -13,7 +13,7 @@ grammar, Citron creates a reentrant type-safe parser in Swift.
 [LALR]: https://en.wikipedia.org/wiki/LALR_parser
 [Citron]: https://github.com/roop/citron
 
-## Features
+### Features
 
 Parsers made with Citron are:
 
@@ -53,7 +53,7 @@ Parsers made with Citron are:
     give out clear error messages, recover from errors to continue
     parsing, and produce partial parse trees.
 
-## Origins
+### Origins
 
 Citron is adapted from the [Lemon] parser generator by [Richard Hipp],
 the creator of SQLite. Lemon is used to generate the parser that parses
@@ -62,7 +62,7 @@ SQL statements in SQLite.
 [Lemon]: https://www.hwaci.com/sw/lemon/lemon.html
 [Richard Hipp]: http://www.hwaci.com/drh/
 
-## Requirements
+### Requirements
 
 Using Citron requires Swift 4. The parser has no dependancies other than
 the [Swift Standard Library][stdlib]. The lexer is additionally
@@ -72,7 +72,7 @@ expressions.
 [stdlib]: https://developer.apple.com/documentation/swift
 [foundation]: https://developer.apple.com/documentation/foundation
 
-## Using Citron
+### Using Citron
 
 To make use of Citron, we should:
 
@@ -102,14 +102,14 @@ To make use of Citron, we should:
     See [_The Parsing Interface_](parsing-interface/) for information on
     how we can use the parser in our code.
 
-## Examples
+### Examples
 
 A few examples of how Citron is used for parsing can be found in the
 ["examples" folder][eg] in the project repository.
 
 [eg]: https://github.com/roop/citron/tree/master/examples/
 
-## See also
+### See also
 
   - _[Introducing Citron]_: A quick overview of Citron and how to use it
 
