@@ -49,7 +49,7 @@ Parsers made with Citron are:
 
     However, a Citron-generated parser can be configured to handle
     errors intelligently, almost as good as parsers written by hand.
-    Using Citron's error handling capabilities, the generated parser can
+    Using Citron's error capturing feature, the generated parser can
     give out clear error messages, recover from errors to continue
     parsing, and produce partial parse trees.
 
@@ -99,8 +99,17 @@ To make use of Citron, we should:
     inputs. We can optionally use Citron's lexer to generate the inputs
     for the parser.
 
-    See [_The Parsing Interface_](parsing-interface/) for information on
+    See [_The parsing interface_](parsing-interface/) for information on
     how we can use the parser in our code.
+
+ 4. Handle errors
+
+    The easy way to handle errors is to catch the thrown errors, as
+    described in [_The parsing interface_](parsing-interface/).
+
+    However, to be able to recover from errors, produce partial parse
+    trees and generate contextual error messages, we should use [_Error
+    capturing_](error-capturing/).
 
 ### Examples
 
