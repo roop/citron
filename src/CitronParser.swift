@@ -672,7 +672,7 @@ private extension CitronParser {
 
     func yyShiftReduce(rule: CitronRuleNumber, symbolCode: CitronSymbolNumber, token: CitronToken) throws {
         tracePrint("ShiftReduce: Shift", symbolNameFor(code:symbolCode))
-        tracePrint("       and reduce with rule: ", "\(rule)")
+        tracePrint("       and reduce with rule", "\(rule)")
         try yyPush(stateOrRule: .rule(rule), symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
     }
 
@@ -681,7 +681,7 @@ private extension CitronParser {
     func yyReduce(rule ruleNumber: CitronRuleNumber) throws -> CitronSymbol? {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
-        tracePrint("Reducing with rule:", yyRuleText[Int(ruleNumber)])
+        tracePrint("Reducing with rule \(ruleNumber):", yyRuleText[Int(ruleNumber)])
 
         let resultSymbol = try yyInvokeCodeBlockForRule(ruleNumber: ruleNumber)
 
