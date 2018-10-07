@@ -33,6 +33,8 @@ protocol.
       - [`maxAttainedStackSize: Int`](#maxattainedstacksize-int)
   - [Tracing](#tracing)
       - [`isTracingEnabled: Bool`](#istracingenabled-bool)
+      - [`isTracingPrintsSymbolValues: Bool`](#istracingprintssymbolvalues-bool)
+      - [`isTracingPrintsTokenValues: Bool`](#istracingprintstokenvalues-bool)
   - [Error capturing](#errorcapturing)
       - [`errorCaptureDelegate: CitronErrorCaptureDelegate?`](#errorcapturedelegate-citronerrorcapturedelegate)
       - [`consume(lexerError: Error)`](#consumelexererror-error)
@@ -171,6 +173,26 @@ protocol.
 
 > If this is set to `true`, information on how the parsing happens is
 > printed out. This can be used to debug the parser.
+>
+> The default value is `false`.
+
+### `isTracingPrintsSymbolValues: Bool`
+
+> If this is set to `false` (the default), tracing prints only the
+> symbol codes and not the semantic values of the symbols.
+>
+> If this is set to `true`, tracing also prints semantic values of the
+> symbols using the `String(describing:)` string initializer.
+>
+> The default value is `false`.
+
+### `isTracingPrintsTokenValues: Bool`
+
+> If this is set to `false` (the default), tracing prints only the token
+> codes and not the semantic values of the tokens.
+>
+> If this is set to `true`, tracing also prints semantic values of the
+> tokens using the `String(describing:)` string initializer.
 >
 > The default value is `false`.
 
