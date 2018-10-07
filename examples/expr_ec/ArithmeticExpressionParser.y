@@ -18,10 +18,10 @@
 
 // Associativity and precedences
 
-%left_associative ADD SUBTRACT.
-%left_associative MULTIPLY DIVIDE.
+%left_associative Add Subtract.
+%left_associative Multiply Divide.
 
-// (MULTIPLY, DIVIDE) have higher precedence than (ADD, SUBTRACT)
+// (Multiply, Divide) have higher precedence than (Add, Subtract)
 // All four are defined as left associative.
 
 
@@ -31,30 +31,30 @@ root ::= expr(a). {
     return a
 }
 
-expr ::= expr(a) ADD expr(b). {
+expr ::= expr(a) Add expr(b). {
     return .addition(a, b)
 }
 
-expr ::= expr(a) SUBTRACT expr(b). {
+expr ::= expr(a) Subtract expr(b). {
     return .subtraction(a, b)
 }
 
-expr ::= expr(a) MULTIPLY expr(b). {
+expr ::= expr(a) Multiply expr(b). {
     return .multiplication(a, b)
 }
 
-expr ::= expr(a) DIVIDE expr(b). {
+expr ::= expr(a) Divide expr(b). {
     return .division(a, b)
 }
 
-expr ::= OPEN_BR expr(a) CLOSE_BR. {
+expr ::= OpenBracket expr(a) CloseBracket. {
     return a
 }
 
-expr ::= INTEGER(a). {
+expr ::= Integer(a). {
     return .number(a)
 }
 
 %capture_errors root.
 %capture_errors expr
-    end_before(CLOSE_BR | ADD | SUBTRACT | MULTIPLY | DIVIDE).
+    end_before(CloseBracket | Add | Subtract | Multiply | Divide).

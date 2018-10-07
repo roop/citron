@@ -44,22 +44,22 @@ let lexer = Lexer(rules: [
 
         .regexPattern("[0-9]+", { str in
             if let number = Int(str) {
-                return (number, .INTEGER)
+                return (number, .Integer)
             }
             return nil
         }),
 
         // Operators
 
-        .string("+", (0, .ADD)),
-        .string("-", (0, .SUBTRACT)),
-        .string("*", (0, .MULTIPLY)),
-        .string("/", (0, .DIVIDE)),
+        .string("+", (0, .Add)),
+        .string("-", (0, .Subtract)),
+        .string("*", (0, .Multiply)),
+        .string("/", (0, .Divide)),
 
         // Brackets
 
-        .string("(", (0, .OPEN_BR)),
-        .string(")", (0, .CLOSE_BR)),
+        .string("(", (0, .OpenBracket)),
+        .string(")", (0, .CloseBracket)),
 
         // Whitespace
 
