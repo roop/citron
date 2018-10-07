@@ -122,6 +122,7 @@ protocol CitronParser: class {
     // Tracing
 
     var isTracingEnabled: Bool { get set }
+    var shouldPrintSymbolValuesInStackTrace: Bool { get set }
     var yySymbolName: [String] { get } // yyTokenName in lemon
     var yyRuleText: [String] { get } // yyRuleName in lemon
 
@@ -770,7 +771,16 @@ private extension CitronParser {
         if (isTracingEnabled) {
             print("STACK contents:")
             for (i, e) in yyStack.enumerated() {
-                print("    \(i): (stateOrRule: \(e.stateOrRule), symbol: \(symbolNameFor(code:e.symbolCode)) [\(e.symbolCode)])")
+                print("    \(i): (stateOrRule: \(e.stateOrRule)", terminator: "")
+                if (e.symbolCode > 0) {
+                    print(", symbolCode: \(symbolNameFor(code:e.symbolCode))", terminator: "")
+                    if (shouldPrintSymbolValuesInStackTrace) {
+                        print(", symbol: \"\(String(describing: yySymbolContent(e.symbol)))\"", terminator: "")
+                    }
+                }
+                defer {
+                    print(")")
+                }
             }
         }
     }
