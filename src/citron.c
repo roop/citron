@@ -4156,7 +4156,8 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    // Tracing\n\n");
 
   fprintf(out, "    var isTracingEnabled: Bool = false\n");
-  fprintf(out, "    var shouldPrintSymbolValuesInStackTrace: Bool = false\n");
+  fprintf(out, "    var isTracingPrintsSymbolValues: Bool = false\n");
+  fprintf(out, "    var isTracingPrintsTokenValues: Bool = false\n");
 
   /* Generate a table containing the symbolic name of every symbol */
   fprintf(out, "    let yySymbolName: [String] = [\n");

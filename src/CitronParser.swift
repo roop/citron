@@ -122,7 +122,8 @@ protocol CitronParser: class {
     // Tracing
 
     var isTracingEnabled: Bool { get set }
-    var shouldPrintSymbolValuesInStackTrace: Bool { get set }
+    var isTracingPrintsSymbolValues: Bool { get set }
+    var isTracingPrintsTokenValues: Bool { get set }
     var yySymbolName: [String] { get } // yyTokenName in lemon
     var yyRuleText: [String] { get } // yyRuleName in lemon
 
@@ -239,7 +240,7 @@ enum CitronErrorCaptureResponse<T> {
 extension CitronParser {
     func consume(token: CitronToken, code tokenCode: CitronTokenCode) throws {
         let symbolCode = tokenCode.rawValue
-        tracePrint("Input:", symbolNameFor(code:symbolCode))
+        tracePrint("Input:", tokenCode: tokenCode, token: token)
 
         var isErrorCapturedUsingEndBeforeClause: Bool = false
 
@@ -404,7 +405,7 @@ private extension CitronParser {
             }
         }
         if (canCapture && yyShouldSaveErrorForCapturing(error: error)) {
-            tracePrint("Error capture: Saved error for later capturing: \(error)")
+            tracePrint("Error capture: Saved error for later capturing:", "\(error)")
             // Save this error for either capturing or throwing later
             self.yyErrorCaptureSavedError = (error: error, isLexerError: isLexerError)
             self.yyErrorCaptureTokensSinceError = []
@@ -436,7 +437,8 @@ private extension CitronParser {
         }
 
         assert(info.stackIndex < yyStack.count)
-        tracePrint("Error capture: Found match at stack index \(info.stackIndex) on symbol \"\(yySymbolName[Int(info.symbolCode.rawValue)])\"")
+        tracePrint("Error capture: Found match at stack index", "\(info.stackIndex)")
+        tracePrint("Error capture: Found match on symbol", quoted: symbolNameFor(code: info.symbolCode))
 
         let stackEntry = yyStack[info.stackIndex]
         guard case .state(_) = stackEntry.stateOrRule else {
@@ -543,19 +545,19 @@ private extension CitronParser {
                     continue
                 }
                 if (isAtEndOfInput) {
-                    tracePrint("Error capture: Match at end of input for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                    tracePrint("Error capture: Match at end of input for symbol", quoted: symbolNameFor(code: symbolCode))
                     return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: false)
                 }
                 guard let directive = yyErrorCaptureDirectives[s] else {
                     continue
                 }
                 if (lookAhead != nil && directive.endBefore.contains(lookAhead!)) {
-                    tracePrint("Error capture: Match for endBefore clause for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                    tracePrint("Error capture: Match for endBefore clause for symbol", quoted: symbolNameFor(code: symbolCode))
                     return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: true)
                 }
                 for endAfterTokenSequence in directive.endAfter {
                     if (yyErrorCaptureTokensSinceError.map({ $0.tokenCode }).hasSuffix(endAfterTokenSequence)) {
-                        tracePrint("Error capture: Match for endAfter clause for symbol \"\(yySymbolName[Int(symbolCode.rawValue)])\"")
+                        tracePrint("Error capture: Match for endAfter clause for symbol", quoted: symbolNameFor(code: symbolCode))
                         return (stackIndex: stackIndex, symbolCode: symbolCode, didMatchEndBeforeClause: false)
                     }
                 }
@@ -583,7 +585,7 @@ private extension CitronParser {
     func yyPop() {
         let last = yyStack.popLast()
         if let last = last {
-            tracePrint("Popping", symbolNameFor(code:last.symbolCode))
+            tracePrint("Popping", quoted: symbolNameFor(symbolNumber: last.symbolCode))
         }
     }
 
@@ -625,7 +627,8 @@ private extension CitronParser {
 
             // Check for fallback
             if let fallback = yyFallback[safe: lookAhead], fallback > 0 {
-                tracePrint("Fallback:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code:fallback))
+                tracePrint("Fallback:", quoted: symbolNameFor(symbolNumber: lookAhead))
+                tracePrint("       =>", quoted: symbolNameFor(symbolNumber: fallback))
                 precondition((yyFallback[safe: fallback] ?? -1) == 0, "Fallback loop detected")
                 lookAhead = fallback
                 continue
@@ -639,7 +642,8 @@ private extension CitronParser {
                 if ((yyShiftOffsetMin + Int(wildcard) >= 0 || j >= 0) &&
                     (yyShiftOffsetMax + Int(wildcard) < yyLookaheadAction.count || j < yyLookaheadAction.count) &&
                     (actionLookahead == wildcard && lookAhead > 0)) {
-                    tracePrint("Wildcard:", symbolNameFor(code: lookAhead), "=>", symbolNameFor(code: wildcard))
+                    tracePrint("Wildcard:", quoted: symbolNameFor(symbolNumber: lookAhead))
+                    tracePrint("       =>", quoted: symbolNameFor(symbolNumber: wildcard))
                     return action
                 }
             }
@@ -666,15 +670,17 @@ private extension CitronParser {
     }
 
     func yyShift(state: CitronStateNumber, symbolCode: CitronSymbolNumber, token: CitronToken) throws {
-        tracePrint("Shift: Shift", symbolNameFor(code:symbolCode))
+        let symbol = yyTokenToSymbol(token)
+        tracePrint("Shift: Shift", symbolNumber: symbolCode, symbol: symbol)
         tracePrint("       and go to state", "\(state)")
-        try yyPush(stateOrRule: .state(state), symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
+        try yyPush(stateOrRule: .state(state), symbolCode: symbolCode, symbol: symbol)
     }
 
     func yyShiftReduce(rule: CitronRuleNumber, symbolCode: CitronSymbolNumber, token: CitronToken) throws {
-        tracePrint("ShiftReduce: Shift", symbolNameFor(code:symbolCode))
+        let symbol = yyTokenToSymbol(token)
+        tracePrint("ShiftReduce: Shift", symbolNumber: symbolCode, symbol: symbol)
         tracePrint("       and reduce with rule", "\(rule)")
-        try yyPush(stateOrRule: .rule(rule), symbolCode: symbolCode, symbol: yyTokenToSymbol(token))
+        try yyPush(stateOrRule: .rule(rule), symbolCode: symbolCode, symbol: symbol)
     }
 
     // yyReduce: Reduces using the specified rule number.
@@ -682,7 +688,7 @@ private extension CitronParser {
     func yyReduce(rule ruleNumber: CitronRuleNumber) throws -> CitronSymbol? {
         assert(ruleNumber < yyRuleInfo.count)
         guard (!yyStack.isEmpty) else { fatalError("Unexpected empty stack") }
-        tracePrint("Reducing with rule \(ruleNumber):", yyRuleText[Int(ruleNumber)])
+        tracePrint("Reducing with rule", "\(ruleNumber): \(yyRuleText[Int(ruleNumber)])")
 
         let resultSymbol = try yyInvokeCodeBlockForRule(ruleNumber: ruleNumber)
 
@@ -727,7 +733,7 @@ private extension CitronParser {
         isAccepted = false
 
         try yyPush(stateOrRule: stateOrRule, symbolCode: lhsSymbolCode, symbol: resultSymbol)
-        tracePrint("Shift:", symbolNameFor(code:lhsSymbolCode))
+        tracePrint("Shift: Shift", symbolNumber: lhsSymbolCode, symbol: resultSymbol)
         if (isTracingEnabled) {
             switch (stateOrRule) {
             case .state(let s):
@@ -749,20 +755,50 @@ private extension CitronParser {
         }
     }
 
-    func tracePrint(_ msg: String, _ closure: @autoclosure () -> CustomDebugStringConvertible) {
+    func tracePrint(_ msg: String, tokenCode: CitronTokenCode, token: CitronToken) {
+        if (isTracingEnabled) {
+            print("\(msg) (tokenCode: \(tokenCode)", terminator: "")
+            if (isTracingPrintsTokenValues) {
+                print(", token: \"\(token)\")")
+            } else {
+                print(")")
+            }
+        }
+    }
+
+    func tracePrint(_ msg: String, symbolNumber: CitronSymbolNumber, symbol: CitronSymbol) {
+        if (isTracingEnabled) {
+            print("\(msg) (symbolCode: \(symbolNameFor(symbolNumber: symbolNumber))", terminator: "")
+            if (isTracingPrintsSymbolValues) {
+                let symbolString = String(describing: yySymbolContent(symbol))
+                print(", symbol: \"\(symbolString)\")")
+            } else {
+                print(")")
+            }
+        }
+    }
+
+    func tracePrint(_ msg: String, _ closure: @autoclosure () -> String) {
         if (isTracingEnabled) {
             print("\(msg) \(closure())")
         }
     }
 
-    func tracePrint(_ msg: String, _ closure: @autoclosure () -> CustomDebugStringConvertible,
-                    _ msg2: String, _ closure2: @autoclosure () -> CustomDebugStringConvertible) {
+    func tracePrint(_ msg: String, quoted closure: @autoclosure () -> String) {
         if (isTracingEnabled) {
-            print("\(msg) \(closure()) \(msg2) \(closure2())")
+            print("\(msg) \"\(closure())\"")
         }
     }
 
-    func symbolNameFor(code i: CitronSymbolNumber) -> String {
+    func symbolNameFor(code: CitronSymbolCode) -> String {
+        return symbolNameFor(symbolNumber: code.rawValue)
+    }
+
+    func symbolNameFor(code: CitronNonTerminalCode) -> String {
+        return symbolNameFor(symbolNumber: code.rawValue)
+    }
+
+    func symbolNameFor(symbolNumber i: CitronSymbolNumber) -> String {
         if (i > 0 && i < yySymbolName.count) { return yySymbolName[Int(i)] }
         return "?"
     }
@@ -773,9 +809,10 @@ private extension CitronParser {
             for (i, e) in yyStack.enumerated() {
                 print("    \(i): (stateOrRule: \(e.stateOrRule)", terminator: "")
                 if (e.symbolCode > 0) {
-                    print(", symbolCode: \(symbolNameFor(code:e.symbolCode))", terminator: "")
-                    if (shouldPrintSymbolValuesInStackTrace) {
-                        print(", symbol: \"\(String(describing: yySymbolContent(e.symbol)))\"", terminator: "")
+                    print(", symbolCode: \(symbolNameFor(symbolNumber: e.symbolCode))", terminator: "")
+                    if (isTracingPrintsSymbolValues) {
+                        let symbolString = String(describing: yySymbolContent(e.symbol))
+                        print(", symbol: \"\(symbolString)\"", terminator: "")
                     }
                 }
                 defer {
