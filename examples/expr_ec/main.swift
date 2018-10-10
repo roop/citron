@@ -7,7 +7,7 @@ enum ArithmeticExpression {
     indirect case subtraction(ArithmeticExpression, ArithmeticExpression)
     indirect case multiplication(ArithmeticExpression, ArithmeticExpression)
     indirect case division(ArithmeticExpression, ArithmeticExpression)
-    case error(Error)
+    indirect case error(Error, ArithmeticExpression?)
 }
 
 extension ArithmeticExpression: CustomStringConvertible {
@@ -23,8 +23,12 @@ extension ArithmeticExpression: CustomStringConvertible {
             return "(* \(left) \(right))"
         case .division(let left, let right):
             return "(/ \(left) \(right))"
-        case .error(_):
-            return "[ERR]"
+        case .error(_, let e):
+            if let e = e {
+                return "\(e)?"
+            } else {
+                return " ?"
+            }
         }
     }
 }
@@ -84,32 +88,32 @@ class ErrorCapturer: ArithmeticExpressionParser.CitronErrorCaptureDelegate {
 
     func shouldCaptureErrorOnRoot(state: ArithmeticExpressionParser.CitronErrorCaptureState,
         error: Error) -> CitronErrorCaptureResponse<ArithmeticExpression> {
-        printError(capturingOn: .root, state: state, position: errorPosition!)
-        return .captureAs(.error(error))
+        // printState("root", state)
+        printError(state: state, position: errorPosition!)
+        return .captureAs(.error(error, findPartialExpression(state: state)))
     }
 
     func shouldCaptureErrorOnExpr(state: ArithmeticExpressionParser.CitronErrorCaptureState,
         error: Error) -> CitronErrorCaptureResponse<ArithmeticExpression> {
-        printError(capturingOn: .expr, state: state, position: errorPosition!)
-        return .captureAs(.error(error))
+        // printState("expr", state)
+        printError(state: state, position: errorPosition!)
+        return .captureAs(.error(error, findPartialExpression(state: state)))
     }
 
-    func printError(capturingOn: ArithmeticExpressionParser.CitronNonTerminalCode,
-            state: ArithmeticExpressionParser.CitronErrorCaptureState, position: CitronLexerPosition) {
+    func printError(state: ArithmeticExpressionParser.CitronErrorCaptureState, position: CitronLexerPosition) {
         let msg: String
-        if (capturingOn == .root &&
-            state.erroringToken == nil &&
-            state.resolvedSymbols.contains { $0.symbolCode == .OpenBracket }) {
-            msg = "Parenthesis not closed"
-        } else {
-            switch (state.lastResolvedSymbol?.symbolCode) {
-            case .some(.Integer): fallthrough
-            case .some(.CloseBracket): fallthrough
-            case .some(.expr):
+        switch (state.lastResolvedSymbol?.symbolCode) {
+        case .some(.Integer): fallthrough
+        case .some(.CloseBracket): fallthrough
+        case .some(.expr):
+            if (state.erroringToken == nil &&
+                state.resolvedSymbols.contains { $0.symbolCode == .OpenBracket }) {
+                msg = "Parenthesis not closed"
+            } else {
                 msg = "Expecting an operator: +, -, *, or /"
-            default:
-                msg = "Expecting an integer or parenthesized expression"
             }
+        default:
+            msg = "Expecting an integer or parenthesized expression"
         }
         print("Error: \(msg)")
         let endOfLine = inputString.endOfLine(from: position.linePosition)
@@ -118,6 +122,27 @@ class ErrorCapturer: ArithmeticExpressionParser.CitronErrorCaptureDelegate {
         let padding = String(repeating: " ", count: column)
         print(line)
         print("\(padding)^")
+    }
+
+    func findPartialExpression(state: ArithmeticExpressionParser.CitronErrorCaptureState) -> ArithmeticExpression? {
+        for resolvedSymbol in state.resolvedSymbols {
+            if (resolvedSymbol.symbolCode == .expr) {
+                if let e = resolvedSymbol.value as? ArithmeticExpression {
+                    return e
+                }
+            } else if (resolvedSymbol.symbolCode == .Integer) {
+                if let n = resolvedSymbol.value as? Int {
+                    return .number(n)
+                }
+            }
+        }
+        for unclaimedToken in state.unclaimedTokens {
+            if (unclaimedToken.tokenCode == .Integer) {
+                let n = unclaimedToken.token
+                return .number(n)
+            }
+        }
+        return nil
     }
 
     func printState(_ msg: String, _ state: ArithmeticExpressionParser.CitronErrorCaptureState) {
