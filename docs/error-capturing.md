@@ -358,9 +358,83 @@ represent an error state.
 ## Examples
 
 A few examples of how Citron is used for parsing can be found in the
-["examples" folder][eg] in the project repository.
+["examples" folder][eg] in the project repository. The examples with a
+"_ec" suffix support error capturing.
+
+These are the two examples with error capturing enabled:
+
+ 1. [`expr_ec`]:
+
+    This is an arithmetic expression parser that parses an expression in
+    infix notation, parses it and outputs it in lisp-style prefix notation.
+
+    For example:
+
+    ~~~ Text
+    $ ./expr "(1 + 2) * (3 + 4)"
+    Prefix notation: (* (+ 1 2) (+ 3 4))
+    ~~~
+
+    It detects multiple errors in one go, gives out contextual error
+    messages and can produce a partial parse tree (and therefore a
+    partial prefix notation output):
+
+    ~~~ Text
+    $ ./expr "1 + ($ * 4"
+    Error: Expecting an integer or parenthesized expression
+    1 + ($ * 4
+         ^
+    Error: Parenthesis not closed
+    1 + ($ * 4
+              ^
+    Prefix notation: (+ 1 (*  ? 4)?)
+    ~~~
+
+    ~~~ Text
+    $ ./expr "1 + + 2 3 - 4 5 * ("
+    Error: Expecting an integer or parenthesized expression
+    1 + + 2 3 - 4 5 * (
+        ^
+    Error: Expecting an operator: +, -, *, or /
+    1 + + 2 3 - 4 5 * (
+                  ^
+    Error: Expecting an integer or parenthesized expression
+    1 + + 2 3 - 4 5 * (
+                       ^
+    Prefix notation: (- (+ 1 2?) (* 4?  ?))
+    ~~~
+
+ 2. [`functype_ec`]:
+
+    This parses Swift function headers and produces the type of the
+    function.
+
+    For example:
+
+    ~~~ Text
+    $ ./functype "func add(a: Int, b: Int) -> Int"
+    Function type is: (Int, Int) -> Int
+    ~~~
+
+    It detects multiple errors in one go and gives out contextual error
+    messages:
+
+    ~~~ Text
+    $ ./functype "func add(a: Int, b, c) ->"
+    1: error: expected ':' after parameter name.
+    func add(a: Int, b, c) ->
+                      ^
+    1: error: expected ':' after parameter name.
+    func add(a: Int, b, c) ->
+                         ^
+    1: error: expected result type.
+    func add(a: Int, b, c) ->
+                             ^
+    ~~~
 
 [eg]: https://github.com/roop/citron/tree/master/examples/
+[`expr_ec`]: https://github.com/roop/citron/tree/master/examples/expr_ec/
+[`functype_ec`]: https://github.com/roop/citron/tree/master/examples/expr_ec/
 
 [`errorCaptureDelegate`]: /citron/parsing-interface/api/CitronParser/#errorcapturedelegate-citronerrorcapturedelegate
 [`CitronErrorCaptureDelegate`]: ../parsing-interface/api/CitronErrorCaptureDelegate/
