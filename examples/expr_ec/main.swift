@@ -71,26 +71,83 @@ let lexer = Lexer(rules: [
 class ErrorCapturer: ArithmeticExpressionParser.CitronErrorCaptureDelegate {
     var inputString: String = ""
     weak var lexer: Lexer? = nil
+    var errorPosition: CitronLexerPosition? = nil
 
     func shouldSaveErrorForCapturing(error: Error) -> Bool {
-        let errorPosition: String.Index
         if case CitronLexerError.noMatchingRuleAt(let pos) = error {
-            errorPosition = pos.tokenPosition
+            errorPosition = pos
         } else {
-            errorPosition = lexer!.currentPosition.tokenPosition
+            errorPosition = lexer!.currentPosition
         }
-        print("Error: Unexpected input after '\(inputString.prefix(upTo: errorPosition))'")
         return true
     }
 
     func shouldCaptureErrorOnRoot(state: ArithmeticExpressionParser.CitronErrorCaptureState,
         error: Error) -> CitronErrorCaptureResponse<ArithmeticExpression> {
+        printError(capturingOn: .root, state: state, position: errorPosition!)
         return .captureAs(.error(error))
     }
 
     func shouldCaptureErrorOnExpr(state: ArithmeticExpressionParser.CitronErrorCaptureState,
         error: Error) -> CitronErrorCaptureResponse<ArithmeticExpression> {
+        printError(capturingOn: .expr, state: state, position: errorPosition!)
         return .captureAs(.error(error))
+    }
+
+    func printError(capturingOn: ArithmeticExpressionParser.CitronNonTerminalCode,
+            state: ArithmeticExpressionParser.CitronErrorCaptureState, position: CitronLexerPosition) {
+        let msg: String
+        if (capturingOn == .root &&
+            state.erroringToken == nil &&
+            state.resolvedSymbols.contains { $0.symbolCode == .OpenBracket }) {
+            msg = "Parenthesis not closed"
+        } else {
+            switch (state.lastResolvedSymbol?.symbolCode) {
+            case .some(.Integer): fallthrough
+            case .some(.CloseBracket): fallthrough
+            case .some(.expr):
+                msg = "Expecting an operator: +, -, *, or /"
+            default:
+                msg = "Expecting an integer or parenthesized expression"
+            }
+        }
+        print("Error: \(msg)")
+        let endOfLine = inputString.endOfLine(from: position.linePosition)
+        let column = inputString.distance(from: position.linePosition, to: position.tokenPosition)
+        let line = inputString[position.linePosition ..< endOfLine]
+        let padding = String(repeating: " ", count: column)
+        print(line)
+        print("\(padding)^")
+    }
+
+    func printState(_ msg: String, _ state: ArithmeticExpressionParser.CitronErrorCaptureState) {
+        print("\(msg)")
+        print("---")
+        print("Resolved symbols:")
+        for (i, rs) in state.resolvedSymbols.enumerated() {
+            print("  \(i). \(rs.symbolCode) (value: \(rs.value))")
+        }
+        print("Unclaimed tokens:")
+        for (i, ut) in state.unclaimedTokens.enumerated() {
+            print("  \(i). \(ut.tokenCode) (value: \(ut.token))")
+        }
+        print("Next token:")
+        if let nt = state.nextToken {
+            print("  [non-nil]: \(nt.tokenCode) (value: \(nt.token))")
+        } else {
+            print("  [nil]")
+        }
+        print("---")
+      }
+}
+
+private extension String {
+    func endOfLine(from: String.Index) -> String.Index {
+        var index = from
+        while (index < self.endIndex && self[index] != "\n") {
+            index = self.index(after: index)
+        }
+        return index
     }
 }
 
