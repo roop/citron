@@ -27,6 +27,8 @@ used as the generic parameter.
   - [Tokenizing](#tokenizing)
      - [`tokenize(_ string: String, onFound: Action)`](#tokenize_-string-string-onfound-action)
      - [`tokenize(_ string: String, onFound: Action, onError: ErrorAction?)`](#tokenize_-string-string-onfound-action-onerror-erroraction)
+  - [Position](#position)
+     - [`currentPosition: CitronLexerPosition`](#currentposition-citronlexerposition)
   - [Errors](#errors)
      - [`noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`](#nomatchingruleaterrorposition-citronlexerposition)
   - [Usage with `CitronParser`](#usage-with-citronparser)
@@ -158,6 +160,12 @@ used as the generic parameter.
 >
 >   - Any errors thrown in the `onFound` and `onError` action blocks
 >     will be prapagated up to the caller of this method.
+
+## Position
+
+### `currentPosition: `[`CitronLexerPosition`]
+
+The current position of the lexer.
 
 ## Errors
 
