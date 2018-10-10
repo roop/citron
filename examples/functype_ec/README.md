@@ -7,3 +7,6 @@ that to an in-memory data structure. We use that to print out the type
 definition for that function, which for this example would be
 `(Int, Int) -> Int`.
 
+This example uses error capturing to:
+  - Collect multiple errors in one pass
+  - Give clear error messages

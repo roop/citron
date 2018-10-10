@@ -9,8 +9,10 @@ Swift documentation.
 
 The parse tree is printed out in prefix notation in a lisp-like format.
 
-Error capturing uses '(' and ')' as synchronization points to continue
-parsing even after errors.
+This example uses error capturing to:
+  - Collect multiple errors in one pass
+  - Give clear error messages
+  - Create a partial parse tree when there are errors
 
 [swift_doc_rec_enums]: https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/Enumerations.html#//apple_ref/doc/uid/TP40014097-CH12-ID536
 
