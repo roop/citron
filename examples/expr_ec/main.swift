@@ -196,7 +196,7 @@ if CommandLine.argc != 2 {
                 try parser.consume(lexerError: e)
             })
         let tree = try parser.endParsing()
-        print("\(tree)")
+        print("Prefix notation: \(tree)")
     }
     // We handle all errors through error capturing, so we
     // won't have any errors to catch here.
