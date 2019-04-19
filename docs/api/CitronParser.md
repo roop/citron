@@ -45,6 +45,7 @@ protocol.
       - [`CitronSymbolCode`](#citronsymbolcode)
       - [`CitronResult`](#citronresult)
       - [`CitronErrorCaptureDelegate`](#citronerrorcapturedelegate)
+      - [`CitronErrorCaptureState`](#citronerrorcapturestate)
 
 ---
 
@@ -290,7 +291,17 @@ Citron-generated parser code.
 > See the [`CitronErrorCaptureDelegate`](../CitronErrorCaptureDelegate)
 > page for more information.
 
+### `CitronErrorCaptureState`
+
+> This is typealiased to a structure populated by Citron to pass the
+> error capturing state to
+> [`CitronErrorCaptureDelegate`](#citronerrorcapturedelegate) methods.
+>
+> See the [`CitronErrorCaptureState`](../CitronErrorCaptureState) page
+> for more information.
+
 [`CitronToken`]: #citrontoken
 [`CitronTokenCode`]: #citrontokencode
 [`CitronResult`]: #citronresult
 [`CitronErrorCaptureDelegate`]: #citronerrorcapturedelegate
+[`CitronErrorCaptureState`]: #citronerrorcapturestate
