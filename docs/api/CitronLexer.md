@@ -30,7 +30,7 @@ used as the generic parameter.
   - [Position](#position)
      - [`currentPosition: CitronLexerPosition`](#currentposition-citronlexerposition)
   - [Errors](#errors)
-     - [`noMatchingRuleAt(errorPosition: `[`CitronLexerPosition`]`)`](#nomatchingruleaterrorposition-citronlexerposition)
+     - [`noMatchingRuleAt(errorPosition: CitronLexerPosition)`](#nomatchingruleaterrorposition-citronlexerposition)
   - [Usage with `CitronParser`](#usage-with-citronparser)
 
 ## Types
