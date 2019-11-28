@@ -35,8 +35,8 @@ The Citron source code is just three files:
  3. **`CitronLexer.swift`**: This file defines the `CitronLexer` class,
     which can be used to generate the input for the parser.
 
-While compiling our Swift code that uses [the parser
-interface](/citron/parser-interface/), we should compile the following
+While compiling our Swift code that uses [the parsing
+interface](/citron/parsing-interface/), we should compile the following
 along with that:
 
   - The generated parser
