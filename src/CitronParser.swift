@@ -815,7 +815,7 @@ private extension CitronParser {
                         print(", symbol: \"\(symbolString)\"", terminator: "")
                     }
                 }
-                defer {
+                do {
                     print(")")
                 }
             }
