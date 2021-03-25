@@ -1586,6 +1586,7 @@ int main(int argc, char **argv)
   static int rpflag = 0;
   static int basisflag = 0;
   static int compress = 0;
+  static int succeedWithConflicts = 0;
   static int printReport = 0;
   static int statistics = 0;
   static int noResort = 0;
@@ -1593,6 +1594,7 @@ int main(int argc, char **argv)
     {OPT_FSTR, "o", (char*)handle_O_option, "Specify an output file."},
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
+    {OPT_FLAG, "i", (char*)&succeedWithConflicts, "Return success even in case there are conflicts."},
     {OPT_FLAG, "g", (char*)&rpflag, "Print grammar without actions."},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
@@ -1746,7 +1748,13 @@ int main(int argc, char **argv)
   }
 
   /* return 0 on success, 1 on failure. */
-  exitcode = ((lem.errorcnt > 0) || (lem.nconflict > 0)) ? 1 : 0;
+  exitcode = 0;
+  if (lem.errorcnt > 0) {
+    exitcode = 1;
+  }
+  if (lem.nconflict > 0 && !succeedWithConflicts) {
+    exitcode = 1;
+  }
   exit(exitcode);
   return (exitcode);
 }
