@@ -47,7 +47,7 @@ class CitronLexer<TokenData> {
                 return rule
             }
         }
-        currentPosition = (tokenPosition: String.Index(encodedOffset: 0), linePosition: String.Index(encodedOffset: 0), lineNumber: 0)
+        currentPosition = (tokenPosition: "".startIndex, linePosition: "".startIndex, lineNumber: 0)
     }
 
     func tokenize(_ string: String, onFound: Action) throws {
