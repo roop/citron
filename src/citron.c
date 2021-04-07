@@ -4250,8 +4250,9 @@ void ReportTable(struct lemon *lemp){
     assert(lhstype);
     fprintf(out, ") throws -> %s {", lhstype);
     if (rp->code) {
-      const char *codeblock = (rp->code[0] == '\n') ? &rp->code[1] : rp->code;
-      fprintf(out, "\n%s", codeblock);
+      fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, rp->line);
+      fprintf(out, "%s", rp->code);
+      fprintf(out, "\n#sourceLocation()\n");
     } else if (rp->lhs->datatype && rp->lhs->code) {
       fprintf(out, " return defaultCodeBlockForType%d() ", rp->lhs->dtnum);
     } else if (rp->lhs->datatype == 0 && lemp->defaultCodeBlock) {
