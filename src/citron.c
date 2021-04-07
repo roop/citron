@@ -4250,13 +4250,14 @@ void ReportTable(struct lemon *lemp){
     assert(lhstype);
     fprintf(out, ") throws -> %s {", lhstype);
     if (rp->code) {
-      fprintf(out, "%s", rp->code);
+      const char *codeblock = (rp->code[0] == '\n') ? &rp->code[1] : rp->code;
+      fprintf(out, "\n%s", codeblock);
     } else if (rp->lhs->datatype && rp->lhs->code) {
       fprintf(out, " return defaultCodeBlockForType%d() ", rp->lhs->dtnum);
     } else if (rp->lhs->datatype == 0 && lemp->defaultCodeBlock) {
       fprintf(out, " return defaultCodeBlockForDefaultNonterminalType() ");
     }
-    fprintf(out, " }\n");
+    fprintf(out, "\n}\n");
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
       const char *rhsalias = rp->rhsalias[i];
