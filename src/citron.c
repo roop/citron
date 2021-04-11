@@ -4254,11 +4254,11 @@ void ReportTable(struct lemon *lemp){
       fprintf(out, "%s", rp->code);
       fprintf(out, "\n#sourceLocation()\n");
     } else if (rp->lhs->datatype && rp->lhs->code) {
-      fprintf(out, " return defaultCodeBlockForType%d() ", rp->lhs->dtnum);
+      fprintf(out, "\n    return defaultCodeBlockForType%d()\n", rp->lhs->dtnum);
     } else if (rp->lhs->datatype == 0 && lemp->defaultCodeBlock) {
-      fprintf(out, " return defaultCodeBlockForDefaultNonterminalType() ");
+      fprintf(out, "\n    return defaultCodeBlockForDefaultNonterminalType()\n");
     }
-    fprintf(out, "\n}\n");
+    fprintf(out, "}\n");
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
       const char *rhsalias = rp->rhsalias[i];
