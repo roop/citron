@@ -438,6 +438,7 @@ struct lemon {
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
   const char *defaultCodeBlock;  /* Code to use as the default code block for default-typed non-terminals */
+  int defaultCodeBlockLineNumber;  /* Line number of the start of default code block */
   char *start;             /* Name of the start symbol for the grammar */
   char *preface;           /* Code to put at the start of the generated file */
   char *epilogue;          /* Code to put at the end of the generated file */
@@ -2287,6 +2288,7 @@ block which begins on this line.");
                   psp->errorcnt++;
                 } else {
                   psp->gp->defaultCodeBlock = &x[1];
+                  psp->gp->defaultCodeBlockLineNumber = psp->tokenlineno;
                 }
             }
             psp->is_prev_decl_default_nonterminal_type = 0;
@@ -4209,7 +4211,9 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: CitronRuleNumber) throws -> CitronSymbol {\n");
   if (lemp->vartype && lemp->defaultCodeBlock) {
     fprintf(out, "        func defaultCodeBlockForDefaultNonterminalType() -> %s {", lemp->vartype);
+    fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->defaultCodeBlockLineNumber);
     fprintf(out, "%s", lemp->defaultCodeBlock);
+    fprintf(out, "\n#sourceLocation()\n");
     fprintf(out, "        }\n");
   }
   for (i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
