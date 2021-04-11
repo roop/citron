@@ -300,7 +300,9 @@ struct symbol {
   int dtnum;               /* The data type number.  In the parser, the value
                            ** stack is a union.  The .yy%d element of this
                            ** union is the correct data type for this object */
-  const char *code;              /* Default code block. Only used if type==NONTERMINAL */
+  const char *code;        /* Default code block. Only used if type==NONTERMINAL */
+  int codeLineNumber;      /* Line number at which code begins. Only used if type==NONTERMINAL */
+
   /* The following fields are used by MULTITERMINALs only */
   int nsubsym;             /* Number of constituent symbols in the MULTI */
   struct symbol **subsym;  /* Array of constituent symbols */
@@ -2273,6 +2275,7 @@ block which begins on this line.");
               psp->errorcnt++;
             } else {
               psp->prevnonterminaltype->code = &x[1];
+              psp->prevnonterminaltype->codeLineNumber = psp->tokenlineno;
             }
             psp->prevnonterminaltype = 0;
         } else if (psp->is_prev_decl_default_nonterminal_type != 0) {
@@ -4213,7 +4216,9 @@ void ReportTable(struct lemon *lemp){
     struct symbol *sp = lemp->symbols[i];
     if (sp->type==NONTERMINAL && sp->datatype != 0 && sp->code != 0) {
       fprintf(out, "        func defaultCodeBlockForType%d() -> %s {", sp->dtnum, sp->datatype);
+      fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, sp->codeLineNumber);
       fprintf(out, "%s", sp->code);
+      fprintf(out, "\n#sourceLocation()\n");
       fprintf(out, "        }\n");
     }
   }
@@ -5017,6 +5022,7 @@ struct symbol *Symbol_new(const char *x)
     sp->datatype = 0;
     sp->useCnt = 0;
     sp->code = 0;
+    sp->codeLineNumber = 0;
     sp->error_capture_line = 0;
     sp->num_error_capture_end_before_sequences = 0;
     sp->num_error_capture_end_after_sequences = 0;
