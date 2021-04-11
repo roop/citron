@@ -441,7 +441,9 @@ struct lemon {
   int defaultCodeBlockLineNumber;  /* Line number of the start of default code block */
   char *start;             /* Name of the start symbol for the grammar */
   char *preface;           /* Code to put at the start of the generated file */
+  int prefaceLineNumber; /* Line number of preface */
   char *epilogue;          /* Code to put at the end of the generated file */
+  int epilogueLineNumber; /* Line number of epilogue */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the generated enum */
@@ -2466,8 +2468,10 @@ to follow the previous rule.");
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"preface")==0 ){
           psp->declargslot = &(psp->gp->preface);
+          psp->gp->prefaceLineNumber = psp->tokenlineno;
         }else if( strcmp(x,"epilogue")==0 ){
           psp->declargslot = &(psp->gp->epilogue);
+          psp->gp->epilogueLineNumber = psp->tokenlineno;
         }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -3839,7 +3843,9 @@ void ReportTable(struct lemon *lemp){
 
   if (lemp->preface) {
     fprintf(out, "// Preface\n\n");
-    fprintf(out, "%s\n\n", lemp->preface);
+    fprintf(out, "#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->prefaceLineNumber);
+    fprintf(out, "%s\n", lemp->preface);
+    fprintf(out, "#sourceLocation()\n\n");
   }
 
   // Open the Parser class
@@ -4601,7 +4607,9 @@ void ReportTable(struct lemon *lemp){
 
   if (lemp->epilogue) {
     fprintf(out, "// Epilogue\n\n");
-    fprintf(out, "%s\n\n", lemp->epilogue);
+    fprintf(out, "#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->epilogueLineNumber);
+    fprintf(out, "%s\n", lemp->epilogue);
+    fprintf(out, "#sourceLocation()\n\n");
   }
 
   fclose(out);
