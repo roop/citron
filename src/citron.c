@@ -300,7 +300,9 @@ struct symbol {
   int dtnum;               /* The data type number.  In the parser, the value
                            ** stack is a union.  The .yy%d element of this
                            ** union is the correct data type for this object */
-  const char *code;              /* Default code block. Only used if type==NONTERMINAL */
+  const char *code;        /* Default code block. Only used if type==NONTERMINAL */
+  int codeLineNumber;      /* Line number at which code begins. Only used if type==NONTERMINAL */
+
   /* The following fields are used by MULTITERMINALs only */
   int nsubsym;             /* Number of constituent symbols in the MULTI */
   struct symbol **subsym;  /* Array of constituent symbols */
@@ -436,9 +438,12 @@ struct lemon {
   char *tokentype;         /* Type of terminal symbols in the parser stack */
   char *vartype;           /* The default type of non-terminal symbols */
   const char *defaultCodeBlock;  /* Code to use as the default code block for default-typed non-terminals */
+  int defaultCodeBlockLineNumber;  /* Line number of the start of default code block */
   char *start;             /* Name of the start symbol for the grammar */
   char *preface;           /* Code to put at the start of the generated file */
+  int prefaceLineNumber; /* Line number of preface */
   char *epilogue;          /* Code to put at the end of the generated file */
+  int epilogueLineNumber; /* Line number of epilogue */
   char *filename;          /* Name of the input file */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the generated enum */
@@ -2273,6 +2278,7 @@ block which begins on this line.");
               psp->errorcnt++;
             } else {
               psp->prevnonterminaltype->code = &x[1];
+              psp->prevnonterminaltype->codeLineNumber = psp->tokenlineno;
             }
             psp->prevnonterminaltype = 0;
         } else if (psp->is_prev_decl_default_nonterminal_type != 0) {
@@ -2284,6 +2290,7 @@ block which begins on this line.");
                   psp->errorcnt++;
                 } else {
                   psp->gp->defaultCodeBlock = &x[1];
+                  psp->gp->defaultCodeBlockLineNumber = psp->tokenlineno;
                 }
             }
             psp->is_prev_decl_default_nonterminal_type = 0;
@@ -2461,8 +2468,10 @@ to follow the previous rule.");
           psp->insertLineMacro = 0;
         }else if( strcmp(x,"preface")==0 ){
           psp->declargslot = &(psp->gp->preface);
+          psp->gp->prefaceLineNumber = psp->tokenlineno;
         }else if( strcmp(x,"epilogue")==0 ){
           psp->declargslot = &(psp->gp->epilogue);
+          psp->gp->epilogueLineNumber = psp->tokenlineno;
         }else if( strcmp(x,"tokencode_prefix")==0 ){
           psp->declargslot = &psp->gp->tokenprefix;
           psp->insertLineMacro = 0;
@@ -3834,7 +3843,9 @@ void ReportTable(struct lemon *lemp){
 
   if (lemp->preface) {
     fprintf(out, "// Preface\n\n");
-    fprintf(out, "%s\n\n", lemp->preface);
+    fprintf(out, "#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->prefaceLineNumber);
+    fprintf(out, "%s\n", lemp->preface);
+    fprintf(out, "#sourceLocation()\n\n");
   }
 
   // Open the Parser class
@@ -4206,14 +4217,18 @@ void ReportTable(struct lemon *lemp){
   fprintf(out, "    func yyInvokeCodeBlockForRule(ruleNumber: CitronRuleNumber) throws -> CitronSymbol {\n");
   if (lemp->vartype && lemp->defaultCodeBlock) {
     fprintf(out, "        func defaultCodeBlockForDefaultNonterminalType() -> %s {", lemp->vartype);
+    fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->defaultCodeBlockLineNumber);
     fprintf(out, "%s", lemp->defaultCodeBlock);
+    fprintf(out, "\n#sourceLocation()\n");
     fprintf(out, "        }\n");
   }
   for (i = 1 /* Skip the base symbol */; i < lemp->nsymbol; i++) {
     struct symbol *sp = lemp->symbols[i];
     if (sp->type==NONTERMINAL && sp->datatype != 0 && sp->code != 0) {
       fprintf(out, "        func defaultCodeBlockForType%d() -> %s {", sp->dtnum, sp->datatype);
+      fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, sp->codeLineNumber);
       fprintf(out, "%s", sp->code);
+      fprintf(out, "\n#sourceLocation()\n");
       fprintf(out, "        }\n");
     }
   }
@@ -4250,13 +4265,15 @@ void ReportTable(struct lemon *lemp){
     assert(lhstype);
     fprintf(out, ") throws -> %s {", lhstype);
     if (rp->code) {
+      fprintf(out, "\n#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, rp->line);
       fprintf(out, "%s", rp->code);
+      fprintf(out, "\n#sourceLocation()\n");
     } else if (rp->lhs->datatype && rp->lhs->code) {
-      fprintf(out, " return defaultCodeBlockForType%d() ", rp->lhs->dtnum);
+      fprintf(out, "\n    return defaultCodeBlockForType%d()\n", rp->lhs->dtnum);
     } else if (rp->lhs->datatype == 0 && lemp->defaultCodeBlock) {
-      fprintf(out, " return defaultCodeBlockForDefaultNonterminalType() ");
+      fprintf(out, "\n    return defaultCodeBlockForDefaultNonterminalType()\n");
     }
-    fprintf(out, " }\n");
+    fprintf(out, "}\n");
     is_first_rhs_item = 1;
     for (i = 0; i < rp->nrhs; i++) {
       const char *rhsalias = rp->rhsalias[i];
@@ -4590,7 +4607,9 @@ void ReportTable(struct lemon *lemp){
 
   if (lemp->epilogue) {
     fprintf(out, "// Epilogue\n\n");
-    fprintf(out, "%s\n\n", lemp->epilogue);
+    fprintf(out, "#sourceLocation(file: \"%s\", line: %d)\n", lemp->filename, lemp->epilogueLineNumber);
+    fprintf(out, "%s\n", lemp->epilogue);
+    fprintf(out, "#sourceLocation()\n\n");
   }
 
   fclose(out);
@@ -5015,6 +5034,7 @@ struct symbol *Symbol_new(const char *x)
     sp->datatype = 0;
     sp->useCnt = 0;
     sp->code = 0;
+    sp->codeLineNumber = 0;
     sp->error_capture_line = 0;
     sp->num_error_capture_end_before_sequences = 0;
     sp->num_error_capture_end_after_sequences = 0;
