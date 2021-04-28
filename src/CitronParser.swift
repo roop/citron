@@ -40,7 +40,7 @@ Citron: Modifications to Lemon to generate a parser in Swift
 // The CitronParser protocol defined below is compatible with Swift code
 // generated using Citron version 2.x.
 
-protocol CitronParser: class {
+protocol CitronParser: AnyObject {
 
     // Types
 
