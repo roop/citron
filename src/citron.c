@@ -4553,7 +4553,7 @@ void ReportTable(struct lemon *lemp){
 
   fprintf(out, "}\n\n"); // Closing class Parser
 
-  fprintf(out, "protocol _%sCitronErrorCaptureDelegate : class {\n", className);
+  fprintf(out, "protocol _%sCitronErrorCaptureDelegate : AnyObject {\n", className);
   fprintf(out, "    func shouldSaveErrorForCapturing(error: Error) -> Bool\n");
   for(int i=0; i<lemp->nsymbol; i++){
     struct symbol *sp = lemp->symbols[i];
