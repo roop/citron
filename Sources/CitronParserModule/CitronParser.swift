@@ -40,7 +40,7 @@ Citron: Modifications to Lemon to generate a parser in Swift
 // The CitronParser protocol defined below is compatible with Swift code
 // generated using Citron version 2.x.
 
-protocol CitronParser: AnyObject {
+public protocol CitronParser: AnyObject {
 
     // Types
 
@@ -175,32 +175,32 @@ protocol CitronParser: AnyObject {
 
 // Error handling
 
-enum _CitronParserError<Token, TokenCode>: Error {
+public enum _CitronParserError<Token, TokenCode>: Error {
     case syntaxErrorAt(token: Token, tokenCode: TokenCode)
     case unexpectedEndOfInput
     case stackOverflow
 }
 
-protocol CitronParserError : Error { }
+public protocol CitronParserError : Error { }
 
-class _CitronParserUnexpectedTokenError<Token, TokenCode> : CitronParserError {
-    let token: Token
-    let tokenCode: TokenCode
+public class _CitronParserUnexpectedTokenError<Token, TokenCode> : CitronParserError {
+    public let token: Token
+    public let tokenCode: TokenCode
     init(token: Token, tokenCode: TokenCode) {
         self.token = token
         self.tokenCode = tokenCode
     }
 }
 
-class CitronParserUnexpectedEndOfInputError : CitronParserError {
+public class CitronParserUnexpectedEndOfInputError : CitronParserError {
 }
 
-class CitronParserStackOverflowError : CitronParserError {
+public class CitronParserStackOverflowError : CitronParserError {
 }
 
 // Parser actions and states
 
-enum _CitronParsingAction<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
+public enum _CitronParsingAction<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
     case SH(StateNumber) // Shift token, then go to state <state>
     case RD(RuleNumber)  // Reduce with rule number <rule>
     case SR(RuleNumber)  // Shift token, then reduce with rule number <rule>
@@ -208,36 +208,36 @@ enum _CitronParsingAction<StateNumber: BinaryInteger, RuleNumber: BinaryInteger>
     case ACCEPT
 }
 
-enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
+public enum _CitronStateOrRule<StateNumber: BinaryInteger, RuleNumber: BinaryInteger> {
     case state(StateNumber)
     case rule(RuleNumber)
 }
 
 // Error capturing
 
-enum _CitronErrorCaptureResult<NonTerminalCode, Symbol> {
+public enum _CitronErrorCaptureResult<NonTerminalCode, Symbol> {
     case notCaptured
     case capturedOnIntermediateSymbol(symbolCode: NonTerminalCode, didMatchEndBeforeClause: Bool)
     case capturedOnFinalResult(result: Symbol)
 }
 
-struct _CitronErrorCaptureState<Token, TokenCode, SymbolCode> {
-    let resolvedSymbols: [(symbolCode: SymbolCode, value: Any)]
-    let unclaimedTokens: [(token: Token, tokenCode: TokenCode)]
-    let nextToken: (token: Token, tokenCode: TokenCode)?
+public struct _CitronErrorCaptureState<Token, TokenCode, SymbolCode> {
+    public let resolvedSymbols: [(symbolCode: SymbolCode, value: Any)]
+    public let unclaimedTokens: [(token: Token, tokenCode: TokenCode)]
+    public let nextToken: (token: Token, tokenCode: TokenCode)?
 
-    var lastResolvedSymbol: (symbolCode: SymbolCode, value: Any)? { return resolvedSymbols.last }
-    var erroringToken: (token: Token, tokenCode: TokenCode)? { return (unclaimedTokens.first ?? nextToken) }
+    public var lastResolvedSymbol: (symbolCode: SymbolCode, value: Any)? { return resolvedSymbols.last }
+    public var erroringToken: (token: Token, tokenCode: TokenCode)? { return (unclaimedTokens.first ?? nextToken) }
 }
 
-enum CitronErrorCaptureResponse<T> {
+public enum CitronErrorCaptureResponse<T> {
     case captureAs(T)
     case dontCapture
 }
 
 // Parsing interface
 
-extension CitronParser {
+public extension CitronParser {
     func consume(token: CitronToken, code tokenCode: CitronTokenCode) throws {
         let symbolCode = tokenCode.rawValue
         tracePrint("Input:", tokenCode: tokenCode, token: token)
