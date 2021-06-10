@@ -23,21 +23,21 @@
 
 import Foundation
 
-typealias CitronLexerPosition = (tokenPosition: String.Index, linePosition: String.Index, lineNumber: Int)
+public typealias CitronLexerPosition = (tokenPosition: String.Index, linePosition: String.Index, lineNumber: Int)
 
-class CitronLexer<TokenData> {
-    typealias Action = (TokenData) throws -> Void
-    typealias ErrorAction = (CitronLexerError) throws -> Void
-    enum LexingRule {
+public class CitronLexer<TokenData> {
+    public typealias Action = (TokenData) throws -> Void
+    public typealias ErrorAction = (CitronLexerError) throws -> Void
+    public enum LexingRule {
         case string(String, TokenData?)
         case regex(NSRegularExpression, (String) -> TokenData?)
         case regexPattern(String, (String) -> TokenData?)
     }
-    let rules: [LexingRule]
+    private let rules: [LexingRule]
 
-    var currentPosition: CitronLexerPosition
+    public private(set) var currentPosition: CitronLexerPosition
 
-    init(rules: [LexingRule]) {
+    public init(rules: [LexingRule]) {
         self.rules = rules.map { rule in
             // Convert .regexPattern values to equivalent .regex values
             switch (rule) {
@@ -50,11 +50,11 @@ class CitronLexer<TokenData> {
         currentPosition = (tokenPosition: "".startIndex, linePosition: "".startIndex, lineNumber: 0)
     }
 
-    func tokenize(_ string: String, onFound: Action) throws {
+    public func tokenize(_ string: String, onFound: Action) throws {
         try tokenize(string, onFound: onFound, onError: nil)
     }
 
-    func tokenize(_ string: String, onFound: Action, onError: ErrorAction?) throws {
+    public func tokenize(_ string: String, onFound: Action, onError: ErrorAction?) throws {
         currentPosition = (tokenPosition: string.startIndex, linePosition: string.startIndex, lineNumber: 1)
         var errorStartPosition: CitronLexerPosition? = nil
         while (currentPosition.tokenPosition < string.endIndex) {
@@ -119,7 +119,7 @@ class CitronLexer<TokenData> {
     }
 }
 
-enum CitronLexerError: Error {
+public enum CitronLexerError: Error {
     case noMatchingRuleAt(errorPosition: CitronLexerPosition)
 }
 
