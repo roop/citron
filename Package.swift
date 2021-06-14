@@ -20,8 +20,10 @@ let package = Package(
         .target(
             name: "citron"),
         .target(
-            name: "CitronParserModule"),
+            name: "CitronParserModule",
+            exclude: ["LICENSE.txt"]),
         .target(
-            name: "CitronLexerModule"),
+            name: "CitronLexerModule",
+            exclude: ["LICENSE.txt"]),
     ]
 )
