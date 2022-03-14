@@ -12,7 +12,7 @@ public struct Scanner<TokenID> {
   /// - Parameter patterns: a mapping from regular expression pattern to either
   ///   a coresponding token ID, or `nil` if the pattern is to be discarded
   ///   (e.g. for whitespace).
-  init(
+  public init(
     literalStrings: [String: TokenID],
     patterns: [String: TokenID?]
   ) {
