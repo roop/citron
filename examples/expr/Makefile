@@ -4,7 +4,7 @@ NAME = expr
 CC = clang
 SWIFTC = swiftc
 BIN = ../../bin
-SRC = ../../src
+SRC = ../../Sources
 CITRON = ${BIN}/citron
 
 build: ${NAME}
@@ -15,11 +15,11 @@ run: ${NAME}
 clean:
 	rm -rf ./${NAME} ${GRAMMAR}.swift ${CITRON}
 
-${CITRON}: ${SRC}/citron.c
+${CITRON}: ${SRC}/citron/main.c
 	mkdir -p ${BIN} && ${CC} $^ -o $@
 
 ${GRAMMAR}.swift: ${CITRON} ${GRAMMAR}.y
 	${CITRON} ${GRAMMAR}.y -o $@
 
-${NAME}: ${SRC}/CitronParser.swift ${SRC}/CitronLexer.swift ${GRAMMAR}.swift main.swift
+${NAME}: ${SRC}/CitronParserModule/CitronParser.swift ${SRC}/CitronLexerModule/CitronLexer.swift ${GRAMMAR}.swift main.swift
 	${SWIFTC} $^ -o $@
