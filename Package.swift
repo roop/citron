@@ -6,24 +6,13 @@ import PackageDescription
 let package = Package(
     name: "citron",
     products: [
-        .executable(
-            name: "citron",
-            targets: ["citron"]),
-        .library(
-            name: "CitronParserModule",
-            targets: ["CitronParserModule"]),
-        .library(
-            name: "CitronLexerModule",
-            targets: ["CitronLexerModule"]),
+        .executable(name: "citron", targets: ["citron"]),
+        .library(name: "CitronParserModule", targets: ["CitronParserModule"]),
+        .library(name: "CitronLexerModule", targets: ["CitronLexerModule"]),
     ],
     targets: [
-        .target(
-            name: "citron"),
-        .target(
-            name: "CitronParserModule",
-            exclude: ["LICENSE.txt"]),
-        .target(
-            name: "CitronLexerModule",
-            exclude: ["LICENSE.txt"]),
+        .target(name: "citron"),
+        .target(name: "CitronParserModule", exclude: ["LICENSE.txt"]),
+        .target(name: "CitronLexerModule", exclude: ["LICENSE.txt"]),
     ]
 )
