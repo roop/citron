@@ -19,16 +19,33 @@ let package = Package(
         name: "CitronParserGenerator", capability: .buildTool(),
         dependencies: ["citron"]),
 
+      // Examples
       .executableTarget(
         name: "expr",
         dependencies: ["CitronParserModule", "CitronLexerModule"],
         path: "examples/expr",
+        exclude: ["README.md", "Makefile"],
         plugins: [.plugin(name: "CitronParserGenerator")]),
 
       .executableTarget(
         name: "expr_ec",
         dependencies: ["CitronParserModule", "CitronLexerModule"],
         path: "examples/expr_ec",
+        exclude: ["README.md", "Makefile"],
+        plugins: [.plugin(name: "CitronParserGenerator")]),
+
+      .executableTarget(
+        name: "functype",
+        dependencies: ["CitronParserModule", "CitronLexerModule"],
+        path: "examples/functype",
+        exclude: ["README.md", "Makefile"],
+        plugins: [.plugin(name: "CitronParserGenerator")]),
+
+      .executableTarget(
+        name: "functype_ec",
+        dependencies: ["CitronParserModule", "CitronLexerModule"],
+        path: "examples/functype_ec",
+        exclude: ["README.md", "Makefile"],
         plugins: [.plugin(name: "CitronParserGenerator")]),
     ]
 )
