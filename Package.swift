@@ -18,5 +18,11 @@ let package = Package(
       .plugin(
         name: "CitronParserGenerator", capability: .buildTool(),
         dependencies: ["citron"]),
+
+      .executableTarget(
+        name: "expr",
+        dependencies: ["CitronParserModule", "CitronLexerModule"],
+        path: "examples/expr",
+        plugins: [.plugin(name: "CitronParserGenerator")])
     ]
 )
