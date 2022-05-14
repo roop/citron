@@ -23,6 +23,12 @@ let package = Package(
         name: "expr",
         dependencies: ["CitronParserModule", "CitronLexerModule"],
         path: "examples/expr",
-        plugins: [.plugin(name: "CitronParserGenerator")])
+        plugins: [.plugin(name: "CitronParserGenerator")]),
+
+      .executableTarget(
+        name: "expr_ec",
+        dependencies: ["CitronParserModule", "CitronLexerModule"],
+        path: "examples/expr_ec",
+        plugins: [.plugin(name: "CitronParserGenerator")]),
     ]
 )

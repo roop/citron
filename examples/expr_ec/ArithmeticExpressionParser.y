@@ -2,6 +2,10 @@
 
 %class_name ArithmeticExpressionParser
 
+%preface {
+  import CitronParserModule
+  import CitronLexerModule
+}
 
 // Type for terminals
 
