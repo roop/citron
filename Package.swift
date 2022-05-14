@@ -9,10 +9,14 @@ let package = Package(
         .executable(name: "citron", targets: ["citron"]),
         .library(name: "CitronParserModule", targets: ["CitronParserModule"]),
         .library(name: "CitronLexerModule", targets: ["CitronLexerModule"]),
+        .plugin(name: "CitronParserGenerator", targets: ["CitronParserGenerator"])
     ],
     targets: [
-        .executableTarget(name: "citron"),
-        .target(name: "CitronParserModule", exclude: ["LICENSE.txt"]),
-        .target(name: "CitronLexerModule", exclude: ["LICENSE.txt"]),
+      .executableTarget(name: "citron"),
+      .target(name: "CitronParserModule", exclude: ["LICENSE.txt"]),
+      .target(name: "CitronLexerModule", exclude: ["LICENSE.txt"]),
+      .plugin(
+        name: "CitronParserGenerator", capability: .buildTool(),
+        dependencies: ["citron"]),
     ]
 )
