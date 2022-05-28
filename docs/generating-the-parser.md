@@ -48,7 +48,7 @@ along with that:
 To get a compiled version of Citron, we can run:
 
 ~~~ Text
-clang citron.c -o citron
+clang Sources/citron/main.c -o citron
 ~~~
 
 ## Running Citron
