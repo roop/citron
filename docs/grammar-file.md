@@ -175,7 +175,7 @@ We can save this grammar into a grammar file, say
 `grammar.y` and [run citron][run] on the grammar file.
 
 ~~~
-$ clang citron.c -o ./citron
+$ clang Sources/citron/main.c -o ./citron
 $ ./citron grammar.y
 ~~~
 
