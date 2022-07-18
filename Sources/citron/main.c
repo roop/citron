@@ -3843,8 +3843,12 @@ void ReportTable(struct lemon *lemp){
 
   const char *tokenPrefix = lemp->tokenprefix ? lemp->tokenprefix : "";
   fprintf(out, "    enum CitronTokenCode: CitronSymbolNumber {\n");
-  for(i=1; i<lemp->nterminal; i++){
-    fprintf(out, "      case %s%-30s = %3d\n", tokenPrefix, lemp->symbols[i]->name, i);
+  if (lemp->nterminal > 1) {
+    for(i=1; i<lemp->nterminal; i++){
+      fprintf(out, "      case %s%-30s = %3d\n", tokenPrefix, lemp->symbols[i]->name, i);
+    }
+  } else {
+      fprintf(out, "      case %-30s = %3d\n", "Dummy", 1);
   }
   fprintf(out, "    }\n\n");
 
