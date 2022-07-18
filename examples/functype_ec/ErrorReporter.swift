@@ -1,3 +1,5 @@
+import CitronParserModule
+import CitronLexerModule
 
 class ErrorReporter {
     let inputString: String

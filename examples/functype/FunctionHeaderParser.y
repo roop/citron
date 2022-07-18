@@ -1,6 +1,9 @@
 %class_name FunctionHeaderParser
 
 %preface {
+    import CitronParserModule
+    import CitronLexerModule
+
     enum Token {
         case keyword // for func, throws, inout, etc.
         case punctuation // for (, ), ->, etc.
@@ -13,6 +16,7 @@
         }
     }
     typealias TypeIdentifier = String
+
 }
 
 %token_type Token

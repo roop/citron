@@ -1,6 +1,8 @@
 %class_name FunctionHeaderParser
 
 %preface {
+    import CitronParserModule
+    import CitronLexerModule
     typealias TypeIdentifier = String
 }
 

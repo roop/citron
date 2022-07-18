@@ -1,3 +1,6 @@
+import CitronParserModule
+import CitronLexerModule
+
 struct FunctionParameter {
     let localName: String
     let externalName: String?
