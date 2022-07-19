@@ -1,3 +1,6 @@
+import CitronParserModule
+import CitronLexerModule
+
 enum Token {
     case keyword // for func, throws, inout, etc.
     case punctuation // for (, ), ->, etc.

@@ -640,16 +640,19 @@ grammar.</span>
 
 #### token
 
-The order of tokens in the `CitronTokenCode` enumeration is determined
-by the order in which the tokens appear in the grammar. In case we want
-a token to appear earlier in the enumeration, we can tell Citron about
-the token before it appears in the grammar with this directive.
+The order of tokens in the `CitronTokenCode` enumeration is determined by the
+order in which the tokens appear in the grammar file (either in a rule, or in a
+directive). In case we want a token to appear earlier in the enumeration, we
+can tell Citron about the token before it appears in the grammar file with this
+directive.
 
 For example:
 
 ~~~ Text
-%token COMMA
+%token CloseBrackets OpenBrackets.
 ~~~
+
+The `%token` directive should end with a `.` character.
 
 #### fallback
 
