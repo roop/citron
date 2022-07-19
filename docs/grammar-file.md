@@ -708,10 +708,11 @@ We can replace all those lines with a token set specification like
 this:
 
 ~~~ Text
-%token_set throws_clause Throws | Rethrows.
+%token_set throws_clause Throws Rethrows.
 ~~~
 
-The `%token_set` directive should end with a `.` character.
+The `%token_set` directive should end with a `.` character. The `%token_set`
+directive must be the first use of the non-terminal it defines.
 
 ### Error capturing
 
