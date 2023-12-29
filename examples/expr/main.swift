@@ -28,43 +28,43 @@ extension ArithmeticExpression: CustomStringConvertible {
     }
 }
 
-// Create parser
-
-let parser = ArithmeticExpressionParser()
-// parser.isTracingEnabled = true
-
-// Create lexer
-
 typealias Lexer = CitronLexer<(Int, ArithmeticExpressionParser.CitronTokenCode)>
 
-let lexer = Lexer(rules: [
+func makeLexerAndParser() -> (Lexer, ArithmeticExpressionParser) {
 
-        // Numbers
+    let lexer = Lexer(rules: [
 
-        .regexPattern("[0-9]+", { str in
-            if let number = Int(str) {
-                return (number, .Integer)
-            }
-            return nil
-        }),
+            // Numbers
 
-        // Operators
+            .regexPattern("[0-9]+", { str in
+                if let number = Int(str) {
+                    return (number, .Integer)
+                }
+                return nil
+            }),
 
-        .string("+", (0, .Add)),
-        .string("-", (0, .Subtract)),
-        .string("*", (0, .Multiply)),
-        .string("/", (0, .Divide)),
+            // Operators
 
-        // Brackets
+            .string("+", (0, .Add)),
+            .string("-", (0, .Subtract)),
+            .string("*", (0, .Multiply)),
+            .string("/", (0, .Divide)),
 
-        .string("(", (0, .OpenBracket)),
-        .string(")", (0, .CloseBracket)),
+            // Brackets
 
-        // Whitespace
+            .string("(", (0, .OpenBracket)),
+            .string(")", (0, .CloseBracket)),
 
-        .regexPattern("\\s", { _ in nil })
-    ])
+            // Whitespace
 
+            .regexPattern("\\s", { _ in nil })
+        ])
+
+    return (lexer, ArithmeticExpressionParser())
+
+}
+
+let (lexer, parser) = makeLexerAndParser()
 // Tokenize and parse
 
 if CommandLine.argc != 2 {
