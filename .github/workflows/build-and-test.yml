@@ -1,0 +1,73 @@
+---
+name: Build and test
+
+"on":
+  push:
+    branches: ["**"]
+    paths-ignore:
+      - "Docs/**"
+      - "**.md"
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+  pull_request:
+    branches: ["**"]
+    paths-ignore:
+      - "Docs/**"
+      - "**.md"
+      - "README.md"
+      - "LICENSE"
+      - ".gitignore"
+
+jobs:
+
+  devcontainer:
+    name: "Devcontainer: ${{ matrix.os }}/${{ matrix.configuration }}"
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        configuration: [debug]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build and Test
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: swift test -c ${{ matrix.configuration }}
+
+  native:
+    name: "Native: ${{ matrix.os }}/${{ matrix.configuration }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+        configuration: [debug]
+
+        include:
+          # Default values to add
+          - shell: 'bash -eo pipefail {0}'
+          - build-options: '--explicit-target-dependency-import-check=error'
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Swift (Unices)
+        uses: 'swift-actions/setup-swift@v1'
+        with:
+          version: 5.9
+
+      - name: Build and Test (${{ matrix.configuration }})
+        run: >
+          swift test -c ${{ matrix.configuration }} ${{ matrix.build-options }}
+          --explicit-target-dependency-import-check=error
+
