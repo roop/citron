@@ -44,7 +44,9 @@ let parser = ArithmeticExpressionParser()
 
 typealias Lexer = CitronLexer<(token: Int, code: ArithmeticExpressionParser.CitronTokenCode)>
 
-let lexer = Lexer(rules: [
+func makeLexerAndParser(input: String) -> (Lexer, ArithmeticExpressionParser) {
+
+    let lexer = Lexer(rules: [
 
         // Numbers
 
@@ -71,6 +73,14 @@ let lexer = Lexer(rules: [
 
         .regexPattern("\\s", { _ in nil })
     ])
+
+    let parser = ArithmeticExpressionParser()
+    let errorCapturer = ErrorCapturer()
+    errorCapturer.inputString = input
+    errorCapturer.lexer = lexer
+    parser.errorCaptureDelegate = errorCapturer
+    return (lexer, parser)
+}
 
 // Error capturing
 
@@ -178,17 +188,14 @@ private extension String {
     }
 }
 
-let errorCapturer = ErrorCapturer()
-parser.errorCaptureDelegate = errorCapturer
-
 // Tokenize and parse
 
 if CommandLine.argc != 2 {
     print("Pass the expression to be parsed as a quoted argument.")
 } else {
     let inputString = CommandLine.arguments[1]
-    errorCapturer.inputString = inputString
-    errorCapturer.lexer = lexer
+    let (lexer, parser) = makeLexerAndParser(input: inputString)
+
     do {
         try lexer.tokenize(inputString,
             onFound: { t in

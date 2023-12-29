@@ -47,5 +47,10 @@ let package = Package(
         path: "examples/functype_ec",
         exclude: ["README.md", "Makefile"],
         plugins: [.plugin(name: "CitronParserGenerator")]),
+
+      .testTarget(
+          name: "CitronTests",
+          dependencies: ["expr", "expr_ec", "functype", "functype_ec"]
+      ),
     ]
 )
