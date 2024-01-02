@@ -58,8 +58,8 @@ public struct Scanner<TokenID> {
 public extension Scanner {
   /// The sequence of tokens in a source file.
   ///
-  /// An .ILLEGAL_CHARACTER token is produced for each character that isn't
-  /// otherwise recognized.
+  /// A special “unrecognized character” token is produced for each
+  /// character that isn't otherwise recognized.
   struct Tokens {
     /// The complete text from which `self`'s tokens will be derived.
     private let sourceText: String
@@ -78,25 +78,26 @@ public extension Scanner {
     private let literalStrings: [String: TokenID]
 
     /// A tokenID used when no pattern matches in the source text.
-    private let unrecognizedToken: TokenID
+    private let unrecognizedCharacter: TokenID
   }
 
-  /// Returns the sequence of tokens in the given source text, with their
-  /// source ranges indicating they were extracted from the file at `path`.
+  /// Returns the sequence of tokens in the given source text, with
+  /// their source ranges indicating they were extracted from the file
+  /// at `path`, with `unrecognizedCharacter` being the ID of tokens
+  /// created when none of the source patterns matches.
   func tokens(
     in sourceText: String, fromFile path: String,
-    unrecognizedToken: TokenID
+    unrecognizedCharacter: TokenID
   ) -> Tokens {
     return .init(
       in: sourceText, fromFile: path,
       matchers: matchers, literalStrings: literalStrings,
-      unrecognizedToken: unrecognizedToken)
+      unrecognizedCharacter: unrecognizedCharacter)
   }
 }
 
-/// The sequence of tokens in a source file.
-///
-/// An .ILLEGAL_CHARACTER token is produced for each character that isn't
+/// The sequence of tokens in a source file, including special
+/// “unrecognized character” tokens for each character that isn't
 /// otherwise recognized.
 extension Scanner.Tokens: Sequence {
   /// Creates an instance that extracts the tokens from `sourceText`, labeling
@@ -104,13 +105,13 @@ extension Scanner.Tokens: Sequence {
   fileprivate init(
     in sourceText: String, fromFile sourceFileName: String,
     matchers: [Scanner.Matcher], literalStrings: [String: TokenID],
-    unrecognizedToken: TokenID
+    unrecognizedCharacter: TokenID
   ) {
     self.sourceText = sourceText
     self.sourceFileName = sourceFileName
     self.matchers = matchers
     self.literalStrings = literalStrings
-    self.unrecognizedToken = unrecognizedToken
+    self.unrecognizedCharacter = unrecognizedCharacter
   }
 
   /// Returns a new iteration state.
@@ -118,7 +119,7 @@ extension Scanner.Tokens: Sequence {
     .init(
       over: sourceText, from: sourceFileName,
       matchers: matchers, literalStrings: literalStrings,
-      unrecognizedToken: unrecognizedToken)
+      unrecognizedCharacter: unrecognizedCharacter)
   }
 
   /// The token stream's iteration state and element producer.
@@ -128,7 +129,7 @@ extension Scanner.Tokens: Sequence {
     fileprivate init(
       over sourceText: String, from sourceFileName: String,
       matchers: [Scanner.Matcher], literalStrings: [String: TokenID],
-      unrecognizedToken: TokenID)
+      unrecognizedCharacter: TokenID)
     {
       self.sourceText = sourceText
       textPosition = sourceText.startIndex
@@ -136,7 +137,7 @@ extension Scanner.Tokens: Sequence {
       self.sourceFileName = sourceFileName
       self.matchers = matchers
       self.literalStrings = literalStrings
-      self.unrecognizedToken = unrecognizedToken
+      self.unrecognizedCharacter = unrecognizedCharacter
     }
 
     public typealias Element = (TokenID, Substring, SourceRegion)
@@ -184,7 +185,7 @@ extension Scanner.Tokens: Sequence {
           = (newlineCount == 0 ? sourcePosition.column : 1)
           + tokenLines.last!.count
 
-        if let matchedID = bestMatchUTF16Length == 0 ? unrecognizedToken
+        if let matchedID = bestMatchUTF16Length == 0 ? unrecognizedCharacter
              : bestMatchIndex == 0 ? literalStrings[String(tokenText)]
              : matchers[bestMatchIndex].tokenID
         {
@@ -224,7 +225,7 @@ extension Scanner.Tokens: Sequence {
     private let literalStrings: [String: TokenID]
 
     /// A tokenID used when no pattern matches in the source text.
-    private let unrecognizedToken: TokenID
+    private let unrecognizedCharacter: TokenID
   }
 }
 
